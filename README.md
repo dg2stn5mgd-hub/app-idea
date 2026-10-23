@@ -64,6 +64,11 @@ You're already on your way to school or work. If the other person runs late, get
 
 ## Prototype
 
-`prototype/index.html` is a clickable mockup with made-up people. Open it in a browser to try the flow.
+There are two versions, built from the same code:
+
+- `prototype/index.html`: **an existing user** already using the app (bottom tabs, waves, people met).
+- `prototype/new-user.html`: **a new user** signing up: mobile number and code, name, birthday, school or work, optional photo, daily commute and days, interests, who to meet, and the safety rules. It ends in the app with an empty history.
+
+`new-user.html` is generated. After changing `index.html`, run `python3 prototype/make_new_user.py` to rebuild it.
 
 It has about 300 made-up riders on every MRT line (a handful written by hand on the TEL, the rest generated with Singapore names, schools and jobs, and morning times from 07:15 to 08:30), so any route you demo has people on it.

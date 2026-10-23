@@ -1,0 +1,1381 @@
+<title>Carriage Sign-up</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;700&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: a single phone-width app column, centred on wider screens. MRT signage feel: station codes in mono, Thomson-East Coast Line brown as the accent. */
+:root {
+  --bg: #e9ecef;
+  --surface: #ffffff;
+  --surface-2: #f3f4f6;
+  --fg: #1c1f23;
+  --muted: #5d636b;
+  --line: #d9dde2;
+  --accent: #9d5b25;      /* TEL brown */
+  --accent-soft: #f4e9df;
+  --on-accent: #ffffff;
+  --match: #1d7a52;
+  --match-soft: #e2f3ea;
+  --warn-soft: #fff4d6;
+  --warn-fg: #6b4e00;
+  --map: #eef1e8;
+  --map-edge: #c9cfc3;
+  --water: #cfe0ea;
+  --font-display: "Familjen Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1113; --surface: #181b1e; --surface-2: #22262a; --fg: #e9ebed; --muted: #a2a8af;
+    --line: #2f343a; --accent: #d68c4f; --accent-soft: #3a2a1c; --on-accent: #1a1006;
+    --match: #4cc38a; --match-soft: #16301f; --warn-soft: #3a3016; --warn-fg: #f1d68a; --map: #1e2421; --map-edge: #3a433e; --water: #101b23;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1113; --surface: #181b1e; --surface-2: #22262a; --fg: #e9ebed; --muted: #a2a8af;
+  --line: #2f343a; --accent: #d68c4f; --accent-soft: #3a2a1c; --on-accent: #1a1006;
+  --match: #4cc38a; --match-soft: #16301f; --warn-soft: #3a3016; --warn-fg: #f1d68a; --map: #1e2421; --map-edge: #3a433e; --water: #101b23;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 40px;
+}
+.phone {
+  max-width: 420px; margin: 0 auto; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 22px; overflow: clip;
+  min-height: 640px; display: flex; flex-direction: column;
+}
+.banner {
+  background: var(--warn-soft); color: var(--warn-fg); font-size: 12.5px;
+  padding: 8px 18px; text-align: center;
+}
+.top { display: flex; align-items: center; gap: 10px; padding: 14px 18px 0; min-height: 44px; }
+.back { background: none; border: 0; color: var(--muted); font: inherit; padding: 6px 0; cursor: pointer; }
+.dots { display: flex; gap: 6px; margin-left: auto; }
+.dots span { width: 22px; height: 4px; border-radius: 2px; background: var(--line); }
+.dots span.on { background: var(--accent); }
+main { padding: 10px 18px 22px; display: flex; flex-direction: column; gap: 18px; flex: 1; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+h1 { font-size: 30px; line-height: 1.12; }
+h2 { font-size: 23px; line-height: 1.2; }
+h3 { font-size: 16px; }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+.mono { font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; }
+.label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); font-weight: 600; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+select, input[type="time"], input[type="text"] {
+  font: inherit; color: var(--fg); background: var(--surface-2);
+  border: 1px solid var(--line); border-radius: 10px; padding: 11px 12px; width: 100%;
+}
+.row { display: flex; gap: 10px; }
+.row > * { flex: 1; min-width: 0; }
+.btn {
+  font: inherit; font-weight: 600; border: 0; border-radius: 12px; padding: 14px 16px;
+  background: var(--accent); color: var(--on-accent); cursor: pointer; width: 100%;
+}
+.btn.ghost { background: var(--surface-2); color: var(--fg); border: 1px solid var(--line); }
+.btn.small-btn { width: auto; padding: 9px 14px; font-size: 14px; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+button:focus-visible, select:focus-visible, input:focus-visible, .chip:focus-visible, .rating button:focus-visible, .seg button:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+.spacer { flex: 1; }
+.error { color: #c0392b; font-size: 13px; }
+
+/* Line diagram */
+.route { display: flex; flex-direction: column; gap: 0; padding: 4px 0; }
+.stop { display: grid; grid-template-columns: 22px 1fr auto; align-items: center; gap: 10px; min-height: 30px; position: relative; }
+.route { --lc: var(--accent); }
+.stop .pin { width: 14px; height: 14px; border-radius: 50%; border: 3px solid var(--lc); background: var(--surface); justify-self: center; z-index: 1; }
+.stop.end .pin { background: var(--lc); }
+.stop::before { content: ""; position: absolute; left: 9px; top: 0; bottom: 0; width: 4px; background: var(--lc); }
+.stop.gap::before { background: repeating-linear-gradient(var(--lc) 0 4px, transparent 4px 8px); }
+.leg { display: flex; flex-direction: column; gap: 4px; }
+.leg-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.change { border: 1px dashed var(--line); border-radius: 10px; padding: 8px 12px; color: var(--muted); margin: 6px 0; }
+.pill { display: inline-block; color: #fff; font-family: var(--font-mono); font-size: 11px; font-weight: 500; padding: 2px 7px; border-radius: 6px; vertical-align: 1px; }
+.stop:first-child::before { top: 50%; }
+.stop:last-child::before { bottom: 50%; }
+.stop .code { color: var(--muted); }
+
+/* Chips */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  font: inherit; font-size: 14px; border-radius: 999px; padding: 7px 13px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--surface-2); color: var(--fg);
+}
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.tag { font-size: 12.5px; border-radius: 999px; padding: 3px 9px; background: var(--surface-2); color: var(--muted); }
+.tag.shared { background: var(--match-soft); color: var(--match); font-weight: 600; }
+
+/* Segmented control */
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--surface-2); padding: 5px; border-radius: 12px; border: 1px solid var(--line); }
+.seg button { font: inherit; font-weight: 600; border: 0; border-radius: 9px; padding: 10px; background: transparent; color: var(--muted); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--fg); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.seg.three { grid-template-columns: repeat(3, 1fr); }
+.rating { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.rating button { font: inherit; font-weight: 600; padding: 14px 10px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); color: var(--fg); cursor: pointer; }
+.rating button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.qa { display: flex; flex-direction: column; gap: 10px; border-left: 3px solid var(--accent); padding-left: 12px; }
+.note.nudge { display: flex; align-items: center; gap: 10px; background: var(--accent-soft); color: var(--fg); }
+.nudge span { flex: 1; min-width: 0; }
+.pill-status { font-size: 12.5px; font-weight: 600; border-radius: 999px; padding: 3px 10px; }
+.pill-status.good { background: var(--match-soft); color: var(--match); }
+.pill-status.warn { background: var(--warn-soft); color: var(--warn-fg); }
+.card.faded { opacity: 0.7; }
+.actions { flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-size: 18px; }
+.logo { width: 28px; height: 28px; border-radius: 8px; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; font-weight: 700; }
+.search { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 16px; padding: 12px; box-shadow: 0 2px 10px rgba(0,0,0,.06); }
+.search-fields { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.swap { font: inherit; font-size: 20px; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface-2); color: var(--fg); cursor: pointer; flex: none; }
+.map-card { border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+.map { display: block; width: 100%; height: auto; }
+.map-wrap { position: relative; }
+.water { fill: var(--water); }
+.land { fill: var(--map); stroke: var(--map-edge); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.net { fill: none; stroke-width: 2.5; opacity: 0.35; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.net-dot { fill: var(--map-edge); }
+.ride { fill: none; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.dot-fill { fill: #ffffff; }
+.dot-end { fill: var(--accent); stroke: #ffffff; }
+.map-label { font-family: var(--font-body); font-weight: 700; fill: var(--fg); paint-order: stroke; stroke: var(--map); stroke-linejoin: round; }
+.map-place { font-family: var(--font-body); font-weight: 500; fill: var(--muted); paint-order: stroke; stroke: var(--map); stroke-linejoin: round; }
+.map-toggle { position: absolute; bottom: 10px; right: 10px; font: inherit; font-size: 13px; font-weight: 600; padding: 6px 11px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+.map-meta { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; padding: 12px 14px; }
+.big-time { font-family: var(--font-display); font-size: 24px; font-weight: 700; }
+.choice { display: flex; flex-direction: column; gap: 8px; }
+.center { text-align: center; }
+a.btn { display: block; text-align: center; text-decoration: none; }
+.stops summary { cursor: pointer; color: var(--accent); font-weight: 600; padding: 4px 0; }
+.stops[open] summary { margin-bottom: 8px; }
+.tabs button { padding: 10px 4px; font-size: 13.5px; }
+.badge { display: inline-block; min-width: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: var(--on-accent); font-size: 11.5px; line-height: 18px; }
+.count { font-family: var(--font-mono); font-size: 12px; color: var(--muted); font-weight: 500; }
+section.list > div { display: flex; flex-direction: column; gap: 2px; }
+.phone { position: relative; }
+#app { flex: 1; display: flex; flex-direction: column; }
+.screen { flex: 1; display: flex; flex-direction: column; }
+.tabbar { position: sticky; bottom: 0; z-index: 5; display: grid; grid-template-columns: repeat(5, 1fr);
+  background: var(--surface); border-top: 1px solid var(--line); padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px)); }
+.tab { position: relative; font: inherit; font-size: 11.5px; font-weight: 600; background: none; border: 0; color: var(--muted);
+  display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0; cursor: pointer; border-radius: 10px; }
+.tab svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.tab[aria-current="page"] { color: var(--accent); }
+.tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.tab-badge { position: absolute; top: 2px; left: calc(50% + 6px); min-width: 17px; padding: 0 4px; border-radius: 9px;
+  background: var(--accent); color: var(--on-accent); font-size: 10.5px; line-height: 17px; }
+.me-row { font: inherit; color: var(--fg); text-align: left; display: flex; align-items: center; gap: 10px; justify-content: space-between;
+  border: 1px solid var(--line); border-radius: 14px; padding: 14px; background: var(--surface); cursor: pointer; }
+.me-row > span:first-child { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.me-value { font-size: 15px; }
+.me-row > .muted { white-space: nowrap; }
+.top-gap { height: 8px; }
+.avatar.big { width: 60px; height: 60px; font-size: 17px; }
+.progress { flex: 1; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; margin-left: 8px; }
+.progress span { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
+.phone-row { display: flex; gap: 8px; }
+.phone-row .cc { display: grid; place-items: center; padding: 0 14px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); font-weight: 600; }
+.phone-row input { flex: 1; min-width: 0; }
+input[type="tel"], input[type="date"] { font: inherit; color: var(--fg); background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 11px 12px; width: 100%; }
+.otp { font-family: var(--font-mono) !important; font-size: 28px !important; letter-spacing: 0.5em; text-align: center; }
+.photo-pick { display: flex; align-items: center; gap: 14px; }
+img.avatar { object-fit: cover; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+.photo-pick label { cursor: pointer; }
+.perks { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; color: var(--muted); }
+.rules { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 12px; }
+.rules li { display: flex; flex-direction: column; gap: 2px; }
+.agree { display: flex; gap: 10px; align-items: center; font-weight: 600; cursor: pointer; }
+.agree input { width: 20px; height: 20px; accent-color: var(--accent); }
+.done-hero { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; padding-top: 12px; }
+.done-hero .avatar.big { width: 84px; height: 84px; font-size: 30px; }
+.note { background: var(--surface-2); border-radius: 12px; padding: 12px 14px; font-size: 13.5px; color: var(--muted); }
+
+/* Match cards */
+.list { display: flex; flex-direction: column; gap: 12px; }
+.card { border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.who { display: flex; align-items: center; gap: 12px; }
+.avatar {
+  width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  font-family: var(--font-display); font-weight: 700; color: var(--on-accent); background: var(--accent);
+}
+.who .meta { min-width: 0; }
+.overlap { display: flex; flex-direction: column; gap: 5px; }
+.bar { display: flex; gap: 3px; }
+.bar span { flex: 1; height: 6px; border-radius: 3px; background: var(--line); }
+.bar span.on { background: var(--match); }
+.ends { display: flex; justify-content: space-between; gap: 8px; }
+.card .actions { display: flex; gap: 8px; align-items: center; }
+.status { font-size: 13px; color: var(--match); font-weight: 600; }
+.summary { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Train picker */
+.train { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+.car {
+  font: inherit; border: 2px solid var(--line); background: var(--surface-2); color: var(--fg);
+  border-radius: 10px; padding: 14px 0 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.car:first-child { border-top-left-radius: 22px; }
+.car:last-child { border-top-right-radius: 22px; }
+.car b { font-family: var(--font-display); font-size: 20px; }
+.car[aria-pressed="true"] { border-color: var(--match); background: var(--match-soft); color: var(--match); }
+.ticket { border: 2px dashed var(--match); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 8px; background: var(--match-soft); }
+.ticket .big { font-family: var(--font-display); font-size: 22px; font-weight: 700; }
+.toast {
+  position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+  background: var(--fg); color: var(--surface); padding: 10px 16px; border-radius: 10px; font-size: 14px; max-width: 90vw;
+}
+.hero-line { display: flex; align-items: center; gap: 8px; }
+.hero-line .seg-line { flex: 1; height: 5px; background: var(--accent); border-radius: 3px; }
+.hero-line .dot { width: 16px; height: 16px; border: 4px solid var(--accent); border-radius: 50%; background: var(--surface); }
+.hero-line .dot.you { background: var(--accent); }
+.hero-line .dot.them { border-color: var(--match); background: var(--match); }
+@media (prefers-reduced-motion: no-preference) {
+  .fade { animation: fade .25s ease-out; }
+  @keyframes fade { from { opacity: .4; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+}
+</style>
+
+<div class="phone">
+  <div class="banner">Prototype: new user sign-up. Nothing you enter is saved or sent anywhere.</div>
+  <div id="app"></div>
+</div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+// Which version of the prototype this page shows. new-user.html is the same file with this set to "new".
+const START_AS = "new";
+
+// Singapore MRT network (stations open as of 2026). Each line lists its stations in order.
+// Branches (Changi Airport, Marina Bay) are their own short lists; shared names are interchanges.
+const LINES = {
+  NS: { name:"North-South Line", short:"NSL", color:"#d42e12", cars:6, st:[
+    ["NS1","Jurong East"],["NS2","Bukit Batok"],["NS3","Bukit Gombak"],["NS4","Choa Chu Kang"],["NS5","Yew Tee"],
+    ["NS7","Kranji"],["NS8","Marsiling"],["NS9","Woodlands"],["NS10","Admiralty"],["NS11","Sembawang"],["NS12","Canberra"],
+    ["NS13","Yishun"],["NS14","Khatib"],["NS15","Yio Chu Kang"],["NS16","Ang Mo Kio"],["NS17","Bishan"],["NS18","Braddell"],
+    ["NS19","Toa Payoh"],["NS20","Novena"],["NS21","Newton"],["NS22","Orchard"],["NS23","Somerset"],["NS24","Dhoby Ghaut"],
+    ["NS25","City Hall"],["NS26","Raffles Place"],["NS27","Marina Bay"],["NS28","Marina South Pier"]] },
+  EW: { name:"East-West Line", short:"EWL", color:"#009645", cars:6, st:[
+    ["EW1","Pasir Ris"],["EW2","Tampines"],["EW3","Simei"],["EW4","Tanah Merah"],["EW5","Bedok"],["EW6","Kembangan"],
+    ["EW7","Eunos"],["EW8","Paya Lebar"],["EW9","Aljunied"],["EW10","Kallang"],["EW11","Lavender"],["EW12","Bugis"],
+    ["EW13","City Hall"],["EW14","Raffles Place"],["EW15","Tanjong Pagar"],["EW16","Outram Park"],["EW17","Tiong Bahru"],
+    ["EW18","Redhill"],["EW19","Queenstown"],["EW20","Commonwealth"],["EW21","Buona Vista"],["EW22","Dover"],["EW23","Clementi"],
+    ["EW24","Jurong East"],["EW25","Chinese Garden"],["EW26","Lakeside"],["EW27","Boon Lay"],["EW28","Pioneer"],["EW29","Joo Koon"],
+    ["EW30","Gul Circle"],["EW31","Tuas Crescent"],["EW32","Tuas West Road"],["EW33","Tuas Link"]] },
+  CG: { name:"East-West Line (Changi Airport branch)", short:"EWL", color:"#009645", cars:6, st:[
+    ["EW4","Tanah Merah"],["CG1","Expo"],["CG2","Changi Airport"]] },
+  NE: { name:"North East Line", short:"NEL", color:"#9900aa", cars:6, st:[
+    ["NE1","HarbourFront"],["NE3","Outram Park"],["NE4","Chinatown"],["NE5","Clarke Quay"],["NE6","Dhoby Ghaut"],
+    ["NE7","Little India"],["NE8","Farrer Park"],["NE9","Boon Keng"],["NE10","Potong Pasir"],["NE11","Woodleigh"],
+    ["NE12","Serangoon"],["NE13","Kovan"],["NE14","Hougang"],["NE15","Buangkok"],["NE16","Sengkang"],["NE17","Punggol"],
+    ["NE18","Punggol Coast"]] },
+  CC: { name:"Circle Line", short:"CCL", color:"#fa9e0d", cars:3, st:[
+    ["CC1","Dhoby Ghaut"],["CC2","Bras Basah"],["CC3","Esplanade"],["CC4","Promenade"],["CC5","Nicoll Highway"],
+    ["CC6","Stadium"],["CC7","Mountbatten"],["CC8","Dakota"],["CC9","Paya Lebar"],["CC10","MacPherson"],["CC11","Tai Seng"],
+    ["CC12","Bartley"],["CC13","Serangoon"],["CC14","Lorong Chuan"],["CC15","Bishan"],["CC16","Marymount"],["CC17","Caldecott"],
+    ["CC19","Botanic Gardens"],["CC20","Farrer Road"],["CC21","Holland Village"],["CC22","Buona Vista"],["CC23","one-north"],
+    ["CC24","Kent Ridge"],["CC25","Haw Par Villa"],["CC26","Pasir Panjang"],["CC27","Labrador Park"],["CC28","Telok Blangah"],
+    ["CC29","HarbourFront"]] },
+  CE: { name:"Circle Line (Marina Bay branch)", short:"CCL", color:"#fa9e0d", cars:3, st:[
+    ["CC4","Promenade"],["CE1","Bayfront"],["CE2","Marina Bay"]] },
+  DT: { name:"Downtown Line", short:"DTL", color:"#005ec4", cars:3, st:[
+    ["DT1","Bukit Panjang"],["DT2","Cashew"],["DT3","Hillview"],["DT4","Hume"],["DT5","Beauty World"],["DT6","King Albert Park"],
+    ["DT7","Sixth Avenue"],["DT8","Tan Kah Kee"],["DT9","Botanic Gardens"],["DT10","Stevens"],["DT11","Newton"],
+    ["DT12","Little India"],["DT13","Rochor"],["DT14","Bugis"],["DT15","Promenade"],["DT16","Bayfront"],["DT17","Downtown"],
+    ["DT18","Telok Ayer"],["DT19","Chinatown"],["DT20","Fort Canning"],["DT21","Bencoolen"],["DT22","Jalan Besar"],
+    ["DT23","Bendemeer"],["DT24","Geylang Bahru"],["DT25","Mattar"],["DT26","MacPherson"],["DT27","Ubi"],["DT28","Kaki Bukit"],
+    ["DT29","Bedok North"],["DT30","Bedok Reservoir"],["DT31","Tampines West"],["DT32","Tampines"],["DT33","Tampines East"],
+    ["DT34","Upper Changi"],["DT35","Expo"]] },
+  TE: { name:"Thomson-East Coast Line", short:"TEL", color:"#9d5b25", cars:4, st:[
+    ["TE1","Woodlands North"],["TE2","Woodlands"],["TE3","Woodlands South"],["TE4","Springleaf"],["TE5","Lentor"],
+    ["TE6","Mayflower"],["TE7","Bright Hill"],["TE8","Upper Thomson"],["TE9","Caldecott"],["TE11","Stevens"],["TE12","Napier"],
+    ["TE13","Orchard Boulevard"],["TE14","Orchard"],["TE15","Great World"],["TE16","Havelock"],["TE17","Outram Park"],
+    ["TE18","Maxwell"],["TE19","Shenton Way"],["TE20","Marina Bay"],["TE22","Gardens by the Bay"],["TE23","Tanjong Rhu"],
+    ["TE24","Katong Park"],["TE25","Tanjong Katong"],["TE26","Marine Parade"],["TE27","Marine Terrace"],["TE28","Siglap"],
+    ["TE29","Bayshore"]] },
+};
+const MIN_PER_STOP = 2, TRANSFER_MIN = 5;
+
+// Every station name with all of its codes, e.g. "Outram Park" -> ["EW16","NE3","TE17"]
+const STATIONS = {};
+for (const [L, line] of Object.entries(LINES)) line.st.forEach(([c, n], i) => {
+  (STATIONS[n] ||= { codes: [], nodes: [] });
+  if (!STATIONS[n].codes.includes(c)) STATIONS[n].codes.push(c);
+  STATIONS[n].nodes.push(L + "|" + i);
+});
+const STATION_NAMES = Object.keys(STATIONS).sort((a, b) => a.localeCompare(b));
+const codes = n => STATIONS[n].codes.join(" / ");
+
+// Fastest route between two stations (Dijkstra over line stops plus interchange walks).
+// Returns legs: [{ line, idx: [station indexes on that line], times: [minute at each station] }]
+const routeCache = {};
+function route(from, to, t0) {
+  const key = from + ">" + to;
+  if (!routeCache[key]) routeCache[key] = shortest(from, to);
+  const path = routeCache[key];
+  if (!path) return null;
+  const legs = [];
+  let t = toMin(t0), prev = null;
+  for (const node of path) {
+    const [L, i] = node.split("|"); const n = Number(i);
+    if (prev && prev.L === L) t += MIN_PER_STOP;
+    else if (prev) t += TRANSFER_MIN;
+    if (!prev || prev.L !== L) legs.push({ line: L, idx: [], times: [] });
+    const leg = legs[legs.length - 1];
+    leg.idx.push(n); leg.times.push(t);
+    prev = { L };
+  }
+  const real = legs.filter(l => l.idx.length > 1);
+  return { legs: real, minutes: t - toMin(t0), stops: real.reduce((a, l) => a + l.idx.length - 1, 0) };
+}
+function shortest(from, to) {
+  if (from === to) return null;
+  const dist = {}, back = {}, done = new Set(), goal = new Set(STATIONS[to].nodes);
+  for (const n of STATIONS[from].nodes) dist[n] = 0;
+  while (true) {
+    let cur = null;
+    for (const n in dist) if (!done.has(n) && (cur === null || dist[n] < dist[cur])) cur = n;
+    if (cur === null) return null;
+    if (goal.has(cur)) { const path = [cur]; while (back[path[0]]) path.unshift(back[path[0]]); return path; }
+    done.add(cur);
+    const [L, i] = cur.split("|"); const n = Number(i), line = LINES[L];
+    const next = [];
+    if (n > 0) next.push([L + "|" + (n - 1), MIN_PER_STOP]);
+    if (n < line.st.length - 1) next.push([L + "|" + (n + 1), MIN_PER_STOP]);
+    for (const other of STATIONS[line.st[n][1]].nodes) if (other !== cur) next.push([other, TRANSFER_MIN]);
+    for (const [m, c] of next) if (!done.has(m) && (dist[m] === undefined || dist[cur] + c < dist[m])) { dist[m] = dist[cur] + c; back[m] = cur; }
+  }
+}
+const nameOf = (L, i) => LINES[L].st[i][1];
+const towards = leg => nameOf(leg.line, leg.idx[leg.idx.length - 1] > leg.idx[0] ? LINES[leg.line].st.length - 1 : 0);
+const pill = L => `<span class="pill" style="background:${LINES[L].color}">${LINES[L].short}</span>`;
+
+const INTERESTS = ["Investing","Cars","Gaming","Football","Basketball","Badminton","Music","Anime","K-drama",
+  "Fitness","Photography","Coding","Food","Startups","Reading","Travel","Fashion","Movies"];
+
+// Made-up riders. t = the time they usually board at their own station.
+const PEOPLE = [
+  { n:"Wei Ling", a:17, from:"Bayshore", to:"Gardens by the Bay", t:"07:41", i:["Investing","Reading","Music"], bio:"JC1, trying to understand the stock market" },
+  { n:"Arjun", a:17, from:"Siglap", to:"Marine Parade", t:"07:43", i:["Cars","Football","Gaming"], bio:"Will talk F1 all day" },
+  { n:"Hui Min", a:16, from:"Marine Parade", to:"Orchard", t:"07:49", i:["Photography","Food","Investing"], bio:"Film camera person" },
+  { n:"Daniel", a:17, from:"Bayshore", to:"Outram Park", t:"07:52", i:["Cars","Coding","Startups"], bio:"Building a robot for a school comp" },
+  { n:"Nur Aisyah", a:15, from:"Tanjong Katong", to:"Maxwell", t:"07:50", i:["Badminton","K-drama","Music"], bio:"Sec 3, badminton CCA" },
+  { n:"Ryan", a:17, from:"Marine Terrace", to:"Shenton Way", t:"07:30", i:["Investing","Basketball"], bio:"Early bird, always first in class" },
+  { n:"Ethan", a:17, from:"Katong Park", to:"Bayshore", t:"07:46", i:["Cars","Gaming"], bio:"Rides the other way" },
+  { n:"Sophie", a:16, from:"Woodlands", to:"Orchard", t:"07:40", i:["Fashion","Music"], bio:"North side" },
+  { n:"Jasmine", a:24, from:"Bayshore", to:"Shenton Way", t:"07:40", i:["Investing","Fitness","Travel"], bio:"Analyst at a bank" },
+  { n:"Marcus", a:27, from:"Siglap", to:"Orchard", t:"07:44", i:["Cars","Photography"], bio:"Weekend car meets" },
+  { n:"Clara", a:22, from:"Marine Parade", to:"Havelock", t:"07:48", i:["Startups","Coding","Investing"], bio:"Uni intern at a fintech" },
+  { n:"Hafiz", a:29, from:"Marine Terrace", to:"Marina Bay", t:"07:46", i:["Football","Food"], bio:"Supports Liverpool, sorry" },
+  { n:"Bryan", a:17, from:"Bayshore", to:"Raffles Place", t:"07:40", i:["Investing","Basketball","Gaming"], bio:"Changes to the red line at Marina Bay" },
+  { n:"Mei Xuan", a:16, from:"Siglap", to:"Bishan", t:"07:44", i:["Anime","Music","Cars"], bio:"Long ride up north, always has snacks" },
+  { n:"Farah", a:17, from:"Gardens by the Bay", to:"Dhoby Ghaut", t:"07:55", i:["Reading","Investing","Food"], bio:"Debate club, will argue with you nicely" },
+  { n:"Jun Wei", a:17, from:"Tampines", to:"Bugis", t:"07:45", i:["Cars","Football"], bio:"East side, blue line" },
+  { n:"Priya", a:26, from:"Marine Parade", to:"Raffles Place", t:"07:47", i:["Investing","Travel","Food"], bio:"Works in Raffles Place" },
+  { n:"Kenji", a:31, from:"Tanjong Katong", to:"Great World", t:"07:52", i:["Reading","Movies","Cars"], bio:"Ask me for book recs" },
+];
+
+const MET = [
+  { n:"Rachel", a:17, i:["Investing","Music","Food"], bio:"Saves her allowance in a robo-advisor",
+    when:"Today · 07:47 · Marine Terrace → Katong Park", status:"feedback" },
+  { n:"Zhi Hao", a:17, i:["Cars","Basketball","Gaming"], bio:"Knows every car at the Katong showrooms",
+    when:"Mon 20 Oct · 3 stops", status:"friends", handle:"@zhihao.kicks" },
+  { n:"Amira", a:16, i:["Investing","Reading"], bio:"Reads one book a week on the train",
+    when:"Fri 17 Oct · 2 stops", status:"again", next:"Thu 30 Oct · 07:45 · carriage 2" },
+  { n:"Kai", a:17, i:["Football","Cars"], bio:"Plays for his school team",
+    when:"Wed 15 Oct", status:"noshow" },
+  { n:"Sarah", a:16, i:["Music","Fashion"], bio:"Plays bass in a band",
+    when:"Tue 14 Oct · 1 stop", status:"nosecond" },
+].map(m => ({ ...m, met: true, from:"Marine Terrace", to:"Katong Park", t:"07:45" }));
+PEOPLE.push(...MET);
+const metList = () => state.isNew ? [] : MET;
+
+// ~285 more made-up riders spread over every line, so any route has people on it.
+// Generated the same way every time (fixed seed), morning rush 07:15–08:30.
+(function addRiders() {
+  let seed = 20261023;
+  const rnd = () => { seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  const pick = a => a[Math.floor(rnd() * a.length)];
+  const FIRST = ["Wei Jie","Jia Hui","Sharifah","Aditya","Kavya","Isabelle","Haziq","Siti","Ravi","Shu Ting","Darren","Nadia",
+    "Chloe","Irfan","Divya","Jun Hao","Xin Yi","Aaron","Hannah","Faris","Lakshmi","Zachary","Yi Xuan","Syafiq","Meera","Joel",
+    "Gabrielle","Amirul","Pei Shan","Rohan","Nicole","Danish","Ananya","Javier","Alicia","Hakim","Kiran","Rui En","Sean","Aisha",
+    "Vikram","Jolene","Ming Hui","Ahmad","Tanvi","Caleb","Jasmin","Wen Xuan","Iskandar","Shreya","Dylan","Hui Wen","Luqman",
+    "Rachel","Ishaan","Valerie","Zhi Wei","Natasha","Harith","Pooja","Elijah","Kai Xin","Rizwan","Clarissa","Ben","Yu Ting"];
+  const TEEN = ["Sec 2","Sec 3","Sec 4","JC1","JC2","Poly Y1","Poly Y2","ITE Y1"];
+  const ADULT = ["Uni Y1","Uni Y3","Intern","Nurse","Engineer","Designer","Teacher","Accountant","Barista","Analyst"];
+  const ABOUT = { Investing:"reads the Business Times on the train", Cars:"spots every supercar on the PIE",
+    Gaming:"ranked grinder, ask me about Valorant", Football:"Arsenal fan, unfortunately", Basketball:"plays at the void deck court",
+    Badminton:"badminton every Saturday", Music:"always has earphones in", Anime:"rewatching One Piece, again",
+    "K-drama":"cries at every K-drama", Fitness:"gym before school or work", Photography:"street photos on weekends",
+    Coding:"building my own app", Food:"knows the best hawker stalls", Startups:"wants to start a company",
+    Reading:"always has a book", Travel:"planning the next trip", Fashion:"thrifts on weekends", Movies:"Letterboxd addict" };
+  const HUBS = ["Raffles Place","Orchard","Bishan","Jurong East","Dhoby Ghaut","Tampines","one-north","Paya Lebar","Woodlands",
+    "Serangoon","Buona Vista","Novena","Bugis","City Hall","Outram Park","HarbourFront","Kent Ridge","Ang Mo Kio","Clementi",
+    "Toa Payoh","Tanjong Pagar","Downtown","Punggol","Changi Airport","Expo"];
+  const used = new Set(PEOPLE.map(p => p.n));
+  while (PEOPLE.length < 300) {
+    const from = pick(STATION_NAMES), to = rnd() < 0.7 ? pick(HUBS) : pick(STATION_NAMES);
+    if (from === to) continue;
+    let n; do n = pick(FIRST) + " " + String.fromCharCode(65 + Math.floor(rnd() * 26)) + "."; while (used.has(n));
+    used.add(n);
+    const teen = rnd() < 0.6, a = teen ? 14 + Math.floor(rnd() * 4) : 18 + Math.floor(rnd() * 17);
+    const i = [];
+    while (i.length < 3) { const x = pick(INTERESTS); if (!i.includes(x)) i.push(x); }
+    const m = 15 + Math.floor(rnd() * 76), t = String(7 + Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
+    const role = teen ? pick(TEEN) : rnd() < 0.4 ? "Works near " + to : pick(ADULT);
+    PEOPLE.push({ n, a, from, to, t, i, bio: role + " · " + ABOUT[i[0]], gen: true });
+  }
+})();
+
+const QUESTIONS = ["What's your go-to food spot?", "What are you into right now?", "Best thing that happened this week?",
+  "What would you do with $1,000?", "Song on repeat?", "Dream car or dream trip?"];
+
+// Made-up details a match shares once you've both waved
+const EXTRA = {
+  "Wei Ling": { spot:"Green tote bag, usually reading", handle:"@weiling.reads", qa:[["What would you do with $1,000?","Half into an ETF, half on books"],["Song on repeat?","Anything by Laufey"],["What's your go-to food spot?","Prawn mee near Bayshore"]] },
+  "Arjun": { spot:"Red Ferrari cap", handle:"@arjun.f1", qa:[["Dream car or dream trip?","A 911 GT3. Or Monza for the F1"],["What are you into right now?","Learning to sim race"],["Best thing that happened this week?","Scored in the inter-class match"]] },
+  "Hui Min": { spot:"Film camera around my neck", handle:"@huimin.35mm", qa:[["What's your go-to food spot?","Katong laksa, no contest"],["What are you into right now?","Shooting on expired film"],["What would you do with $1,000?","A trip to Japan for photos"]] },
+  "Nur Aisyah": { spot:"Badminton racket bag", handle:"@aisyah.smash", qa:[["Song on repeat?","NewJeans, always"],["Best thing that happened this week?","Won my CCA friendly"],["What's your go-to food spot?","Nasi lemak at Marine Parade"]] },
+  "Daniel": { spot:"Grey hoodie, laptop out", handle:"@dan.builds", qa:[["What are you into right now?","Coding a robot arm"],["Dream car or dream trip?","Any EV I can take apart"],["What would you do with $1,000?","More motors for the robot"]] },
+};
+const extra = p => EXTRA[p.n] || { spot:"I'll wave when I see you", handle:"@" + p.n.toLowerCase().replace(/\s+/g, ""), qa:[["What are you into right now?", p.i.join(", ")]] };
+
+const state = {
+  isNew: START_AS === "new",
+  step: 0, from: "Marine Terrace", to: "Katong Park", time: "07:45",
+  interests: new Set(["Investing","Cars"]), age: 17, mode: "friends", minAge: 15, maxAge: 17,
+  window: 10, waves: { "Wei Ling": "sent", "Bryan": "sent" }, planFor: null, car: 3, day: "Tomorrow", plan: null,
+  spot: "Black backpack, standing by the door",
+  questions: new Set(["What are you into right now?", "Dream car or dream trip?"]),
+  answers: { "What are you into right now?": "Reading about index funds", "Dream car or dream trip?": "Nissan GT-R" },
+  fb: null, friends: {}, theySayNo: false, fromMet: false, done: {}, mapWhole: false, showAll: false,
+  profile: { phone: "", otp: "", name: "", birthday: "", gender: "", schoolType: "", school: "", bio: "", photo: "" },
+  days: new Set(["Mon","Tue","Wed","Thu","Fri"]), agree: false,
+  commute: { from: "Marine Terrace", to: "Katong Park", time: "07:45" },
+  nav: { from: "Marine Terrace", to: "Katong Park", time: "07:45" },
+  incoming: { "Hui Min": "this morning", "Nur Aisyah": "yesterday", "Mei Xuan": "2 days ago" },
+  declined: {}, sentWhen: { "Wei Ling": "yesterday", "Bryan": "3 days ago" }
+};
+
+const toMin = t => { const [h,m] = t.split(":").map(Number); return h*60 + m; };
+const fmt = m => String(Math.floor(m/60)).padStart(2,"0") + ":" + String(m%60).padStart(2,"0");
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+// state.commute: your saved daily trip. state.from/to/time: the trip Rides is showing (your commute,
+// or a one-off trip from the Map). state.nav: whatever you're looking up on the Map.
+const myRoute = (trip = state) => route(trip.from, trip.to, trip.time);
+const sameTrip = (a, b) => a.from === b.from && a.to === b.to && a.time === b.time;
+
+// Where does this person's ride overlap yours? Checks each of your legs against each of theirs:
+// same line, same direction, sharing at least one stop.
+function overlap(p, trip = state) {
+  const mine = myRoute(trip), theirs = route(p.from, p.to, p.t);
+  if (!mine || !theirs) return null;
+  const segs = [];
+  let offset = 0;
+  for (const u of mine.legs) {
+    for (const v of theirs.legs) {
+      if (u.line !== v.line) continue;
+      const ud = Math.sign(u.idx[u.idx.length - 1] - u.idx[0]), vd = Math.sign(v.idx[v.idx.length - 1] - v.idx[0]);
+      if (ud !== vd) continue;
+      const common = u.idx.filter(i => v.idx.includes(i));
+      if (common.length < 2) continue;
+      const a = u.idx.indexOf(common[0]), at = u.times[a];
+      const theirAt = v.times[v.idx.indexOf(common[0])], diff = Math.abs(at - theirAt);
+      segs.push({ line: u.line, start: nameOf(u.line, common[0]), end: nameOf(u.line, common[common.length - 1]),
+        stops: common.length - 1, at, theirAt, diff, offset: offset + a });
+    }
+    offset += u.idx.length - 1;
+  }
+  if (!segs.length) return null;
+  const near = segs.filter(x => x.diff <= state.window);
+  const use = near.length ? near : segs;
+  return { segs: use, inWindow: near.length > 0, total: mine.stops,
+    stops: use.reduce((a, x) => a + x.stops, 0), start: use[0].start, end: use[use.length - 1].end,
+    at: near.length ? use[0].at : use[0].theirAt, yourAt: use[0].at, later: use[0].theirAt - use[0].at,
+    diff: use[0].diff, line: use[0].line };
+}
+
+function sameAgeBand(p) { return state.age < 18 ? p.a < 18 : p.a >= 18; }
+
+function findMatches(trip = state) {
+  const out = [], outsideWindow = [];
+  for (const p of PEOPLE) {
+    if (p.met) continue;
+    if (!sameAgeBand(p) || p.a < state.minAge || p.a > state.maxAge) continue;
+    const o = overlap(p, trip);
+    if (!o) continue;
+    const shared = p.i.filter(x => state.interests.has(x));
+    const m = { p, o, shared, score: shared.length * 3 + o.stops - o.diff / 4 };
+    (o.inWindow ? out : outsideWindow).push(m);
+  }
+  out.sort((a, b) => b.score - a.score);
+  const later = outsideWindow.filter(m => m.o.diff <= 30).sort((a, b) => a.o.diff - b.o.diff || b.score - a.score);
+  return { out, outsideWindow: later };
+}
+const findPerson = name => {
+  for (const trip of [state, state.commute]) {
+    const { out, outsideWindow } = findMatches(trip), m = [...out, ...outsideWindow].find(x => x.p.n === name);
+    if (m) return m;
+  }
+};
+
+const app = document.getElementById("app");
+function go(step) { state.step = step; render(); window.scrollTo(0, 0); }
+
+function header(backTo, dotsOn) {
+  if (backTo === null && !dotsOn) return `<div class="top-gap"></div>`;
+  const back = backTo === null ? "" : `<button class="back" data-go="${backTo}">&larr; Back</button>`;
+  const dots = dotsOn ? `<div class="dots">${[1,2,3].map(n => `<span class="${n <= dotsOn ? "on" : ""}"></span>`).join("")}</div>` : "";
+  return `<div class="top">${back}${dots}</div>`;
+}
+
+const SAVED = [
+  { label: "Home → School (daily)", from: "Marine Terrace", to: "Katong Park" },
+  { label: "Raffles Place", from: "Marine Terrace", to: "Raffles Place" },
+  { label: "Changi Airport", from: "Marine Terrace", to: "Changi Airport" },
+];
+
+// Opens Google Maps with public-transport directions already filled in
+const gmaps = (from, to) => "https://www.google.com/maps/dir/?api=1&travelmode=transit"
+  + (from ? "&origin=" + encodeURIComponent(from + " MRT Station, Singapore") : "")
+  + "&destination=" + encodeURIComponent(to + " MRT Station, Singapore");
+
+// Station positions on the map (from LTA station data; stations opened since 2020 are approximate)
+const POS = {"Admiralty":[201.0,39.4],"Aljunied":[282.9,163.6],"Ang Mo Kio":[249.6,110.1],"Bartley":[279.7,137.2],"Bayfront":[259.1,198.1],"Beauty World":[175.8,138.8],"Bedok":[330.0,156.0],"Bedok North":[318.0,145.3],"Bedok Reservoir":[332.2,143.4],"Bencoolen":[250.4,181.1],"Bendemeer":[263.0,166.3],"Bishan":[249.2,128.7],"Boon Keng":[261.7,160.6],"Boon Lay":[106.1,141.4],"Botanic Gardens":[215.0,157.9],"Braddell":[246.8,139.5],"Bras Basah":[250.7,183.1],"Buangkok":[293.1,97.1],"Bugis":[256.9,180.4],"Bukit Batok":[149.6,131.0],"Bukit Gombak":[151.9,121.2],"Bukit Panjang":[163.0,102.1],"Buona Vista":[190.7,173.5],"Caldecott":[239.5,142.3],"Canberra":[229.7,36.9],"Cashew":[164.7,110.6],"Changi Airport":[388.3,122.7],"Chinatown":[244.4,195.3],"Chinese Garden":[132.6,137.6],"Choa Chu Kang":[144.6,95.2],"City Hall":[252.6,187.1],"Clarke Quay":[246.6,191.6],"Clementi":[165.3,165.0],"Commonwealth":[198.3,177.6],"Dakota":[288.6,171.6],"Dhoby Ghaut":[246.2,181.2],"Dover":[178.7,168.6],"Downtown":[252.8,200.6],"Esplanade":[255.5,186.7],"Eunos":[303.2,160.2],"Expo":[361.5,145.5],"Farrer Park":[254.2,167.6],"Farrer Road":[207.6,162.5],"Fort Canning":[244.3,187.5],"Geylang Bahru":[271.9,158.5],"Gul Circle":[60.6,160.5],"HarbourFront":[221.4,214.5],"Haw Par Villa":[181.8,197.5],"Hillview":[167.4,117.7],"Holland Village":[196.2,168.2],"Hougang":[292.4,108.7],"Jalan Besar":[255.5,174.6],"Joo Koon":[78.4,152.3],"Jurong East":[142.3,146.8],"Kaki Bukit":[308.4,145.0],"Kallang":[271.4,168.5],"Kembangan":[312.9,159.0],"Kent Ridge":[184.6,186.5],"Khatib":[233.0,62.6],"King Albert Park":[183.8,144.3],"Kovan":[285.1,119.8],"Kranji":[162.2,54.8],"Labrador Park":[202.9,207.7],"Lakeside":[121.0,135.7],"Lavender":[262.8,172.6],"Little India":[252.4,176.1],"Lorong Chuan":[264.1,128.4],"MacPherson":[290.3,153.7],"Marina Bay":[255.1,203.8],"Marina South Pier":[262.9,208.7],"Marsiling":[174.1,47.5],"Marymount":[239.4,131.3],"Mattar":[283.2,153.1],"Mountbatten":[282.5,173.8],"Newton":[237.8,166.4],"Nicoll Highway":[263.6,180.2],"Novena":[243.8,159.6],"Orchard":[232.2,176.0],"Outram Park":[239.6,200.2],"Pasir Panjang":[191.4,203.8],"Pasir Ris":[349.2,107.0],"Paya Lebar":[292.2,162.6],"Pioneer":[97.4,142.4],"Potong Pasir":[269.0,148.6],"Promenade":[261.0,186.8],"Punggol":[302.4,74.8],"Queenstown":[205.9,185.1],"Raffles Place":[251.5,195.9],"Redhill":[216.8,190.4],"Rochor":[249.6,173.2],"Sembawang":[220.1,30.9],"Sengkang":[295.4,88.4],"Serangoon":[272.4,129.4],"Simei":[353.3,136.8],"Sixth Avenue":[197.3,149.2],"Somerset":[239.1,179.7],"Stadium":[275.3,177.2],"Stevens":[226.0,159.9],"Tai Seng":[288.2,144.6],"Tampines":[343.0,124.9],"Tampines East":[354.6,123.8],"Tampines West":[338.4,134.5],"Tan Kah Kee":[207.3,154.1],"Tanah Merah":[346.3,152.8],"Tanjong Pagar":[245.9,203.5],"Telok Ayer":[248.3,197.7],"Telok Blangah":[209.8,209.2],"Tiong Bahru":[227.0,193.8],"Toa Payoh":[247.5,147.4],"Tuas Crescent":[49.1,159.0],"Tuas Link":[36.9,139.5],"Tuas West Road":[39.7,150.0],"Ubi":[299.2,150.0],"Upper Changi":[361.4,138.3],"Woodlands":[186.5,43.1],"Woodlands North":[185.1,31.8],"Woodlands South":[193.9,52.7],"Woodleigh":[270.8,140.8],"Yew Tee":[147.4,82.5],"Yio Chu Kang":[244.9,98.2],"Yishun":[235.0,50.6],"one-north":[187.5,180.2],"Springleaf":[218.3,82.4],"Lentor":[236.6,95.4],"Mayflower":[237.0,108.7],"Bright Hill":[233.1,116.7],"Upper Thomson":[232.5,125.4],"Napier":[219.1,172.9],"Orchard Boulevard":[224.3,177.3],"Great World":[232.0,186.6],"Havelock":[233.7,191.7],"Maxwell":[244.1,199.4],"Shenton Way":[250.0,202.6],"Gardens by the Bay":[268.7,201.1],"Tanjong Rhu":[273.7,183.3],"Katong Park":[286.0,182.0],"Tanjong Katong":[297.5,180.5],"Marine Parade":[305.6,177.1],"Marine Terrace":[315.4,173.4],"Siglap":[330.0,170.0],"Bayshore":[342.5,166.7],"Hume":[169.3,125.7],"Punggol Coast":[310.6,64.7]};
+// Singapore's main island and outlying islands (world-geojson, from OpenStreetMap)
+const SG_LAND = ["206.4,1.8 185.4,17.6 165.2,28.2 150.1,31.0 133.6,24.1 114.4,22.4 95.8,36.1 78.7,47.1 67.7,63.6 53.9,85.6 36.1,121.3 21.0,157.0 1.1,215.3 -2.7,241.7 -2.7,258.2 21.3,271.3 47.1,273.0 50.9,266.4 25.1,255.5 28.5,244.1 28.5,229.4 38.8,224.2 52.2,221.8 56.7,242.4 66.3,258.9 77.3,261.0 90.0,251.7 98.9,235.6 111.3,233.5 131.5,221.1 144.2,211.2 160.7,210.8 174.5,225.6 194.7,224.9 208.4,230.1 229.4,247.2 244.5,243.4 254.1,230.1 265.1,218.0 279.2,206.4 298.7,193.7 372.5,170.0 394.5,175.5 413.4,177.2 439.2,181.7 444.3,173.8 440.2,160.0 437.4,143.9 446.4,140.5 465.9,144.9 486.5,149.1 485.8,139.1 483.1,117.5 487.9,101.0 494.1,78.7 489.3,62.9 476.2,48.1 451.2,38.2 436.8,37.9 421.3,40.9 402.8,59.1 393.1,55.7 373.2,57.4 336.8,50.9 325.5,51.2 303.9,53.0 278.8,45.4 257.9,13.8 227.7,4.9 206.4,1.8", "120.2,263.5 111.6,268.0 106.0,274.9 104.2,278.5 114.0,280.3 133.3,279.0 136.9,276.4 132.9,271.3 127.9,265.2 120.2,263.5", "127.4,287.0 122.1,287.0 121.6,290.8 119.0,289.6 114.4,292.4 116.4,296.0 116.9,300.3 123.6,301.1 129.0,296.7 132.7,293.4 135.1,289.6 127.4,287.0", "132.7,300.8 130.0,303.0 126.6,306.6 128.6,309.5 131.5,313.6 137.2,316.7 137.5,322.2 142.0,322.2 144.9,315.2 141.8,311.2 144.2,308.8 142.4,304.7 138.7,303.0 132.7,300.8", "161.1,261.0 156.6,261.1 157.5,264.7 154.9,271.4 156.3,278.3 158.5,284.3 163.1,290.3 168.4,292.2 175.5,290.8 178.1,284.8 182.2,281.7 183.7,274.5 182.2,268.7 176.3,267.0 172.2,269.9 165.7,267.5 161.1,261.0", "165.4,237.8 159.3,238.3 155.6,241.2 152.0,239.3 148.9,238.1 140.5,239.8 134.5,241.7 136.7,245.2 138.9,249.1 142.7,251.2 145.1,255.3 147.2,258.0 151.1,258.4 157.3,256.5 165.9,257.3 174.6,257.5 180.8,257.9 180.1,254.4 177.0,247.9 172.4,242.6 165.4,237.8", "150.8,217.4 148.2,218.7 148.2,219.7 149.5,221.5 153.3,223.9 157.0,225.9 159.9,225.9 161.3,224.2 159.0,221.2 154.7,217.6 150.8,217.4", "187.3,263.5 185.4,263.7 185.2,265.2 187.3,266.9 189.1,267.3 189.8,265.7 187.3,263.5", "193.2,268.2 191.4,268.6 190.7,272.5 191.3,276.5 196.2,278.8 192.9,279.0 193.2,280.5 196.7,281.3 199.5,280.5 202.3,280.1 202.3,278.6 201.6,276.9 199.9,274.5 198.5,273.1 196.5,271.1 193.2,268.2", "232.7,262.0 230.8,262.8 231.6,266.2 233.4,268.2 235.8,268.8 237.6,267.0 236.8,264.1 232.7,262.0", "253.8,246.5 249.8,247.5 246.5,246.6 244.8,246.7 244.5,248.8 246.6,250.8 245.1,251.8 246.2,254.1 248.5,254.9 250.9,256.3 250.4,257.2 247.2,256.0 244.4,255.4 242.4,257.3 243.5,259.3 246.1,262.7 250.4,266.9 252.3,266.7 253.6,264.0 252.3,261.0 254.3,261.8 258.1,263.4 259.4,261.7 261.9,261.3 263.8,258.6 263.5,255.6 260.2,253.6 256.1,252.8 258.7,250.0 259.5,246.9 253.8,246.5", "237.1,246.5 236.0,246.6 236.0,248.0 236.8,249.6 237.7,251.3 239.6,252.2 240.5,251.7 240.1,250.0 238.5,248.7 237.1,246.5"];
+
+// Map of Singapore with every MRT line drawn faintly and your route on top.
+// Zooms to your route; "Whole map" shows the full network.
+function routeMap(r, trip = state.nav) {
+  const pts = [];
+  r.legs.forEach((leg, k) => leg.idx.forEach((i, j) => {
+    const name = nameOf(leg.line, i);
+    if (k > 0 && j === 0) { pts[pts.length - 1].change = true; return; }
+    pts.push({ name, xy: POS[name] });
+  }));
+  // Viewport: the whole island, or the route's bounding box padded out to the map's shape
+  const ASPECT = 16 / 10;
+  let vb;
+  if (state.mapWhole) vb = [20, 10, 390, 390 / ASPECT];
+  else {
+    const xs = pts.map(p => p.xy[0]), ys = pts.map(p => p.xy[1]);
+    let x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+    let w = Math.max(x1 - x0, 40) + 80, h = Math.max(y1 - y0, 25) + 45;   // room for labels
+    if (w / h < ASPECT) w = h * ASPECT; else h = w / ASPECT;
+    vb = [(x0 + x1) / 2 - w / 2, (y0 + y1) / 2 - h / 2, w, h];
+  }
+  const u = vb[2] / 360;                      // one screen pixel, in map units
+  const poly = (names, cls, extra) => `<polyline class="${cls}" points="${names.map(n => POS[n].join(",")).join(" ")}" ${extra}/>`;
+  const network = Object.values(LINES).map(l =>
+    poly(l.st.map(x => x[1]), "net", `stroke="${l.color}"`)).join("");
+  const stationDots = Object.keys(POS).map(n => `<circle class="net-dot" cx="${POS[n][0]}" cy="${POS[n][1]}" r="${1.6 * u}"/>`).join("");
+  const route = r.legs.map(leg => poly(leg.idx.map(i => nameOf(leg.line, i)), "ride", `stroke="${LINES[leg.line].color}"`)).join("");
+  const n = pts.length;
+  const dots = pts.map((p, i) => {
+    const [x, y] = p.xy, end = i === 0 || i === n - 1;
+    if (p.change) return `<circle cx="${x}" cy="${y}" r="${6 * u}" class="dot-fill" stroke="#1c1f23" stroke-width="${2.5 * u}"/>`;
+    return end ? `<circle cx="${x}" cy="${y}" r="${7 * u}" class="dot-end" stroke-width="${3 * u}"/>`
+               : `<circle cx="${x}" cy="${y}" r="${2.4 * u}" class="dot-fill"/>`;
+  }).join("");
+  const label = (p, dy, cls = "map-label", dx = 0, anchor = "middle") => `<text x="${p.xy[0] + dx * u}" y="${p.xy[1] + dy * u}" text-anchor="${anchor}" class="${cls}" font-size="${12 * u}" stroke-width="${4 * u}">${esc(p.name)}</text>`;
+  // When a start or end sits right next to a change, put one label above and the other below
+  const changes = pts.filter(p => p.change), dyOf = new Map();
+  [[pts[0], -13], [pts[n - 1], 22]].forEach(([p, dy]) => {
+    const c = changes.find(c => Math.hypot(c.xy[0] - p.xy[0], c.xy[1] - p.xy[1]) < 60 * u);
+    if (c) { const above = p.xy[1] < c.xy[1]; dyOf.set(p, above ? -13 : 22); dyOf.set(c, above ? 22 : -13); }
+    else dyOf.set(p, dy);
+  });
+  const labels = [pts[0], pts[n - 1], ...changes].map(p => label(p, dyOf.get(p) ?? -13)).join("");
+  const places = state.mapWhole ? ["Woodlands", "Jurong East", "Tampines", "Punggol", "Bishan"]
+    .filter(m => !pts.some(p => p.name === m)).map(m => label({ name: m, xy: POS[m] }, -8, "map-place")).join("") : "";
+  return `<div class="map-wrap">
+    <svg class="map" viewBox="${vb.map(v => v.toFixed(1)).join(" ")}" role="img" aria-label="Map of your route from ${esc(trip.from)} to ${esc(trip.to)}">
+      <rect x="-50" y="-50" width="550" height="400" class="water"/>
+      ${SG_LAND.map(l => `<polygon points="${l}" class="land"/>`).join("")}
+      ${network}${stationDots}${route}${dots}${labels}${places}
+    </svg>
+    <button class="map-toggle" data-mapwhole>${state.mapWhole ? "Zoom to my route" : "Whole map"}</button>
+  </div>`;
+}
+
+function stationOptions(sel) {
+  return STATION_NAMES.map(n => `<option value="${esc(n)}" ${n === sel ? "selected" : ""}>${esc(n)} · ${codes(n)}</option>`).join("");
+}
+
+// Your route, leg by leg, with the interchange walks in between
+function routeDiagram(r) {
+  return r.legs.map((leg, k) => {
+    const ids = leg.idx, long = ids.length > 6;
+    const shown = long ? [ids[0], ids[1], null, ids[ids.length - 2], ids[ids.length - 1]] : ids;
+    const change = k > 0 ? `<div class="change small">Change at <b>${esc(nameOf(leg.line, ids[0]))}</b> · about ${TRANSFER_MIN} min walk</div>` : "";
+    return `${change}<div class="leg">
+      <div class="leg-head">${pill(leg.line)}<span class="small">towards ${esc(towards(leg))} · ${ids.length - 1} stop${ids.length > 2 ? "s" : ""}</span></div>
+      <div class="route" style="--lc:${LINES[leg.line].color}">${shown.map((i, j) => i === null
+        ? `<div class="stop gap"><span></span><span class="small muted">${ids.length - 4} more stops</span><span></span></div>`
+        : `<div class="stop ${j === 0 || j === shown.length - 1 ? "end" : ""}"><span class="pin"></span><span>${esc(nameOf(leg.line, i))}</span><span class="mono code">${LINES[leg.line].st[i][0]}</span></div>`).join("")}</div>
+    </div>`;
+  }).join("");
+}
+
+// People on your ride who waved at you and you haven't answered yet
+const wavedAtMe = () => findMatches(state.commute).out.filter(m => state.incoming[m.p.n] && !state.waves[m.p.n] && !state.declined[m.p.n] && !state.friends[m.p.n]);
+
+// One person on the Waves page: where you'd ride together and what you share
+function waveCard(m, actions, note) {
+  const { p, o, shared } = m;
+  return `<article class="card">
+    <div class="who"><div class="avatar">${esc(p.n[0])}</div>
+      <div class="meta"><h3>${esc(p.n)}, ${p.a}</h3><p class="small muted">${esc(p.bio)}</p></div></div>
+    <span class="small">${[...new Set(o.segs.map(x => x.line))].map(pill).join(" ")} <b>${o.stops} stop${o.stops > 1 ? "s" : ""} together</b> · from ${esc(o.start)} · around ${fmt(o.at)}</span>
+    ${shared.length ? `<div class="chips">${shared.map(x => `<span class="tag shared">${x}</span>`).join("")}</div>` : ""}
+    ${note ? `<p class="small muted">${note}</p>` : ""}
+    <div class="actions">${actions}</div>
+  </article>`;
+}
+
+// A met person's current stage: the made-up starting point, or whatever your feedback led to
+function metStatus(m) {
+  const d = state.done[m.n];
+  if (!d) return m;
+  const f = d.fb;
+  if (f.rate === "noshow") return { ...m, status: "noshow" };
+  const wanted = f.again === "yes" || f.share === "yes";
+  if (wanted && d.theySayNo) return { ...m, status: "nosecond" };
+  if (f.share === "yes") return { ...m, status: "friends", handle: extra(m).handle, next: f.again === "yes" ? "Next Monday · same train" : null };
+  if (f.again === "yes") return { ...m, status: "again", next: "Next Monday · same train" };
+  return { ...m, status: "done" };
+}
+
+const screens = {
+  0() {
+    const r = myRoute(state.nav);
+    const riders = r ? findMatches(state.nav).out.length : 0;
+    const changes = r ? r.legs.length - 1 : 0;
+    const trip = (from, to) => state.nav.from === from && state.nav.to === to;
+    return `
+    <main class="fade">
+      <div class="brand"><span class="logo">C</span><b>Carriage</b></div>
+      <div class="search">
+        <div class="search-fields">
+          <div class="field"><label class="label" for="navFrom">From</label><select id="navFrom">${stationOptions(state.nav.from)}</select></div>
+          <div class="field"><label class="label" for="navTo">Where to?</label><select id="navTo">${stationOptions(state.nav.to)}</select></div>
+        </div>
+        <button class="swap" data-swap aria-label="Swap start and destination">⇅</button>
+      </div>
+      <div class="chips">
+        ${SAVED.map(t => `<button class="chip" data-trip="${esc(t.from)}|${esc(t.to)}" aria-pressed="${trip(t.from, t.to)}">${esc(t.label)}</button>`).join("")}
+      </div>
+      <div class="field"><label class="label" for="navTime">Leaving at</label><input type="time" id="navTime" value="${state.nav.time}"></div>
+      ${!r ? `<p class="error">Pick two different stations.</p>` : `
+      <div class="map-card">
+        ${routeMap(r)}
+        <div class="map-meta">
+          <span class="big-time">${r.minutes} min</span>
+          <span class="small muted">${r.stops} stops · ${changes ? changes + " change" + (changes > 1 ? "s" : "") : "no changes"} · ${r.legs.map(l => pill(l.line)).join(" ")}</span>
+        </div>
+      </div>
+      <div class="choice">
+        <button class="btn" data-meet>Meet someone on this ride</button>
+        <p class="small muted center">${riders ? `${riders} ${riders === 1 ? "person" : "people"} on this ride ${riders === 1 ? "is" : "are"} on Carriage right now.` : "Nobody on this ride yet. Try another time."}</p>
+        <a class="btn ghost" href="${gmaps(state.nav.from, state.nav.to)}" target="_blank" rel="noopener">Just navigate, in Google Maps</a>
+      </div>
+      <details class="stops"><summary>See every stop</summary>${routeDiagram(r)}</details>`}
+    </main>`;
+  },
+  1() {
+    const r = myRoute();
+    const err = !r ? `<p class="error">Pick two different stations.</p>` : "";
+    const changes = r ? r.legs.length - 1 : 0;
+    return `${header(10)}
+    <main class="fade">
+      <h2>How do you get to school or work?</h2>
+      <div class="field"><label class="label" for="from">You start at</label><select id="from">${stationOptions(state.from)}</select></div>
+      <div class="field"><label class="label" for="to">You get off at</label><select id="to">${stationOptions(state.to)}</select></div>
+      <div class="field"><label class="label" for="time">You're usually on the train at</label><input type="time" id="time" value="${state.time}"></div>
+      ${err}
+      ${r ? `<div class="field"><span class="label">Your ride · ${r.stops} stops · ${changes ? changes + " change" + (changes > 1 ? "s" : "") : "no changes"} · about ${r.minutes} min</span>${routeDiagram(r)}
+        <span class="small muted">We picked the fastest route. You'll be matched on every line you ride, including after you change.</span></div>` : ""}
+      ${r && !changes ? `<button class="back" data-try style="color:var(--accent);font-weight:600;text-align:left">Try a route with a change: Marine Terrace → Raffles Place</button>` : ""}
+      <span class="small muted">All MRT lines are in. Buses come in a later version.</span>
+      <div class="spacer"></div>
+      <button class="btn" data-go="10" ${err ? "disabled" : ""}>Save my commute</button>
+    </main>`;
+  },
+  2() {
+    const n = state.interests.size;
+    return `${header(10)}
+    <main class="fade">
+      <h2>What do you like talking about?</h2>
+      <p class="muted">Pick at least 2. People who share these show up first.</p>
+      <div class="chips">${INTERESTS.map(x => `<button class="chip" data-interest="${x}" aria-pressed="${state.interests.has(x)}">${x}</button>`).join("")}</div>
+      <div class="spacer"></div>
+      <button class="btn" data-go="10" ${n < 2 ? "disabled" : ""}>${n < 2 ? "Pick " + (2 - n) + " more" : "Save"}</button>
+    </main>`;
+  },
+  3() {
+    const minor = state.age < 18;
+    const lo = minor ? 13 : 18, hi = minor ? 17 : 60;
+    const ages = (sel) => { let o = ""; for (let a = lo; a <= hi; a++) o += `<option ${a === sel ? "selected" : ""}>${a}</option>`; return o; };
+    let ageOpts = ""; for (let a = 13; a <= 60; a++) ageOpts += `<option ${a === state.age ? "selected" : ""}>${a}</option>`;
+    return `${header(10)}
+    <main class="fade">
+      <h2>Who do you want to meet?</h2>
+      <div class="field"><label class="label" for="age">Your age</label><select id="age">${ageOpts}</select></div>
+      <div class="field"><span class="label">Mode</span>
+        <div class="seg">
+          <button data-mode="friends" aria-pressed="${state.mode === "friends"}">Friends</button>
+          <button data-mode="dating" aria-pressed="${state.mode === "dating"}">Dating</button>
+        </div>
+      </div>
+      ${state.mode === "dating" ? `<div class="note">Dating mode is planned for a later version. It will be 18+ only, with ID checks. For now, Carriage matches friends.</div>` : ""}
+      <div class="row">
+        <div class="field"><label class="label" for="minAge">Ages from</label><select id="minAge">${ages(state.minAge)}</select></div>
+        <div class="field"><label class="label" for="maxAge">to</label><select id="maxAge">${ages(state.maxAge)}</select></div>
+      </div>
+      <div class="field"><label class="label" for="window">How flexible is your timing?</label>
+        <select id="window">
+          ${[5,10,15].map(w => `<option value="${w}" ${w === state.window ? "selected" : ""}>Within ${w} minutes of my usual train</option>`).join("")}
+        </select>
+      </div>
+      <div class="note">${minor ? "You'll only be matched with other people under 18." : "You'll only be matched with other adults."} Nobody can see your stations or your time until you both wave at each other.</div>
+      <div class="spacer"></div>
+      <button class="btn" data-go="10">Save</button>
+    </main>`;
+  },
+  4() {
+    const { out, outsideWindow } = findMatches();
+    const card = ({ p, o, shared }, other) => {
+      const segs = Array.from({ length: o.total }, (_, k) => o.segs.some(x => k >= x.offset && k < x.offset + x.stops));
+      const lines = [...new Set(o.segs.map(x => x.line))];
+      const w = state.waves[p.n];
+      const action = state.friends[p.n]
+        ? `<span class="status">Friends · contacts shared</span>`
+        : state.incoming[p.n] && !w && !state.declined[p.n]
+        ? `<span class="pill-status good">Waved at you</span><span class="spacer"></span><button class="btn small-btn" data-waveback="${esc(p.n)}">Wave back</button>`
+        : w === "mutual"
+        ? `<span class="status">You both waved</span><span class="spacer"></span><button class="btn small-btn" data-plan="${esc(p.n)}">Plan a ride</button>`
+        : w === "sent"
+        ? `<span class="small muted">Wave sent. Waiting for ${esc(p.n)}…</span>`
+        : `<button class="btn small-btn" data-wave="${esc(p.n)}">Wave</button><span class="small muted">${other ? `You'd catch their ${fmt(o.at)} train` : "It's a match if they wave back"}</span>`;
+      const when = other
+        ? `<b>Rides your route ${Math.abs(o.later)} min ${o.later > 0 ? "later" : "earlier"}</b> · ${fmt(o.at)} at ${esc(o.start)} · ${o.stops} stop${o.stops > 1 ? "s" : ""} together`
+        : `<b>Rides with you for ${o.stops} stop${o.stops > 1 ? "s" : ""}</b> · about ${o.stops * MIN_PER_STOP} min · ${o.diff === 0 ? "same train" : "usually within " + o.diff + " min"}`;
+      return `<article class="card">
+        <div class="who"><div class="avatar">${esc(p.n[0])}</div>
+          <div class="meta"><h3>${esc(p.n)}, ${p.a}</h3><p class="small muted">${esc(p.bio)}</p></div></div>
+        <div class="overlap">
+          <span class="small">${lines.map(pill).join(" ")} ${when}</span>
+          <div class="bar">${segs.map(on => `<span class="${on ? "on" : ""}"></span>`).join("")}</div>
+          <div class="ends small muted"><span>${esc(state.from)}</span><span>${esc(state.to)}</span></div>
+        </div>
+        <div class="chips">${p.i.map(x => `<span class="tag ${shared.includes(x) ? "shared" : ""}">${x}</span>`).join("")}</div>
+        <div class="actions">${action}</div>
+      </article>`;
+    };
+    const shown = state.showAll ? out : out.slice(0, 8);
+    const cards = shown.map(m => card(m)).join("")
+      + (out.length > shown.length ? `<button class="btn ghost" data-showall>Show all ${out.length} people on your ride</button>` : "");
+    const others = outsideWindow.slice(0, 5);
+    const empty = `<div class="note">Nobody rides with you within ${state.window} minutes yet. ${state.window < 15 ? `<button class="btn ghost small-btn" data-widen>Try 15 minutes</button>` : "Invite a friend who takes your train."}</div>`;
+    const pending = metList().filter(m => metStatus(m).status === "feedback");
+    return `${header(null)}
+    <main class="fade">
+      ${pending.map(m => `<div class="note nudge"><span>You rode with <b>${esc(m.n)}</b> this morning. How did it go?</span>
+        <button class="btn small-btn" data-feedback="${esc(m.n)}">Rate it</button></div>`).join("")}
+      <div>
+        ${sameTrip(state, state.commute)
+          ? `<p class="label">Your daily commute · ${esc(state.from)} → ${esc(state.to)} · ${state.time}</p>`
+          : `<div class="note nudge"><span>Showing a one-off trip: <b>${esc(state.from)} → ${esc(state.to)}</b> at ${state.time}</span><button class="btn ghost small-btn" data-commute>My commute</button></div>`}
+        <h2 style="margin-top:8px">Who do you want to meet?</h2>
+        <p class="muted">${out.length} ${out.length === 1 ? "person is" : "people are"} on your ride. Tap <b>Wave</b> on anyone you'd like to meet. If they wave back, you can plan a ride together.</p>
+      </div>
+      <div class="list">${out.length ? cards : empty}</div>
+      ${others.length ? `<section class="list">
+        <div><h3>Same route, a bit earlier or later</h3>
+        <p class="small muted">They ride your route outside your ${state.window}-minute window. Wave if you'd leave a bit earlier or later to meet them.</p></div>
+        ${others.map(m => card(m, true)).join("")}
+      </section>` : ""}
+      <div class="note">Shown: only the part of the ride you share. Their full route stays private, and so does yours.</div>
+    </main>`;
+  },
+  5() {
+    const m = findPerson(state.planFor);
+    if (!m) return screens[4]();
+    const { p, o, shared } = m;
+    const x = extra(p);
+    const line = LINES[o.line], car = Math.min(state.car, line.cars);
+    const together = o.segs.length > 1
+      ? `You change to the ${LINES[o.segs[1].line].name} together at ${o.segs[1].start}, so you can walk over together.` : "";
+    if (state.plan) {
+      const tip = shared.length
+        ? `You both like ${shared[0]}. Ask ${p.n} how they got into it.`
+        : `Ask ${p.n} about "${p.bio}".`;
+      const mine = [...state.questions].filter(q => (state.answers[q] || "").trim());
+      return `${header(4)}
+      <main class="fade">
+        <h2>Ride planned</h2>
+        <div class="ticket">
+          <span class="label" style="color:var(--match)">${state.day} · with ${esc(p.n)}</span>
+          <span class="big">${fmt(o.at)} at ${esc(o.start)}</span>
+          <span>${pill(o.line)} <span class="mono">${esc(o.start)} → ${esc(o.end)} · ${o.stops} stop${o.stops > 1 ? "s" : ""} together</span></span>
+          <span><b>Carriage ${car}</b>, counting from the front of the train</span>
+          ${together ? `<span class="small">${esc(together)}</span>` : ""}
+          <span class="small"><b>How to spot ${esc(p.n)}:</b> ${esc(x.spot)}</span>
+        </div>
+        <div class="field"><span class="label">${esc(p.n)}'s warm-up answers</span>
+          <div class="qa">${x.qa.map(([q, a]) => `<div><p class="small muted">${esc(q)}</p><p>${esc(a)}</p></div>`).join("")}</div>
+        </div>
+        ${mine.length ? `<div class="field"><span class="label">What ${esc(p.n)} sees from you</span>
+          <div class="qa">${mine.map(q => `<div><p class="small muted">${esc(q)}</p><p>${esc(state.answers[q])}</p></div>`).join("")}</div></div>` : ""}
+        <div class="note"><b style="color:var(--fg)">Conversation starter</b><br>${esc(tip)}</div>
+        <div class="field"><span class="label">Quick messages</span>
+          <div class="chips">${["I'm on the train", "Running late, I'll take the next one", "Can't make it today"].map(msg =>
+            `<button class="chip" data-toast="Sent to ${esc(p.n)}: &quot;${msg}&quot;">${msg}</button>`).join("")}</div>
+          <span class="small muted">No chat before you meet. Save the talking for the ride.</span>
+        </div>
+        <a class="btn ghost" href="${gmaps("", o.start)}" target="_blank" rel="noopener">Directions to ${esc(o.start)} station</a>
+        <button class="btn" data-go="6">Ride's over? Tell us how it went</button>
+        <div class="row">
+          <button class="btn ghost" data-toast="Plan cancelled. ${esc(p.n)} has been told.">Cancel plan</button>
+          <button class="btn ghost" data-toast="Report sent. ${esc(p.n)} can no longer see you.">Block or report</button>
+        </div>
+      </main>`;
+    }
+    return `${header(4)}
+    <main class="fade">
+      <div>
+        <p class="label">You and ${esc(p.n)} both waved</p>
+        <h2>Plan your ride together</h2>
+      </div>
+      <p class="muted">You share ${o.stops} stop${o.stops > 1 ? "s" : ""}, from ${esc(o.start)} to ${esc(o.end)}. You meet on the ${line.name} at ${esc(o.start)} around ${fmt(o.at)}. ${esc(together)}</p>
+      <div class="field"><span class="label">Which day?</span>
+        <div class="seg">${["Tomorrow","Next Monday"].map(d => `<button data-day="${d}" aria-pressed="${state.day === d}">${d}</button>`).join("")}</div>
+      </div>
+      <div class="field"><span class="label">Meet in carriage</span>
+        <div class="train" style="grid-template-columns:repeat(${line.cars},1fr)">${Array.from({ length: line.cars }, (_, k) => k + 1).map(c => `<button class="car" data-car="${c}" aria-pressed="${car === c}"><b>${c}</b><span class="small">${c === 1 ? "Front" : c === line.cars ? "Back" : ""}&nbsp;</span></button>`).join("")}</div>
+        <span class="small muted">${line.short} trains have ${line.cars} carriages. Pick one near your exit or your change, to save time.</span>
+      </div>
+      <div class="field"><label class="label" for="spot">How can ${esc(p.n)} spot you?</label>
+        <input type="text" id="spot" data-keep="spot" value="${esc(state.spot)}" placeholder="e.g. black backpack, standing by the door">
+      </div>
+      <div class="field"><span class="label">Warm-up questions</span>
+        <span class="small muted">Pick up to 3 and answer them. ${esc(p.n)} sees your answers before the ride and you see theirs. Keep it short and leave the rest for the ride.</span>
+        <div class="chips">${QUESTIONS.map(q => `<button class="chip" data-q="${esc(q)}" aria-pressed="${state.questions.has(q)}">${esc(q)}</button>`).join("")}</div>
+        ${[...state.questions].map((q, k) => `<div class="field"><label class="small" for="ans-${k}">${esc(q)}</label>
+          <input type="text" id="ans-${k}" data-keep="ans" data-question="${esc(q)}" value="${esc(state.answers[q] || "")}" placeholder="Your answer"></div>`).join("")}
+      </div>
+      <button class="btn" data-confirm>Send plan to ${esc(p.n)}</button>
+    </main>`;
+  },
+  6() {
+    const p = PEOPLE.find(x => x.n === state.planFor);
+    const f = state.fb;
+    const opt = (key, val, label) => `<button data-fb="${key}" data-val="${val}" aria-pressed="${f[key] === val}">${label}</button>`;
+    const showed = f.rate && f.rate !== "noshow";
+    return `${header(state.fromMet ? 8 : 5)}
+    <main class="fade">
+      <div>
+        <p class="label">After your ride with ${esc(p.n)}</p>
+        <h2>How did it go?</h2>
+      </div>
+      <div class="rating">
+        ${opt("rate", "great", "Great")}${opt("rate", "okay", "Okay")}${opt("rate", "meh", "Not for me")}${opt("rate", "noshow", "They didn't show up")}
+      </div>
+      ${f.rate === "meh" ? `<div class="note">Did ${esc(p.n)} do anything that made you uncomfortable? <button class="back" data-toast="Report sent. Our team will look at it, and ${esc(p.n)} can no longer see you." style="color:var(--accent);font-weight:600">Report it</button></div>` : ""}
+      ${showed ? `
+      <div class="field"><span class="label">Ride together again?</span>
+        <div class="seg">${opt("again", "yes", "Yes")}${opt("again", "no", "No thanks")}</div>
+      </div>
+      <div class="field"><span class="label">Share contacts so you can hang out outside the commute?</span>
+        <div class="seg">${opt("share", "yes", "Yes")}${opt("share", "no", "Not yet")}</div>
+      </div>
+      ${f.share === "yes" ? `<div class="field"><span class="label">What to share</span>
+        <div class="seg three">${["Telegram","Instagram","Phone"].map(t => `<button data-fb="ctype" data-val="${t}" aria-pressed="${f.ctype === t}">${t}</button>`).join("")}</div>
+        <input type="text" id="handle" data-keep="handle" value="${esc(f.handle)}" placeholder="${f.ctype === "Phone" ? "8123 4567" : "@yourhandle"}" aria-label="Your ${f.ctype}">
+        ${f.ctype === "Phone" ? `<span class="small muted">Tip: a Telegram or Instagram handle is easier to block later than a phone number.</span>` : ""}
+      </div>` : ""}` : ""}
+      <div class="note">Your answers are private. ${esc(p.n)} never sees your rating, and only finds out about a second ride or contacts if you <b>both</b> say yes.</div>
+      <div class="spacer"></div>
+      <button class="btn" data-submit ${f.rate ? "" : "disabled"}>Send feedback</button>
+    </main>`;
+  },
+  10() {
+    const r = myRoute(state.commute);
+    const row = (title, value, go) => `<button class="me-row" data-go="${go}"><span><span class="label">${title}</span><span class="me-value">${value}</span></span><span class="muted">Edit ›</span></button>`;
+    return `${header(null)}
+    <main class="fade">
+      <div class="who">${avatarOf(state.profile, "big")}
+        <div class="meta"><h2>${esc(state.profile.name || "You")}, ${state.age}</h2>${state.profile.school ? `<p class="small">${esc(state.profile.school)}</p>` : ""}<p class="small muted">Friends mode · ${state.mode === "dating" ? "dating coming later" : "matching with ages " + state.minAge + "–" + state.maxAge}</p></div></div>
+      <div class="list">
+        ${row("Daily commute", `${esc(state.commute.from)} → ${esc(state.commute.to)} · ${state.commute.time}${r ? ` · ${r.legs.map(l => pill(l.line)).join(" ")}` : ""}`, 1)}
+        ${row("Interests", [...state.interests].map(esc).join(", "), 2)}
+        ${row("Who you want to meet", `Ages ${state.minAge}–${state.maxAge} · within ${state.window} min of your train`, 3)}
+      </div>
+      <div class="note">Your daily commute is what Rides and Waves use, so you can check them anytime without searching. Use the Map for one-off trips.</div>
+    </main>`;
+  },
+  9() {
+    const { out: inWin, outsideWindow: other } = findMatches(state.commute), all = [...inWin, ...other];
+    const incoming = wavedAtMe();
+    const ready = all.filter(m => state.waves[m.p.n] === "mutual" && !state.friends[m.p.n]);
+    const sent = all.filter(m => state.waves[m.p.n] === "sent");
+    const section = (title, hint, items, empty) => `<section class="list">
+      <div><h3>${title}</h3>${hint ? `<p class="small muted">${hint}</p>` : ""}</div>
+      ${items.length ? items.join("") : `<p class="note">${empty}</p>`}
+    </section>`;
+    return `${header(null)}
+    <main class="fade">
+      <div>
+        <p class="label">Waves · your daily commute</p>
+        <h2>Who you want to meet, and who wants to meet you</h2>
+      </div>
+      ${section(`Waved at you <span class="count">${incoming.length}</span>`, "They want to ride with you. Wave back to plan a ride.",
+        incoming.map(m => waveCard(m,
+          `<button class="btn small-btn" data-waveback="${esc(m.p.n)}">Wave back</button><button class="btn ghost small-btn" data-notnow="${esc(m.p.n)}">Not now</button>`,
+          `Waved ${esc(state.incoming[m.p.n])}`)),
+        "Nobody new. When someone on your ride waves at you, they show up here.")}
+      ${section(`Ready to plan <span class="count">${ready.length}</span>`, "You both waved.",
+        ready.map(m => waveCard(m, `<button class="btn small-btn" data-plan="${esc(m.p.n)}">Plan a ride</button>`)),
+        "When you and someone both wave, you can plan a ride here.")}
+      ${section(`You waved at <span class="count">${sent.length}</span>`, "The people you want to meet. You'll get a match when they wave back.",
+        sent.map(m => waveCard(m,
+          `<span class="pill-status warn">Waiting</span><span class="spacer"></span><button class="btn ghost small-btn" data-unwave="${esc(m.p.n)}">Take back wave</button>`,
+          state.sentWhen[m.p.n] ? `Sent ${esc(state.sentWhen[m.p.n])}` : "Sent just now")),
+        `Nobody yet. Go to <b>Rides</b> and wave at someone you'd like to meet.`)}
+      <div class="note">Waves last 7 days. If nobody waves back, the wave quietly ends. "Not now" is private: they're never told.</div>
+    </main>`;
+  },
+  8() {
+    const order = { feedback: 0, friends: 1, again: 2, done: 3, nosecond: 4, noshow: 5 };
+    const list = metList().map(metStatus).sort((a, b) => order[a.status] - order[b.status]);
+    const cards = list.map(m => {
+      const row = {
+        feedback: `<span class="pill-status warn">Waiting for your feedback</span><span class="spacer"></span><button class="btn small-btn" data-feedback="${esc(m.n)}">How did it go?</button>`,
+        friends: `<span class="pill-status good">Friends</span><span class="mono small">Telegram ${esc(m.handle)}</span>`,
+        again: `<span class="pill-status good">Riding again</span>`,
+        done: `<span class="small muted">Feedback sent. No second ride planned.</span>`,
+        nosecond: `<span class="small muted">No second ride this time</span>`,
+        noshow: `<span class="small muted">Didn't show up. Ride missed.</span>`,
+      }[m.status];
+      const extraRow = m.status === "friends"
+        ? `<div class="actions"><button class="btn ghost small-btn" data-toast="Ride request sent to ${esc(m.n)}.">Plan another ride</button><button class="btn ghost small-btn" data-toast="Opening Telegram…">Message</button></div>`
+        : m.next ? `<p class="small"><b>Next ride:</b> ${esc(m.next)}</p>` : "";
+      return `<article class="card ${m.status === "noshow" || m.status === "nosecond" ? "faded" : ""}">
+        <div class="who"><div class="avatar">${esc(m.n[0])}</div>
+          <div class="meta"><h3>${esc(m.n)}, ${m.a}</h3><p class="small muted">${esc(m.when)}</p></div></div>
+        <p class="small muted">${esc(m.bio)}</p>
+        <div class="actions">${row}</div>
+        ${extraRow}
+      </article>`;
+    }).join("");
+    const friends = list.filter(m => m.status === "friends").length;
+    return `${header(null)}
+    <main class="fade">
+      <div>
+        <p class="label">Your rides so far</p>
+        <h2>${list.length} people met · ${friends} friend${friends === 1 ? "" : "s"}</h2>
+      </div>
+      <div class="list">${cards || `<p class="note">Nobody yet. After your first ride with someone, they show up here and you can tell us how it went.</p>`}</div>
+      <div class="note">Only you can see this list. Ratings stay private, and people who said no are never named as the ones who said no.</div>
+    </main>`;
+  },
+  7() {
+    const p = PEOPLE.find(x => x.n === state.planFor);
+    const x = extra(p), f = state.fb;
+    if (state.fromMet) state.done[p.n] = { fb: { ...f }, theySayNo: state.theySayNo };
+    const home = state.fromMet ? 8 : 4, homeLabel = state.fromMet ? "Back to people you've met" : "Back to my matches";
+    const m = findPerson(p.n);
+    if (f.rate === "noshow") {
+      return `${header(null)}<main class="fade">
+        <h2>Sorry ${esc(p.n)} didn't show</h2>
+        <p class="muted">We've noted the missed ride. People who often miss rides get fewer matches, so the people who turn up get better ones.</p>
+        <div class="spacer"></div><button class="btn" data-go="${home}">${homeLabel}</button></main>`;
+    }
+    const wanted = f.again === "yes" || f.share === "yes";
+    if (wanted && state.theySayNo) {
+      return `${header(null)}<main class="fade">
+        <div><p class="label">Two days later</p><h2>No second ride this time</h2></div>
+        <p class="muted">${esc(p.n)} didn't pick a second ride or a contact swap. That happens, and it's not about you. Nobody saw what you chose.</p>
+        <p class="muted">There are other people on your train.</p>
+        <button class="back" data-they style="color:var(--accent);font-weight:600;text-align:left">Demo: switch back to ${esc(p.n)} saying yes</button>
+        <div class="spacer"></div><button class="btn" data-go="${home}">${homeLabel}</button></main>`;
+    }
+    const again = f.again === "yes", share = f.share === "yes";
+    const blocks = [];
+    if (again) blocks.push(`<div class="ticket">
+      <span class="label" style="color:var(--match)">You both want to ride again</span>
+      <span class="big">Next Monday, ${m ? fmt(m.o.at) : state.time}</span>
+      <span>Same train${m ? ` at ${esc(m.o.start)}` : ""}, carriage ${state.car}</span>
+      <button class="btn small-btn" data-toast="Next ride with ${esc(p.n)} is booked for Monday.">Book it</button>
+    </div>`);
+    if (share) blocks.push(`<div class="card">
+      <span class="label">Contacts shared</span>
+      <div class="who"><div class="avatar">${esc(p.n[0])}</div>
+        <div class="meta"><h3>${esc(p.n)}</h3><p class="mono">Telegram ${esc(x.handle)}</p></div></div>
+      <p class="small muted">${esc(p.n)} got your ${esc(f.ctype)}${f.handle.trim() ? `: <span class="mono">${esc(f.handle)}</span>` : ""}. Plan something outside the commute!</p>
+    </div>`);
+    return `${header(null)}
+    <main class="fade">
+      <div>
+        <p class="label">Feedback sent</p>
+        <h2>${share ? `You and ${esc(p.n)} are now friends` : again ? "See you on the train" : "Thanks for the feedback"}</h2>
+      </div>
+      ${blocks.join("") || `<p class="muted">${esc(p.n)} won't see your answers. We'll use them to find you better matches.</p>`}
+      ${blocks.length ? `<button class="back" data-they style="color:var(--accent);font-weight:600;text-align:left">Demo: see what happens if ${esc(p.n)} says no</button>` : ""}
+      <div class="spacer"></div>
+      <button class="btn ghost" data-go="${home}">${homeLabel}</button>
+    </main>`;
+  }
+};
+
+// ---------- Sign-up flow for new users (steps 20–28) ----------
+const OB_STEPS = 7;
+const avatarOf = (pf, size = "") => pf.photo
+  ? `<img class="avatar ${size}" src="${pf.photo}" alt="">`
+  : `<div class="avatar ${size}">${pf.name ? esc(pf.name[0].toUpperCase()) : "You"}</div>`;
+const ageFrom = b => { if (!b) return null; const d = new Date(b), t = new Date();
+  let a = t.getFullYear() - d.getFullYear(); if (t < new Date(t.getFullYear(), d.getMonth(), d.getDate())) a--; return a; };
+function obTop(back, n) {
+  return `<div class="top">${back === null ? "" : `<button class="back" data-go="${back}">&larr; Back</button>`}
+    ${n ? `<div class="progress" role="progressbar" aria-valuemin="1" aria-valuemax="${OB_STEPS}" aria-valuenow="${n}" aria-label="Step ${n} of ${OB_STEPS}"><span style="width:${n / OB_STEPS * 100}%"></span></div><span class="small muted mono">${n}/${OB_STEPS}</span>` : ""}</div>`;
+}
+const pfInput = (field, label, attrs = "") => `<div class="field"><label class="label" for="ob-${field}">${label}</label>
+  <input type="text" id="ob-${field}" data-keep="pf" data-field="${field}" value="${esc(state.profile[field])}" ${attrs}></div>`;
+
+// What's still missing on each step, or "" when it's fine to continue
+function obCheck(step) {
+  const pf = state.profile;
+  if (step === 21 && !/^[89]\d{7}$/.test(pf.phone.replace(/\s/g, ""))) return "Enter an 8-digit Singapore mobile number starting with 8 or 9.";
+  if (step === 22 && !/^\d{6}$/.test(pf.otp)) return "Enter the 6-digit code.";
+  if (step === 23) {
+    if (!pf.name.trim()) return "Add your first name.";
+    const a = ageFrom(pf.birthday);
+    if (a === null || a > 100) return "Add your birthday.";
+    if (a < 13) return "Carriage is for people 13 and up.";
+    if (!pf.schoolType) return "Pick school or work.";
+  }
+  if (step === 24 && !myRoute(state.commute)) return "Pick two different stations.";
+  if (step === 24 && !state.days.size) return "Pick at least one day you ride.";
+  if (step === 25 && state.interests.size < 3) return "Pick at least 3 interests.";
+  if (step === 27 && !state.agree) return "Tick the box to agree to the rules.";
+  return "";
+}
+
+Object.assign(screens, {
+  20() {
+    return `<div class="top-gap"></div>
+    <main class="fade">
+      <div class="brand"><span class="logo">C</span><b>Carriage</b></div>
+      <h1>Meet someone on your way to school or work.</h1>
+      <p class="muted">Tell us your daily train ride and what you're into. Carriage finds people who ride the same train, so you can talk on the way instead of scrolling.</p>
+      <div class="note">
+        <div class="hero-line"><span class="dot you"></span><span class="seg-line"></span><span class="dot them"></span><span class="seg-line"></span><span class="dot"></span></div>
+        <div class="ends small" style="margin-top:6px"><span>You board</span><span>They join</span><span>You get off</span></div>
+      </div>
+      <ul class="perks small">
+        <li>Matched on every MRT line, including where you change</li>
+        <li>No chatting with strangers: you wave, and meet only if you both wave</li>
+        <li>Under 18? You're only ever matched with other under-18s</li>
+      </ul>
+      <div class="spacer"></div>
+      <button class="btn" data-go="21">Create my account</button>
+      <button class="btn ghost" data-existing>I already have an account</button>
+    </main>`;
+  },
+  21() {
+    return `${obTop(20, 1)}
+    <main class="fade">
+      <h2>What's your mobile number?</h2>
+      <div class="field"><label class="label" for="ob-phone">Mobile number</label>
+        <div class="phone-row"><span class="cc">+65</span>
+          <input type="tel" id="ob-phone" data-keep="pf" data-field="phone" value="${esc(state.profile.phone)}" inputmode="numeric" maxlength="9" placeholder="8123 4567" autocomplete="tel-national"></div>
+      </div>
+      <p class="small muted">We'll text you a code to check it's you. Your number is never shown to anyone, and one number can only have one account. That keeps out fake profiles.</p>
+      <div class="spacer"></div>
+      <button class="btn" data-obnext="21">Send code</button>
+    </main>`;
+  },
+  22() {
+    return `${obTop(21, 2)}
+    <main class="fade">
+      <h2>Enter the code</h2>
+      <p class="muted">We sent a 6-digit code to +65 ${esc(state.profile.phone)}.</p>
+      <input type="text" id="ob-otp" class="otp" data-keep="pf" data-field="otp" value="${esc(state.profile.otp)}" inputmode="numeric" maxlength="6" placeholder="••••••" aria-label="6-digit code" autocomplete="one-time-code">
+      <p class="small muted">Demo: any 6 digits work. <button class="back" data-toast="New code sent." style="color:var(--accent);font-weight:600">Resend code</button></p>
+      <div class="spacer"></div>
+      <button class="btn" data-obnext="22">Verify</button>
+    </main>`;
+  },
+  23() {
+    const pf = state.profile, a = ageFrom(pf.birthday);
+    const opts = (list, sel) => [`<option value="">Choose…</option>`].concat(list.map(x => `<option ${x === sel ? "selected" : ""}>${x}</option>`)).join("");
+    return `${obTop(22, 3)}
+    <main class="fade">
+      <h2>About you</h2>
+      <div class="photo-pick">
+        ${avatarOf(pf, "big")}
+        <label class="btn ghost small-btn" for="ob-photo">${pf.photo ? "Change photo" : "Add a photo"}</label>
+        <input type="file" id="ob-photo" accept="image/*" class="visually-hidden">
+      </div>
+      <p class="small muted">Optional. Your photo is only shown after you both wave, so people can spot you.</p>
+      ${pfInput("name", "First name", 'placeholder="e.g. Alex" autocomplete="given-name" maxlength="20"')}
+      <div class="field"><label class="label" for="ob-birthday">Birthday</label>
+        <input type="date" id="ob-birthday" data-keep="pf" data-field="birthday" value="${esc(pf.birthday)}" max="2013-12-31" min="1930-01-01">
+        <span class="small muted">${a !== null && a >= 13 ? `You're ${a}. ` : ""}Only your age is shown, never your birthday.${a !== null && a >= 13 && a < 18 ? " Because you're under 18, you'll only be matched with other under-18s." : ""}</span>
+      </div>
+      <div class="row">
+        <div class="field"><label class="label" for="ob-schoolType">School or work</label><select id="ob-schoolType">${opts(["Secondary school","Junior college","Polytechnic","ITE","University","Working","Other"], pf.schoolType)}</select></div>
+        <div class="field"><label class="label" for="ob-gender">Gender</label><select id="ob-gender">${opts(["Woman","Man","Prefer not to say"], pf.gender)}</select></div>
+      </div>
+      ${pfInput("school", pf.schoolType === "Working" ? "Where you work (optional)" : "School name (optional)", 'placeholder="e.g. Victoria Junior College" maxlength="40"')}
+      ${pfInput("bio", "One line about you (optional)", 'placeholder="e.g. Will talk F1 all day" maxlength="60"')}
+      <div class="spacer"></div>
+      <button class="btn" data-obnext="23">Next</button>
+    </main>`;
+  },
+  24() {
+    const r = myRoute(state.commute);
+    return `${obTop(23, 4)}
+    <main class="fade">
+      <h2>Your daily commute</h2>
+      <p class="muted">The train ride you take most days. You can add other trips later from the Map.</p>
+      <div class="field"><label class="label" for="from">You start at</label><select id="from">${stationOptions(state.commute.from)}</select></div>
+      <div class="field"><label class="label" for="to">You get off at</label><select id="to">${stationOptions(state.commute.to)}</select></div>
+      <div class="field"><label class="label" for="time">You're usually on the train at</label><input type="time" id="time" value="${state.commute.time}"></div>
+      <div class="field"><span class="label">Days you ride</span>
+        <div class="chips">${["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d => `<button class="chip" data-weekday="${d}" aria-pressed="${state.days.has(d)}">${d}</button>`).join("")}</div>
+      </div>
+      ${r ? `<div class="map-card">${routeMap(r, state.commute)}<div class="map-meta"><span class="big-time">${r.minutes} min</span>
+        <span class="small muted">${r.stops} stops · ${r.legs.length - 1 ? (r.legs.length - 1) + " change" + (r.legs.length > 2 ? "s" : "") : "no changes"} · ${r.legs.map(l => pill(l.line)).join(" ")}</span></div></div>` : ""}
+      <div class="spacer"></div>
+      <button class="btn" data-obnext="24">Next</button>
+    </main>`;
+  },
+  25() {
+    const n = state.interests.size;
+    return `${obTop(24, 5)}
+    <main class="fade">
+      <h2>What do you like talking about?</h2>
+      <p class="muted">Pick at least 3. People who share these show up first.</p>
+      <div class="chips">${INTERESTS.map(x => `<button class="chip" data-interest="${x}" aria-pressed="${state.interests.has(x)}">${x}</button>`).join("")}</div>
+      <div class="spacer"></div>
+      <button class="btn" data-obnext="25" ${n < 3 ? "disabled" : ""}>${n < 3 ? "Pick " + (3 - n) + " more" : "Next"}</button>
+    </main>`;
+  },
+  26() {
+    const minor = state.age < 18;
+    const lo = minor ? 13 : 18, hi = minor ? 17 : 60;
+    const ages = sel => { let o = ""; for (let a = lo; a <= hi; a++) o += `<option ${a === sel ? "selected" : ""}>${a}</option>`; return o; };
+    return `${obTop(25, 6)}
+    <main class="fade">
+      <h2>Who do you want to meet?</h2>
+      <div class="field"><span class="label">Mode</span>
+        <div class="seg">
+          <button data-mode="friends" aria-pressed="${state.mode === "friends"}">Friends</button>
+          <button data-mode="dating" aria-pressed="${state.mode === "dating"}">Dating</button>
+        </div>
+      </div>
+      ${state.mode === "dating" ? `<div class="note">Dating mode comes in a later version. It will be 18+ only, with ID checks. For now, Carriage matches friends.</div>` : ""}
+      <div class="row">
+        <div class="field"><label class="label" for="minAge">Ages from</label><select id="minAge">${ages(state.minAge)}</select></div>
+        <div class="field"><label class="label" for="maxAge">to</label><select id="maxAge">${ages(state.maxAge)}</select></div>
+      </div>
+      <div class="field"><label class="label" for="window">How flexible is your timing?</label>
+        <select id="window">${[5,10,15].map(w => `<option value="${w}" ${w === state.window ? "selected" : ""}>Within ${w} minutes of my usual train</option>`).join("")}</select>
+      </div>
+      <div class="note">${minor ? "You're under 18, so you'll only see other people under 18." : "You'll only see other adults."}</div>
+      <div class="spacer"></div>
+      <button class="btn" data-obnext="26">Next</button>
+    </main>`;
+  },
+  27() {
+    const rule = (title, text) => `<li><b>${title}</b><span class="small muted">${text}</span></li>`;
+    return `${obTop(26, 7)}
+    <main class="fade">
+      <h2>Ride safe</h2>
+      <p class="muted">A few rules everyone on Carriage agrees to.</p>
+      <ol class="rules">
+        ${rule("Meet on the train, in public", "Rides happen on the MRT, around other people. Don't go anywhere private with someone you just met.")}
+        ${rule("Keep your details to yourself", "Never share your home address or school timetable. Swap contacts only when you both want to, after a ride.")}
+        ${rule("Be kind, and take no for an answer", "If someone doesn't wave back or says no, that's the end of it.")}
+        ${rule("Report anything that feels off", "Block or report is always one tap away. We look at every report.")}
+      </ol>
+      <label class="agree"><input type="checkbox" id="ob-agree" ${state.agree ? "checked" : ""}> I agree to the Carriage community rules</label>
+      <div class="spacer"></div>
+      <button class="btn" data-obnext="27" ${state.agree ? "" : "disabled"}>Create my account</button>
+    </main>`;
+  },
+  28() {
+    const pf = state.profile, n = findMatches(state.commute).out.length;
+    return `<div class="top-gap"></div>
+    <main class="fade">
+      <div class="done-hero">${avatarOf(pf, "big")}<h1>Welcome, ${esc(pf.name)}!</h1>
+        <p class="muted">Your account is ready.</p></div>
+      <div class="card">
+        <span class="label">Your daily commute</span>
+        <span>${esc(state.commute.from)} → ${esc(state.commute.to)} · ${state.commute.time} · ${[...state.days].join(", ")}</span>
+        <span class="label">Interests</span>
+        <div class="chips">${[...state.interests].map(x => `<span class="tag shared">${x}</span>`).join("")}</div>
+      </div>
+      <div class="note nudge"><span><b>${n} ${n === 1 ? "person rides" : "people ride"}</b> your commute and ${n === 1 ? "is" : "are"} on Carriage.</span></div>
+      <div class="spacer"></div>
+      <button class="btn" data-finish>See who rides with me</button>
+    </main>`;
+  },
+});
+
+const ICONS = {
+  map: '<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Zm0 0v14m6-12v14"/>',
+  rides: '<rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M8 21l2-4m6 4-2-4"/><circle cx="9" cy="14" r=".5"/><circle cx="15" cy="14" r=".5"/>',
+  waves: '<path d="M7 11V6a1.5 1.5 0 0 1 3 0v5m0-1V4.5a1.5 1.5 0 0 1 3 0V10m0-.5a1.5 1.5 0 0 1 3 0V11m0-.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-1a6 6 0 0 1-5-2.7L4 14.5a1.5 1.5 0 0 1 2.5-1.7L7 13.5"/>',
+  met: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5a6.5 6.5 0 0 1 3.5 5.5"/>',
+  me: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+};
+function tabBar() {
+  const on = { 0: "map", 4: "rides", 5: "rides", 6: "rides", 7: "rides", 9: "waves", 8: "met", 10: "me", 1: "me", 2: "me", 3: "me" }[state.step];
+  const fresh = wavedAtMe().length;
+  const tab = (key, label, step) => `<button class="tab" data-tab="${step}" aria-current="${on === key ? "page" : "false"}">
+    <svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[key]}</svg>${label}${key === "waves" && fresh ? `<span class="tab-badge">${fresh}</span>` : ""}</button>`;
+  return `<nav class="tabbar" aria-label="Main">${tab("map", "Map", 0)}${tab("rides", "Rides", 4)}${tab("waves", "Waves", 9)}${tab("met", "Met", 8)}${tab("me", "Me", 10)}</nav>`;
+}
+function render() { app.innerHTML = `<div class="screen">${screens[state.step]()}</div>${state.step >= 20 ? "" : tabBar()}`; }
+
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.hidden = false;
+  clearTimeout(toast.h); toast.h = setTimeout(() => { t.hidden = true; }, 2600);
+}
+
+app.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  const d = b.dataset;
+  if (d.go !== undefined) { if (Number(d.go) === 4) state.plan = null; go(Number(d.go)); }
+  else if (d.interest) { state.interests.has(d.interest) ? state.interests.delete(d.interest) : state.interests.add(d.interest); render(); }
+  else if (d.mode) { state.mode = d.mode; render(); }
+  else if (d.wave) {
+    const n = d.wave; state.waves[n] = "sent"; render();
+    setTimeout(() => { state.waves[n] = "mutual"; if (state.step === 4 || state.step === 9) render(); toast(n + " waved back"); }, 1400);
+  }
+  else if (d.obnext) {
+    const step = Number(d.obnext), problem = obCheck(step);
+    if (problem) { toast(problem); return; }
+    if (step === 23) {
+      state.age = ageFrom(state.profile.birthday);
+      if (state.age < 18) { state.minAge = Math.max(13, state.age - 2); state.maxAge = 17; }
+      else { state.minAge = 18; state.maxAge = Math.min(60, state.age + 5); }
+    }
+    go(step === 27 ? 28 : step + 1);
+  }
+  else if (d.weekday) { state.days.has(d.weekday) ? state.days.delete(d.weekday) : state.days.add(d.weekday); render(); }
+  else if (d.finish !== undefined) { Object.assign(state, state.commute, { nav: { ...state.commute } }); go(4); toast("Welcome to Carriage!"); }
+  else if (d.existing !== undefined) { toast("Demo: open the current-user link to see an existing account."); }
+  else if (d.showall !== undefined) { state.showAll = true; render(); }
+  else if (d.waveback) { state.waves[d.waveback] = "mutual"; render(); toast("You both waved. Plan a ride with " + d.waveback + "."); }
+  else if (d.notnow) { state.declined[d.notnow] = true; render(); toast(d.notnow + " won't be told."); }
+  else if (d.unwave) { delete state.waves[d.unwave]; render(); toast("Wave taken back."); }
+  else if (d.plan) { state.planFor = d.plan; state.plan = null; state.fromMet = false; go(5); }
+  else if (d.feedback) {
+    state.planFor = d.feedback; state.fromMet = true;
+    state.fb = { rate: null, again: null, share: null, ctype: "Telegram", handle: "" };
+    go(6);
+  }
+  else if (d.q) {
+    if (state.questions.has(d.q)) state.questions.delete(d.q);
+    else if (state.questions.size >= 3) { toast("Pick up to 3. Tap one to remove it first."); return; }
+    else state.questions.add(d.q);
+    render();
+  }
+  else if (d.fb) { state.fb[d.fb] = d.val; render(); }
+  else if (d.submit !== undefined) {
+    state.theySayNo = false;
+    if (state.fb.rate !== "noshow" && state.fb.share === "yes") state.friends[state.planFor] = true;
+    go(7);
+  }
+  else if (d.they !== undefined) {
+    state.theySayNo = !state.theySayNo;
+    if (state.fb.share === "yes") { if (state.theySayNo) delete state.friends[state.planFor]; else state.friends[state.planFor] = true; }
+    render();
+  }
+  else if (d.mapwhole !== undefined) { state.mapWhole = !state.mapWhole; render(); }
+  else if (d.tab) { state.showAll = false; go(Number(d.tab)); }
+  else if (d.meet !== undefined) { Object.assign(state, { from: state.nav.from, to: state.nav.to, time: state.nav.time, showAll: false }); go(4); }
+  else if (d.commute !== undefined) { Object.assign(state, state.commute); render(); }
+  else if (d.swap !== undefined) { [state.nav.from, state.nav.to] = [state.nav.to, state.nav.from]; render(); }
+  else if (d.trip) { [state.nav.from, state.nav.to] = d.trip.split("|"); render(); }
+  else if (d.try !== undefined) { state.commute.from = "Marine Terrace"; state.commute.to = "Raffles Place"; Object.assign(state, state.commute); render(); }
+  else if (d.widen !== undefined) { state.window = 15; render(); }
+  else if (d.day) { state.day = d.day; render(); }
+  else if (d.car) { state.car = Number(d.car); render(); }
+  else if (d.confirm !== undefined) {
+    if (!state.spot.trim()) { toast("Add how " + state.planFor + " can spot you."); document.getElementById("spot").focus(); return; }
+    state.plan = true; state.fromMet = false; state.fb = { rate: null, again: null, share: null, ctype: "Telegram", handle: "" };
+    render(); window.scrollTo(0, 0); toast("Plan sent to " + state.planFor);
+  }
+  else if (d.late !== undefined) { toast(state.planFor + " knows you're running late. They'll save you a spot."); }
+  else if (d.toast) { toast(d.toast); }
+});
+
+// Text fields update quietly so typing isn't interrupted by a re-render
+app.addEventListener("input", e => {
+  const t = e.target, k = t.dataset.keep;
+  if (k === "spot") state.spot = t.value;
+  if (k === "ans") state.answers[t.dataset.question] = t.value;
+  if (k === "handle") state.fb.handle = t.value;
+  if (k === "pf") {
+    state.profile[t.dataset.field] = t.dataset.field === "phone" || t.dataset.field === "otp" ? t.value.replace(/[^\d\s]/g, "") : t.value;
+    if (t.value !== state.profile[t.dataset.field]) t.value = state.profile[t.dataset.field];
+  }
+});
+
+app.addEventListener("change", e => {
+  const t = e.target;
+  if (t.id === "ob-birthday") { state.profile.birthday = t.value; render(); return; }
+  if (t.dataset.keep) return;
+  if (t.id === "ob-photo") {
+    const f = t.files && t.files[0];
+    if (!f) return;
+    const rd = new FileReader();
+    rd.onload = () => { state.profile.photo = rd.result; render(); };
+    rd.readAsDataURL(f);
+    return;
+  }
+  if (t.id === "ob-schoolType") state.profile.schoolType = t.value;
+  if (t.id === "ob-gender") state.profile.gender = t.value;
+  if (t.id === "ob-agree") state.agree = t.checked;
+  if (t.id === "navFrom") state.nav.from = t.value;
+  if (t.id === "navTo") state.nav.to = t.value;
+  if (t.id === "navTime" && t.value) state.nav.time = t.value;
+  if (t.id === "from") state.commute.from = t.value;
+  if (t.id === "to") state.commute.to = t.value;
+  if (t.id === "time" && t.value) state.commute.time = t.value;
+  if (["from", "to", "time"].includes(t.id)) Object.assign(state, state.commute);
+  if (t.id === "window") state.window = Number(t.value);
+  if (t.id === "minAge") { state.minAge = Number(t.value); if (state.maxAge < state.minAge) state.maxAge = state.minAge; }
+  if (t.id === "maxAge") { state.maxAge = Number(t.value); if (state.minAge > state.maxAge) state.minAge = state.maxAge; }
+  if (t.id === "age") {
+    const wasMinor = state.age < 18; state.age = Number(t.value);
+    if (wasMinor !== state.age < 18) {
+      if (state.age < 18) { state.minAge = Math.max(13, state.age - 2); state.maxAge = 17; }
+      else { state.minAge = 18; state.maxAge = Math.min(60, state.age + 5); }
+    }
+  }
+  render();
+});
+
+if (state.isNew) {
+  Object.assign(state, { step: 20, interests: new Set(), waves: {}, incoming: {}, sentWhen: {}, friends: {} });
+}
+render();
+</script>

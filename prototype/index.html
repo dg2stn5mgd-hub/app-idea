@@ -181,6 +181,24 @@ section.list > div { display: flex; flex-direction: column; gap: 2px; }
 .me-row > .muted { white-space: nowrap; }
 .top-gap { height: 8px; }
 .avatar.big { width: 60px; height: 60px; font-size: 17px; }
+.progress { flex: 1; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; margin-left: 8px; }
+.progress span { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
+.phone-row { display: flex; gap: 8px; }
+.phone-row .cc { display: grid; place-items: center; padding: 0 14px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); font-weight: 600; }
+.phone-row input { flex: 1; min-width: 0; }
+input[type="tel"], input[type="date"] { font: inherit; color: var(--fg); background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 11px 12px; width: 100%; }
+.otp { font-family: var(--font-mono) !important; font-size: 28px !important; letter-spacing: 0.5em; text-align: center; }
+.photo-pick { display: flex; align-items: center; gap: 14px; }
+img.avatar { object-fit: cover; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+.photo-pick label { cursor: pointer; }
+.perks { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; color: var(--muted); }
+.rules { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 12px; }
+.rules li { display: flex; flex-direction: column; gap: 2px; }
+.agree { display: flex; gap: 10px; align-items: center; font-weight: 600; cursor: pointer; }
+.agree input { width: 20px; height: 20px; accent-color: var(--accent); }
+.done-hero { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; padding-top: 12px; }
+.done-hero .avatar.big { width: 84px; height: 84px; font-size: 30px; }
 .note { background: var(--surface-2); border-radius: 12px; padding: 12px 14px; font-size: 13.5px; color: var(--muted); }
 
 /* Match cards */
@@ -229,12 +247,15 @@ section.list > div { display: flex; flex-direction: column; gap: 2px; }
 </style>
 
 <div class="phone">
-  <div class="banner">Prototype: the people below are made up so you can try the flow.</div>
+  <div class="banner">Prototype: an existing user. The people below are made up so you can try the flow.</div>
   <div id="app"></div>
 </div>
 <div id="toast" class="toast" hidden></div>
 
 <script>
+// Which version of the prototype this page shows. new-user.html is the same file with this set to "new".
+const START_AS = "existing";
+
 // Singapore MRT network (stations open as of 2026). Each line lists its stations in order.
 // Branches (Changi Airport, Marina Bay) are their own short lists; shared names are interchanges.
 const LINES = {
@@ -377,6 +398,7 @@ const MET = [
     when:"Tue 14 Oct · 1 stop", status:"nosecond" },
 ].map(m => ({ ...m, met: true, from:"Marine Terrace", to:"Katong Park", t:"07:45" }));
 PEOPLE.push(...MET);
+const metList = () => state.isNew ? [] : MET;
 
 // ~285 more made-up riders spread over every line, so any route has people on it.
 // Generated the same way every time (fixed seed), morning rush 07:15–08:30.
@@ -430,6 +452,7 @@ const EXTRA = {
 const extra = p => EXTRA[p.n] || { spot:"I'll wave when I see you", handle:"@" + p.n.toLowerCase().replace(/\s+/g, ""), qa:[["What are you into right now?", p.i.join(", ")]] };
 
 const state = {
+  isNew: START_AS === "new",
   step: 0, from: "Marine Terrace", to: "Katong Park", time: "07:45",
   interests: new Set(["Investing","Cars"]), age: 17, mode: "friends", minAge: 15, maxAge: 17,
   window: 10, waves: { "Wei Ling": "sent", "Bryan": "sent" }, planFor: null, car: 3, day: "Tomorrow", plan: null,
@@ -437,6 +460,8 @@ const state = {
   questions: new Set(["What are you into right now?", "Dream car or dream trip?"]),
   answers: { "What are you into right now?": "Reading about index funds", "Dream car or dream trip?": "Nissan GT-R" },
   fb: null, friends: {}, theySayNo: false, fromMet: false, done: {}, mapWhole: false, showAll: false,
+  profile: { phone: "", otp: "", name: "", birthday: "", gender: "", schoolType: "", school: "", bio: "", photo: "" },
+  days: new Set(["Mon","Tue","Wed","Thu","Fri"]), agree: false,
   commute: { from: "Marine Terrace", to: "Katong Park", time: "07:45" },
   nav: { from: "Marine Terrace", to: "Katong Park", time: "07:45" },
   incoming: { "Hui Min": "this morning", "Nur Aisyah": "yesterday", "Mei Xuan": "2 days ago" },
@@ -533,7 +558,7 @@ const SG_LAND = ["206.4,1.8 185.4,17.6 165.2,28.2 150.1,31.0 133.6,24.1 114.4,22
 
 // Map of Singapore with every MRT line drawn faintly and your route on top.
 // Zooms to your route; "Whole map" shows the full network.
-function routeMap(r) {
+function routeMap(r, trip = state.nav) {
   const pts = [];
   r.legs.forEach((leg, k) => leg.idx.forEach((i, j) => {
     const name = nameOf(leg.line, i);
@@ -576,7 +601,7 @@ function routeMap(r) {
   const places = state.mapWhole ? ["Woodlands", "Jurong East", "Tampines", "Punggol", "Bishan"]
     .filter(m => !pts.some(p => p.name === m)).map(m => label({ name: m, xy: POS[m] }, -8, "map-place")).join("") : "";
   return `<div class="map-wrap">
-    <svg class="map" viewBox="${vb.map(v => v.toFixed(1)).join(" ")}" role="img" aria-label="Map of your route from ${esc(state.nav.from)} to ${esc(state.nav.to)}">
+    <svg class="map" viewBox="${vb.map(v => v.toFixed(1)).join(" ")}" role="img" aria-label="Map of your route from ${esc(trip.from)} to ${esc(trip.to)}">
       <rect x="-50" y="-50" width="550" height="400" class="water"/>
       ${SG_LAND.map(l => `<polygon points="${l}" class="land"/>`).join("")}
       ${network}${stationDots}${route}${dots}${labels}${places}
@@ -764,7 +789,7 @@ const screens = {
       + (out.length > shown.length ? `<button class="btn ghost" data-showall>Show all ${out.length} people on your ride</button>` : "");
     const others = outsideWindow.slice(0, 5);
     const empty = `<div class="note">Nobody rides with you within ${state.window} minutes yet. ${state.window < 15 ? `<button class="btn ghost small-btn" data-widen>Try 15 minutes</button>` : "Invite a friend who takes your train."}</div>`;
-    const pending = MET.filter(m => metStatus(m).status === "feedback");
+    const pending = metList().filter(m => metStatus(m).status === "feedback");
     return `${header(null)}
     <main class="fade">
       ${pending.map(m => `<div class="note nudge"><span>You rode with <b>${esc(m.n)}</b> this morning. How did it go?</span>
@@ -891,8 +916,8 @@ const screens = {
     const row = (title, value, go) => `<button class="me-row" data-go="${go}"><span><span class="label">${title}</span><span class="me-value">${value}</span></span><span class="muted">Edit ›</span></button>`;
     return `${header(null)}
     <main class="fade">
-      <div class="who"><div class="avatar big">You</div>
-        <div class="meta"><h2>You, ${state.age}</h2><p class="small muted">Friends mode · ${state.mode === "dating" ? "dating coming later" : "matching with ages " + state.minAge + "–" + state.maxAge}</p></div></div>
+      <div class="who">${avatarOf(state.profile, "big")}
+        <div class="meta"><h2>${esc(state.profile.name || "You")}, ${state.age}</h2>${state.profile.school ? `<p class="small">${esc(state.profile.school)}</p>` : ""}<p class="small muted">Friends mode · ${state.mode === "dating" ? "dating coming later" : "matching with ages " + state.minAge + "–" + state.maxAge}</p></div></div>
       <div class="list">
         ${row("Daily commute", `${esc(state.commute.from)} → ${esc(state.commute.to)} · ${state.commute.time}${r ? ` · ${r.legs.map(l => pill(l.line)).join(" ")}` : ""}`, 1)}
         ${row("Interests", [...state.interests].map(esc).join(", "), 2)}
@@ -934,7 +959,7 @@ const screens = {
   },
   8() {
     const order = { feedback: 0, friends: 1, again: 2, done: 3, nosecond: 4, noshow: 5 };
-    const list = MET.map(metStatus).sort((a, b) => order[a.status] - order[b.status]);
+    const list = metList().map(metStatus).sort((a, b) => order[a.status] - order[b.status]);
     const cards = list.map(m => {
       const row = {
         feedback: `<span class="pill-status warn">Waiting for your feedback</span><span class="spacer"></span><button class="btn small-btn" data-feedback="${esc(m.n)}">How did it go?</button>`,
@@ -960,9 +985,9 @@ const screens = {
     <main class="fade">
       <div>
         <p class="label">Your rides so far</p>
-        <h2>${MET.length} people met · ${friends} friend${friends === 1 ? "" : "s"}</h2>
+        <h2>${list.length} people met · ${friends} friend${friends === 1 ? "" : "s"}</h2>
       </div>
-      <div class="list">${cards}</div>
+      <div class="list">${cards || `<p class="note">Nobody yet. After your first ride with someone, they show up here and you can tell us how it went.</p>`}</div>
       <div class="note">Only you can see this list. Ratings stay private, and people who said no are never named as the ones who said no.</div>
     </main>`;
   },
@@ -1015,6 +1040,202 @@ const screens = {
   }
 };
 
+// ---------- Sign-up flow for new users (steps 20–28) ----------
+const OB_STEPS = 7;
+const avatarOf = (pf, size = "") => pf.photo
+  ? `<img class="avatar ${size}" src="${pf.photo}" alt="">`
+  : `<div class="avatar ${size}">${pf.name ? esc(pf.name[0].toUpperCase()) : "You"}</div>`;
+const ageFrom = b => { if (!b) return null; const d = new Date(b), t = new Date();
+  let a = t.getFullYear() - d.getFullYear(); if (t < new Date(t.getFullYear(), d.getMonth(), d.getDate())) a--; return a; };
+function obTop(back, n) {
+  return `<div class="top">${back === null ? "" : `<button class="back" data-go="${back}">&larr; Back</button>`}
+    ${n ? `<div class="progress" role="progressbar" aria-valuemin="1" aria-valuemax="${OB_STEPS}" aria-valuenow="${n}" aria-label="Step ${n} of ${OB_STEPS}"><span style="width:${n / OB_STEPS * 100}%"></span></div><span class="small muted mono">${n}/${OB_STEPS}</span>` : ""}</div>`;
+}
+const pfInput = (field, label, attrs = "") => `<div class="field"><label class="label" for="ob-${field}">${label}</label>
+  <input type="text" id="ob-${field}" data-keep="pf" data-field="${field}" value="${esc(state.profile[field])}" ${attrs}></div>`;
+
+// What's still missing on each step, or "" when it's fine to continue
+function obCheck(step) {
+  const pf = state.profile;
+  if (step === 21 && !/^[89]\d{7}$/.test(pf.phone.replace(/\s/g, ""))) return "Enter an 8-digit Singapore mobile number starting with 8 or 9.";
+  if (step === 22 && !/^\d{6}$/.test(pf.otp)) return "Enter the 6-digit code.";
+  if (step === 23) {
+    if (!pf.name.trim()) return "Add your first name.";
+    const a = ageFrom(pf.birthday);
+    if (a === null || a > 100) return "Add your birthday.";
+    if (a < 13) return "Carriage is for people 13 and up.";
+    if (!pf.schoolType) return "Pick school or work.";
+  }
+  if (step === 24 && !myRoute(state.commute)) return "Pick two different stations.";
+  if (step === 24 && !state.days.size) return "Pick at least one day you ride.";
+  if (step === 25 && state.interests.size < 3) return "Pick at least 3 interests.";
+  if (step === 27 && !state.agree) return "Tick the box to agree to the rules.";
+  return "";
+}
+
+Object.assign(screens, {
+  20() {
+    return `<div class="top-gap"></div>
+    <main class="fade">
+      <div class="brand"><span class="logo">C</span><b>Carriage</b></div>
+      <h1>Meet someone on your way to school or work.</h1>
+      <p class="muted">Tell us your daily train ride and what you're into. Carriage finds people who ride the same train, so you can talk on the way instead of scrolling.</p>
+      <div class="note">
+        <div class="hero-line"><span class="dot you"></span><span class="seg-line"></span><span class="dot them"></span><span class="seg-line"></span><span class="dot"></span></div>
+        <div class="ends small" style="margin-top:6px"><span>You board</span><span>They join</span><span>You get off</span></div>
+      </div>
+      <ul class="perks small">
+        <li>Matched on every MRT line, including where you change</li>
+        <li>No chatting with strangers: you wave, and meet only if you both wave</li>
+        <li>Under 18? You're only ever matched with other under-18s</li>
+      </ul>
+      <div class="spacer"></div>
+      <button class="btn" data-go="21">Create my account</button>
+      <button class="btn ghost" data-existing>I already have an account</button>
+    </main>`;
+  },
+  21() {
+    return `${obTop(20, 1)}
+    <main class="fade">
+      <h2>What's your mobile number?</h2>
+      <div class="field"><label class="label" for="ob-phone">Mobile number</label>
+        <div class="phone-row"><span class="cc">+65</span>
+          <input type="tel" id="ob-phone" data-keep="pf" data-field="phone" value="${esc(state.profile.phone)}" inputmode="numeric" maxlength="9" placeholder="8123 4567" autocomplete="tel-national"></div>
+      </div>
+      <p class="small muted">We'll text you a code to check it's you. Your number is never shown to anyone, and one number can only have one account. That keeps out fake profiles.</p>
+      <div class="spacer"></div>
+      <button class="btn" data-obnext="21">Send code</button>
+    </main>`;
+  },
+  22() {
+    return `${obTop(21, 2)}
+    <main class="fade">
+      <h2>Enter the code</h2>
+      <p class="muted">We sent a 6-digit code to +65 ${esc(state.profile.phone)}.</p>
+      <input type="text" id="ob-otp" class="otp" data-keep="pf" data-field="otp" value="${esc(state.profile.otp)}" inputmode="numeric" maxlength="6" placeholder="••••••" aria-label="6-digit code" autocomplete="one-time-code">
+      <p class="small muted">Demo: any 6 digits work. <button class="back" data-toast="New code sent." style="color:var(--accent);font-weight:600">Resend code</button></p>
+      <div class="spacer"></div>
+      <button class="btn" data-obnext="22">Verify</button>
+    </main>`;
+  },
+  23() {
+    const pf = state.profile, a = ageFrom(pf.birthday);
+    const opts = (list, sel) => [`<option value="">Choose…</option>`].concat(list.map(x => `<option ${x === sel ? "selected" : ""}>${x}</option>`)).join("");
+    return `${obTop(22, 3)}
+    <main class="fade">
+      <h2>About you</h2>
+      <div class="photo-pick">
+        ${avatarOf(pf, "big")}
+        <label class="btn ghost small-btn" for="ob-photo">${pf.photo ? "Change photo" : "Add a photo"}</label>
+        <input type="file" id="ob-photo" accept="image/*" class="visually-hidden">
+      </div>
+      <p class="small muted">Optional. Your photo is only shown after you both wave, so people can spot you.</p>
+      ${pfInput("name", "First name", 'placeholder="e.g. Alex" autocomplete="given-name" maxlength="20"')}
+      <div class="field"><label class="label" for="ob-birthday">Birthday</label>
+        <input type="date" id="ob-birthday" data-keep="pf" data-field="birthday" value="${esc(pf.birthday)}" max="2013-12-31" min="1930-01-01">
+        <span class="small muted">${a !== null && a >= 13 ? `You're ${a}. ` : ""}Only your age is shown, never your birthday.${a !== null && a >= 13 && a < 18 ? " Because you're under 18, you'll only be matched with other under-18s." : ""}</span>
+      </div>
+      <div class="row">
+        <div class="field"><label class="label" for="ob-schoolType">School or work</label><select id="ob-schoolType">${opts(["Secondary school","Junior college","Polytechnic","ITE","University","Working","Other"], pf.schoolType)}</select></div>
+        <div class="field"><label class="label" for="ob-gender">Gender</label><select id="ob-gender">${opts(["Woman","Man","Prefer not to say"], pf.gender)}</select></div>
+      </div>
+      ${pfInput("school", pf.schoolType === "Working" ? "Where you work (optional)" : "School name (optional)", 'placeholder="e.g. Victoria Junior College" maxlength="40"')}
+      ${pfInput("bio", "One line about you (optional)", 'placeholder="e.g. Will talk F1 all day" maxlength="60"')}
+      <div class="spacer"></div>
+      <button class="btn" data-obnext="23">Next</button>
+    </main>`;
+  },
+  24() {
+    const r = myRoute(state.commute);
+    return `${obTop(23, 4)}
+    <main class="fade">
+      <h2>Your daily commute</h2>
+      <p class="muted">The train ride you take most days. You can add other trips later from the Map.</p>
+      <div class="field"><label class="label" for="from">You start at</label><select id="from">${stationOptions(state.commute.from)}</select></div>
+      <div class="field"><label class="label" for="to">You get off at</label><select id="to">${stationOptions(state.commute.to)}</select></div>
+      <div class="field"><label class="label" for="time">You're usually on the train at</label><input type="time" id="time" value="${state.commute.time}"></div>
+      <div class="field"><span class="label">Days you ride</span>
+        <div class="chips">${["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d => `<button class="chip" data-weekday="${d}" aria-pressed="${state.days.has(d)}">${d}</button>`).join("")}</div>
+      </div>
+      ${r ? `<div class="map-card">${routeMap(r, state.commute)}<div class="map-meta"><span class="big-time">${r.minutes} min</span>
+        <span class="small muted">${r.stops} stops · ${r.legs.length - 1 ? (r.legs.length - 1) + " change" + (r.legs.length > 2 ? "s" : "") : "no changes"} · ${r.legs.map(l => pill(l.line)).join(" ")}</span></div></div>` : ""}
+      <div class="spacer"></div>
+      <button class="btn" data-obnext="24">Next</button>
+    </main>`;
+  },
+  25() {
+    const n = state.interests.size;
+    return `${obTop(24, 5)}
+    <main class="fade">
+      <h2>What do you like talking about?</h2>
+      <p class="muted">Pick at least 3. People who share these show up first.</p>
+      <div class="chips">${INTERESTS.map(x => `<button class="chip" data-interest="${x}" aria-pressed="${state.interests.has(x)}">${x}</button>`).join("")}</div>
+      <div class="spacer"></div>
+      <button class="btn" data-obnext="25" ${n < 3 ? "disabled" : ""}>${n < 3 ? "Pick " + (3 - n) + " more" : "Next"}</button>
+    </main>`;
+  },
+  26() {
+    const minor = state.age < 18;
+    const lo = minor ? 13 : 18, hi = minor ? 17 : 60;
+    const ages = sel => { let o = ""; for (let a = lo; a <= hi; a++) o += `<option ${a === sel ? "selected" : ""}>${a}</option>`; return o; };
+    return `${obTop(25, 6)}
+    <main class="fade">
+      <h2>Who do you want to meet?</h2>
+      <div class="field"><span class="label">Mode</span>
+        <div class="seg">
+          <button data-mode="friends" aria-pressed="${state.mode === "friends"}">Friends</button>
+          <button data-mode="dating" aria-pressed="${state.mode === "dating"}">Dating</button>
+        </div>
+      </div>
+      ${state.mode === "dating" ? `<div class="note">Dating mode comes in a later version. It will be 18+ only, with ID checks. For now, Carriage matches friends.</div>` : ""}
+      <div class="row">
+        <div class="field"><label class="label" for="minAge">Ages from</label><select id="minAge">${ages(state.minAge)}</select></div>
+        <div class="field"><label class="label" for="maxAge">to</label><select id="maxAge">${ages(state.maxAge)}</select></div>
+      </div>
+      <div class="field"><label class="label" for="window">How flexible is your timing?</label>
+        <select id="window">${[5,10,15].map(w => `<option value="${w}" ${w === state.window ? "selected" : ""}>Within ${w} minutes of my usual train</option>`).join("")}</select>
+      </div>
+      <div class="note">${minor ? "You're under 18, so you'll only see other people under 18." : "You'll only see other adults."}</div>
+      <div class="spacer"></div>
+      <button class="btn" data-obnext="26">Next</button>
+    </main>`;
+  },
+  27() {
+    const rule = (title, text) => `<li><b>${title}</b><span class="small muted">${text}</span></li>`;
+    return `${obTop(26, 7)}
+    <main class="fade">
+      <h2>Ride safe</h2>
+      <p class="muted">A few rules everyone on Carriage agrees to.</p>
+      <ol class="rules">
+        ${rule("Meet on the train, in public", "Rides happen on the MRT, around other people. Don't go anywhere private with someone you just met.")}
+        ${rule("Keep your details to yourself", "Never share your home address or school timetable. Swap contacts only when you both want to, after a ride.")}
+        ${rule("Be kind, and take no for an answer", "If someone doesn't wave back or says no, that's the end of it.")}
+        ${rule("Report anything that feels off", "Block or report is always one tap away. We look at every report.")}
+      </ol>
+      <label class="agree"><input type="checkbox" id="ob-agree" ${state.agree ? "checked" : ""}> I agree to the Carriage community rules</label>
+      <div class="spacer"></div>
+      <button class="btn" data-obnext="27" ${state.agree ? "" : "disabled"}>Create my account</button>
+    </main>`;
+  },
+  28() {
+    const pf = state.profile, n = findMatches(state.commute).out.length;
+    return `<div class="top-gap"></div>
+    <main class="fade">
+      <div class="done-hero">${avatarOf(pf, "big")}<h1>Welcome, ${esc(pf.name)}!</h1>
+        <p class="muted">Your account is ready.</p></div>
+      <div class="card">
+        <span class="label">Your daily commute</span>
+        <span>${esc(state.commute.from)} → ${esc(state.commute.to)} · ${state.commute.time} · ${[...state.days].join(", ")}</span>
+        <span class="label">Interests</span>
+        <div class="chips">${[...state.interests].map(x => `<span class="tag shared">${x}</span>`).join("")}</div>
+      </div>
+      <div class="note nudge"><span><b>${n} ${n === 1 ? "person rides" : "people ride"}</b> your commute and ${n === 1 ? "is" : "are"} on Carriage.</span></div>
+      <div class="spacer"></div>
+      <button class="btn" data-finish>See who rides with me</button>
+    </main>`;
+  },
+});
+
 const ICONS = {
   map: '<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Zm0 0v14m6-12v14"/>',
   rides: '<rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M8 21l2-4m6 4-2-4"/><circle cx="9" cy="14" r=".5"/><circle cx="15" cy="14" r=".5"/>',
@@ -1029,7 +1250,7 @@ function tabBar() {
     <svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[key]}</svg>${label}${key === "waves" && fresh ? `<span class="tab-badge">${fresh}</span>` : ""}</button>`;
   return `<nav class="tabbar" aria-label="Main">${tab("map", "Map", 0)}${tab("rides", "Rides", 4)}${tab("waves", "Waves", 9)}${tab("met", "Met", 8)}${tab("me", "Me", 10)}</nav>`;
 }
-function render() { app.innerHTML = `<div class="screen">${screens[state.step]()}</div>${tabBar()}`; }
+function render() { app.innerHTML = `<div class="screen">${screens[state.step]()}</div>${state.step >= 20 ? "" : tabBar()}`; }
 
 function toast(msg) {
   const t = document.getElementById("toast");
@@ -1047,6 +1268,19 @@ app.addEventListener("click", e => {
     const n = d.wave; state.waves[n] = "sent"; render();
     setTimeout(() => { state.waves[n] = "mutual"; if (state.step === 4 || state.step === 9) render(); toast(n + " waved back"); }, 1400);
   }
+  else if (d.obnext) {
+    const step = Number(d.obnext), problem = obCheck(step);
+    if (problem) { toast(problem); return; }
+    if (step === 23) {
+      state.age = ageFrom(state.profile.birthday);
+      if (state.age < 18) { state.minAge = Math.max(13, state.age - 2); state.maxAge = 17; }
+      else { state.minAge = 18; state.maxAge = Math.min(60, state.age + 5); }
+    }
+    go(step === 27 ? 28 : step + 1);
+  }
+  else if (d.weekday) { state.days.has(d.weekday) ? state.days.delete(d.weekday) : state.days.add(d.weekday); render(); }
+  else if (d.finish !== undefined) { Object.assign(state, state.commute, { nav: { ...state.commute } }); go(4); toast("Welcome to Carriage!"); }
+  else if (d.existing !== undefined) { toast("Demo: open the current-user link to see an existing account."); }
   else if (d.showall !== undefined) { state.showAll = true; render(); }
   else if (d.waveback) { state.waves[d.waveback] = "mutual"; render(); toast("You both waved. Plan a ride with " + d.waveback + "."); }
   else if (d.notnow) { state.declined[d.notnow] = true; render(); toast(d.notnow + " won't be told."); }
@@ -1099,11 +1333,27 @@ app.addEventListener("input", e => {
   if (k === "spot") state.spot = t.value;
   if (k === "ans") state.answers[t.dataset.question] = t.value;
   if (k === "handle") state.fb.handle = t.value;
+  if (k === "pf") {
+    state.profile[t.dataset.field] = t.dataset.field === "phone" || t.dataset.field === "otp" ? t.value.replace(/[^\d\s]/g, "") : t.value;
+    if (t.value !== state.profile[t.dataset.field]) t.value = state.profile[t.dataset.field];
+  }
 });
 
 app.addEventListener("change", e => {
   const t = e.target;
+  if (t.id === "ob-birthday") { state.profile.birthday = t.value; render(); return; }
   if (t.dataset.keep) return;
+  if (t.id === "ob-photo") {
+    const f = t.files && t.files[0];
+    if (!f) return;
+    const rd = new FileReader();
+    rd.onload = () => { state.profile.photo = rd.result; render(); };
+    rd.readAsDataURL(f);
+    return;
+  }
+  if (t.id === "ob-schoolType") state.profile.schoolType = t.value;
+  if (t.id === "ob-gender") state.profile.gender = t.value;
+  if (t.id === "ob-agree") state.agree = t.checked;
   if (t.id === "navFrom") state.nav.from = t.value;
   if (t.id === "navTo") state.nav.to = t.value;
   if (t.id === "navTime" && t.value) state.nav.time = t.value;
@@ -1124,5 +1374,8 @@ app.addEventListener("change", e => {
   render();
 });
 
+if (state.isNew) {
+  Object.assign(state, { step: 20, interests: new Set(), waves: {}, incoming: {}, sentWhen: {}, friends: {} });
+}
 render();
 </script>
