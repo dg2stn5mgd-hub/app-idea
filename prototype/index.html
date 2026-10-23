@@ -243,7 +243,7 @@ function findMatches() {
 const app = document.getElementById("app");
 function go(step) { state.step = step; render(); window.scrollTo(0, 0); }
 
-function top(backTo, dotsOn) {
+function header(backTo, dotsOn) {
   const back = backTo === null ? "" : `<button class="back" data-go="${backTo}">&larr; Back</button>`;
   const dots = dotsOn ? `<div class="dots">${[1,2,3].map(n => `<span class="${n <= dotsOn ? "on" : ""}"></span>`).join("")}</div>` : "";
   return `<div class="top">${back}${dots}</div>`;
@@ -265,7 +265,7 @@ function routeDiagram() {
 
 const screens = {
   0() {
-    return `${top(null)}
+    return `${header(null)}
     <main class="fade">
       <p class="label">Meet people on your commute</p>
       <h1>Your daily train ride already has someone worth talking to.</h1>
@@ -281,7 +281,7 @@ const screens = {
   },
   1() {
     const err = state.board === state.alight ? `<p class="error">Pick two different stations.</p>` : "";
-    return `${top(0, 1)}
+    return `${header(0, 1)}
     <main class="fade">
       <h2>How do you get to school or work?</h2>
       <div class="field"><span class="label">Line</span>
@@ -301,7 +301,7 @@ const screens = {
   },
   2() {
     const n = state.interests.size;
-    return `${top(1, 2)}
+    return `${header(1, 2)}
     <main class="fade">
       <h2>What do you like talking about?</h2>
       <p class="muted">Pick at least 2. People who share these show up first.</p>
@@ -315,7 +315,7 @@ const screens = {
     const lo = minor ? 13 : 18, hi = minor ? 17 : 60;
     const ages = (sel) => { let o = ""; for (let a = lo; a <= hi; a++) o += `<option ${a === sel ? "selected" : ""}>${a}</option>`; return o; };
     let ageOpts = ""; for (let a = 13; a <= 60; a++) ageOpts += `<option ${a === state.age ? "selected" : ""}>${a}</option>`;
-    return `${top(2, 3)}
+    return `${header(2, 3)}
     <main class="fade">
       <h2>Who do you want to meet?</h2>
       <div class="field"><label class="label" for="age">Your age</label><select id="age">${ageOpts}</select></div>
@@ -365,7 +365,7 @@ const screens = {
       </article>`;
     }).join("");
     const empty = `<div class="note">Nobody rides with you within ${state.window} minutes yet. ${state.window < 15 ? `<button class="btn ghost small-btn" data-widen>Try 15 minutes</button>` : "Invite a friend who takes your train."}</div>`;
-    return `${top(3)}
+    return `${header(3)}
     <main class="fade">
       <div>
         <p class="label">Friends · ${st(state.board)[0]} → ${st(state.alight)[0]} · ${state.time}</p>
@@ -384,7 +384,7 @@ const screens = {
       const tip = shared.length
         ? `You both like ${shared[0]}. Ask ${p.n} how they got into it.`
         : `Ask ${p.n} about "${p.bio}".`;
-      return `${top(4)}
+      return `${header(4)}
       <main class="fade">
         <h2>Ride planned</h2>
         <div class="ticket">
@@ -401,7 +401,7 @@ const screens = {
         </div>
       </main>`;
     }
-    return `${top(4)}
+    return `${header(4)}
     <main class="fade">
       <div>
         <p class="label">You and ${esc(p.n)} both waved</p>
