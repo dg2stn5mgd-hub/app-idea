@@ -49,7 +49,7 @@ body {
 }
 .phone {
   max-width: 420px; margin: 0 auto; background: var(--surface);
-  border: 1px solid var(--line); border-radius: 22px; overflow: hidden;
+  border: 1px solid var(--line); border-radius: 22px; overflow: clip;
   min-height: 640px; display: flex; flex-direction: column;
 }
 .banner {
@@ -162,6 +162,25 @@ a.btn { display: block; text-align: center; text-decoration: none; }
 .badge { display: inline-block; min-width: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: var(--on-accent); font-size: 11.5px; line-height: 18px; }
 .count { font-family: var(--font-mono); font-size: 12px; color: var(--muted); font-weight: 500; }
 section.list > div { display: flex; flex-direction: column; gap: 2px; }
+.phone { position: relative; }
+#app { flex: 1; display: flex; flex-direction: column; }
+.screen { flex: 1; display: flex; flex-direction: column; }
+.tabbar { position: sticky; bottom: 0; z-index: 5; display: grid; grid-template-columns: repeat(5, 1fr);
+  background: var(--surface); border-top: 1px solid var(--line); padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px)); }
+.tab { position: relative; font: inherit; font-size: 11.5px; font-weight: 600; background: none; border: 0; color: var(--muted);
+  display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0; cursor: pointer; border-radius: 10px; }
+.tab svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.tab[aria-current="page"] { color: var(--accent); }
+.tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.tab-badge { position: absolute; top: 2px; left: calc(50% + 6px); min-width: 17px; padding: 0 4px; border-radius: 9px;
+  background: var(--accent); color: var(--on-accent); font-size: 10.5px; line-height: 17px; }
+.me-row { font: inherit; color: var(--fg); text-align: left; display: flex; align-items: center; gap: 10px; justify-content: space-between;
+  border: 1px solid var(--line); border-radius: 14px; padding: 14px; background: var(--surface); cursor: pointer; }
+.me-row > span:first-child { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.me-value { font-size: 15px; }
+.me-row > .muted { white-space: nowrap; }
+.top-gap { height: 8px; }
+.avatar.big { width: 60px; height: 60px; font-size: 17px; }
 .note { background: var(--surface-2); border-radius: 12px; padding: 12px 14px; font-size: 13.5px; color: var(--muted); }
 
 /* Match cards */
@@ -417,7 +436,9 @@ const state = {
   spot: "Black backpack, standing by the door",
   questions: new Set(["What are you into right now?", "Dream car or dream trip?"]),
   answers: { "What are you into right now?": "Reading about index funds", "Dream car or dream trip?": "Nissan GT-R" },
-  fb: null, friends: {}, theySayNo: false, fromMet: false, done: {}, setup: false, mapWhole: false, showAll: false,
+  fb: null, friends: {}, theySayNo: false, fromMet: false, done: {}, mapWhole: false, showAll: false,
+  commute: { from: "Marine Terrace", to: "Katong Park", time: "07:45" },
+  nav: { from: "Marine Terrace", to: "Katong Park", time: "07:45" },
   incoming: { "Hui Min": "this morning", "Nur Aisyah": "yesterday", "Mei Xuan": "2 days ago" },
   declined: {}, sentWhen: { "Wei Ling": "yesterday", "Bryan": "3 days ago" }
 };
@@ -425,12 +446,15 @@ const state = {
 const toMin = t => { const [h,m] = t.split(":").map(Number); return h*60 + m; };
 const fmt = m => String(Math.floor(m/60)).padStart(2,"0") + ":" + String(m%60).padStart(2,"0");
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
-const myRoute = () => route(state.from, state.to, state.time);
+// state.commute: your saved daily trip. state.from/to/time: the trip Rides is showing (your commute,
+// or a one-off trip from the Map). state.nav: whatever you're looking up on the Map.
+const myRoute = (trip = state) => route(trip.from, trip.to, trip.time);
+const sameTrip = (a, b) => a.from === b.from && a.to === b.to && a.time === b.time;
 
 // Where does this person's ride overlap yours? Checks each of your legs against each of theirs:
 // same line, same direction, sharing at least one stop.
-function overlap(p) {
-  const mine = myRoute(), theirs = route(p.from, p.to, p.t);
+function overlap(p, trip = state) {
+  const mine = myRoute(trip), theirs = route(p.from, p.to, p.t);
   if (!mine || !theirs) return null;
   const segs = [];
   let offset = 0;
@@ -459,12 +483,12 @@ function overlap(p) {
 
 function sameAgeBand(p) { return state.age < 18 ? p.a < 18 : p.a >= 18; }
 
-function findMatches() {
+function findMatches(trip = state) {
   const out = [], outsideWindow = [];
   for (const p of PEOPLE) {
     if (p.met) continue;
     if (!sameAgeBand(p) || p.a < state.minAge || p.a > state.maxAge) continue;
-    const o = overlap(p);
+    const o = overlap(p, trip);
     if (!o) continue;
     const shared = p.i.filter(x => state.interests.has(x));
     const m = { p, o, shared, score: shared.length * 3 + o.stops - o.diff / 4 };
@@ -474,19 +498,25 @@ function findMatches() {
   const later = outsideWindow.filter(m => m.o.diff <= 30).sort((a, b) => a.o.diff - b.o.diff || b.score - a.score);
   return { out, outsideWindow: later };
 }
-const findPerson = name => { const { out, outsideWindow } = findMatches(); return [...out, ...outsideWindow].find(m => m.p.n === name); };
+const findPerson = name => {
+  for (const trip of [state, state.commute]) {
+    const { out, outsideWindow } = findMatches(trip), m = [...out, ...outsideWindow].find(x => x.p.n === name);
+    if (m) return m;
+  }
+};
 
 const app = document.getElementById("app");
 function go(step) { state.step = step; render(); window.scrollTo(0, 0); }
 
 function header(backTo, dotsOn) {
+  if (backTo === null && !dotsOn) return `<div class="top-gap"></div>`;
   const back = backTo === null ? "" : `<button class="back" data-go="${backTo}">&larr; Back</button>`;
   const dots = dotsOn ? `<div class="dots">${[1,2,3].map(n => `<span class="${n <= dotsOn ? "on" : ""}"></span>`).join("")}</div>` : "";
   return `<div class="top">${back}${dots}</div>`;
 }
 
 const SAVED = [
-  { label: "Home → School", from: "Marine Terrace", to: "Katong Park" },
+  { label: "Home → School (daily)", from: "Marine Terrace", to: "Katong Park" },
   { label: "Raffles Place", from: "Marine Terrace", to: "Raffles Place" },
   { label: "Changi Airport", from: "Marine Terrace", to: "Changi Airport" },
 ];
@@ -546,7 +576,7 @@ function routeMap(r) {
   const places = state.mapWhole ? ["Woodlands", "Jurong East", "Tampines", "Punggol", "Bishan"]
     .filter(m => !pts.some(p => p.name === m)).map(m => label({ name: m, xy: POS[m] }, -8, "map-place")).join("") : "";
   return `<div class="map-wrap">
-    <svg class="map" viewBox="${vb.map(v => v.toFixed(1)).join(" ")}" role="img" aria-label="Map of your route from ${esc(state.from)} to ${esc(state.to)}">
+    <svg class="map" viewBox="${vb.map(v => v.toFixed(1)).join(" ")}" role="img" aria-label="Map of your route from ${esc(state.nav.from)} to ${esc(state.nav.to)}">
       <rect x="-50" y="-50" width="550" height="400" class="water"/>
       ${SG_LAND.map(l => `<polygon points="${l}" class="land"/>`).join("")}
       ${network}${stationDots}${route}${dots}${labels}${places}
@@ -574,17 +604,8 @@ function routeDiagram(r) {
   }).join("");
 }
 
-function tabs(active) {
-  const rides = findMatches().out.length, fresh = wavedAtMe().length;
-  return `<div class="seg three tabs">
-    <button data-go="4" aria-pressed="${active === 4}">Rides (${rides})</button>
-    <button data-go="9" aria-pressed="${active === 9}">Waves${fresh ? ` <span class="badge">${fresh}</span>` : ""}</button>
-    <button data-go="8" aria-pressed="${active === 8}">Met (${MET.length})</button>
-  </div>`;
-}
-
 // People on your ride who waved at you and you haven't answered yet
-const wavedAtMe = () => findMatches().out.filter(m => state.incoming[m.p.n] && !state.waves[m.p.n] && !state.declined[m.p.n] && !state.friends[m.p.n]);
+const wavedAtMe = () => findMatches(state.commute).out.filter(m => state.incoming[m.p.n] && !state.waves[m.p.n] && !state.declined[m.p.n] && !state.friends[m.p.n]);
 
 // One person on the Waves page: where you'd ride together and what you share
 function waveCard(m, actions, note) {
@@ -614,24 +635,24 @@ function metStatus(m) {
 
 const screens = {
   0() {
-    const r = myRoute();
-    const riders = r ? findMatches().out.length : 0;
+    const r = myRoute(state.nav);
+    const riders = r ? findMatches(state.nav).out.length : 0;
     const changes = r ? r.legs.length - 1 : 0;
-    const trip = (from, to) => state.from === from && state.to === to;
-    return `${header(null)}
+    const trip = (from, to) => state.nav.from === from && state.nav.to === to;
+    return `
     <main class="fade">
       <div class="brand"><span class="logo">C</span><b>Carriage</b></div>
       <div class="search">
         <div class="search-fields">
-          <div class="field"><label class="label" for="from">From</label><select id="from">${stationOptions(state.from)}</select></div>
-          <div class="field"><label class="label" for="to">Where to?</label><select id="to">${stationOptions(state.to)}</select></div>
+          <div class="field"><label class="label" for="navFrom">From</label><select id="navFrom">${stationOptions(state.nav.from)}</select></div>
+          <div class="field"><label class="label" for="navTo">Where to?</label><select id="navTo">${stationOptions(state.nav.to)}</select></div>
         </div>
         <button class="swap" data-swap aria-label="Swap start and destination">⇅</button>
       </div>
       <div class="chips">
         ${SAVED.map(t => `<button class="chip" data-trip="${esc(t.from)}|${esc(t.to)}" aria-pressed="${trip(t.from, t.to)}">${esc(t.label)}</button>`).join("")}
       </div>
-      <div class="field"><label class="label" for="time">Leaving at</label><input type="time" id="time" value="${state.time}"></div>
+      <div class="field"><label class="label" for="navTime">Leaving at</label><input type="time" id="navTime" value="${state.nav.time}"></div>
       ${!r ? `<p class="error">Pick two different stations.</p>` : `
       <div class="map-card">
         ${routeMap(r)}
@@ -642,8 +663,8 @@ const screens = {
       </div>
       <div class="choice">
         <button class="btn" data-meet>Meet someone on this ride</button>
-        <p class="small muted center">${riders ? `${riders} ${riders === 1 ? "person" : "people"} on this ride ${riders === 1 ? "is" : "are"} on Carriage right now.` : "Nobody on this ride yet. Try another time."}${state.setup ? "" : " Takes a minute to set up the first time."}</p>
-        <a class="btn ghost" href="${gmaps(state.from, state.to)}" target="_blank" rel="noopener">Just navigate, in Google Maps</a>
+        <p class="small muted center">${riders ? `${riders} ${riders === 1 ? "person" : "people"} on this ride ${riders === 1 ? "is" : "are"} on Carriage right now.` : "Nobody on this ride yet. Try another time."}</p>
+        <a class="btn ghost" href="${gmaps(state.nav.from, state.nav.to)}" target="_blank" rel="noopener">Just navigate, in Google Maps</a>
       </div>
       <details class="stops"><summary>See every stop</summary>${routeDiagram(r)}</details>`}
     </main>`;
@@ -652,7 +673,7 @@ const screens = {
     const r = myRoute();
     const err = !r ? `<p class="error">Pick two different stations.</p>` : "";
     const changes = r ? r.legs.length - 1 : 0;
-    return `${header(0, 1)}
+    return `${header(10)}
     <main class="fade">
       <h2>How do you get to school or work?</h2>
       <div class="field"><label class="label" for="from">You start at</label><select id="from">${stationOptions(state.from)}</select></div>
@@ -664,18 +685,18 @@ const screens = {
       ${r && !changes ? `<button class="back" data-try style="color:var(--accent);font-weight:600;text-align:left">Try a route with a change: Marine Terrace → Raffles Place</button>` : ""}
       <span class="small muted">All MRT lines are in. Buses come in a later version.</span>
       <div class="spacer"></div>
-      <button class="btn" data-go="2" ${err ? "disabled" : ""}>Next</button>
+      <button class="btn" data-go="10" ${err ? "disabled" : ""}>Save my commute</button>
     </main>`;
   },
   2() {
     const n = state.interests.size;
-    return `${header(0, 2)}
+    return `${header(10)}
     <main class="fade">
       <h2>What do you like talking about?</h2>
       <p class="muted">Pick at least 2. People who share these show up first.</p>
       <div class="chips">${INTERESTS.map(x => `<button class="chip" data-interest="${x}" aria-pressed="${state.interests.has(x)}">${x}</button>`).join("")}</div>
       <div class="spacer"></div>
-      <button class="btn" data-go="3" ${n < 2 ? "disabled" : ""}>${n < 2 ? "Pick " + (2 - n) + " more" : "Next"}</button>
+      <button class="btn" data-go="10" ${n < 2 ? "disabled" : ""}>${n < 2 ? "Pick " + (2 - n) + " more" : "Save"}</button>
     </main>`;
   },
   3() {
@@ -683,7 +704,7 @@ const screens = {
     const lo = minor ? 13 : 18, hi = minor ? 17 : 60;
     const ages = (sel) => { let o = ""; for (let a = lo; a <= hi; a++) o += `<option ${a === sel ? "selected" : ""}>${a}</option>`; return o; };
     let ageOpts = ""; for (let a = 13; a <= 60; a++) ageOpts += `<option ${a === state.age ? "selected" : ""}>${a}</option>`;
-    return `${header(2, 3)}
+    return `${header(10)}
     <main class="fade">
       <h2>Who do you want to meet?</h2>
       <div class="field"><label class="label" for="age">Your age</label><select id="age">${ageOpts}</select></div>
@@ -705,7 +726,7 @@ const screens = {
       </div>
       <div class="note">${minor ? "You'll only be matched with other people under 18." : "You'll only be matched with other adults."} Nobody can see your stations or your time until you both wave at each other.</div>
       <div class="spacer"></div>
-      <button class="btn" data-go="4" data-setup>Find people on my ride</button>
+      <button class="btn" data-go="10">Save</button>
     </main>`;
   },
   4() {
@@ -744,14 +765,15 @@ const screens = {
     const others = outsideWindow.slice(0, 5);
     const empty = `<div class="note">Nobody rides with you within ${state.window} minutes yet. ${state.window < 15 ? `<button class="btn ghost small-btn" data-widen>Try 15 minutes</button>` : "Invite a friend who takes your train."}</div>`;
     const pending = MET.filter(m => metStatus(m).status === "feedback");
-    return `${header(0)}
+    return `${header(null)}
     <main class="fade">
-      ${tabs(4)}
       ${pending.map(m => `<div class="note nudge"><span>You rode with <b>${esc(m.n)}</b> this morning. How did it go?</span>
         <button class="btn small-btn" data-feedback="${esc(m.n)}">Rate it</button></div>`).join("")}
       <div>
-        <p class="label">Friends · ${esc(state.from)} → ${esc(state.to)} · ${state.time}</p>
-        <h2>Who do you want to meet?</h2>
+        ${sameTrip(state, state.commute)
+          ? `<p class="label">Your daily commute · ${esc(state.from)} → ${esc(state.to)} · ${state.time}</p>`
+          : `<div class="note nudge"><span>Showing a one-off trip: <b>${esc(state.from)} → ${esc(state.to)}</b> at ${state.time}</span><button class="btn ghost small-btn" data-commute>My commute</button></div>`}
+        <h2 style="margin-top:8px">Who do you want to meet?</h2>
         <p class="muted">${out.length} ${out.length === 1 ? "person is" : "people are"} on your ride. Tap <b>Wave</b> on anyone you'd like to meet. If they wave back, you can plan a ride together.</p>
       </div>
       <div class="list">${out.length ? cards : empty}</div>
@@ -864,8 +886,23 @@ const screens = {
       <button class="btn" data-submit ${f.rate ? "" : "disabled"}>Send feedback</button>
     </main>`;
   },
+  10() {
+    const r = myRoute(state.commute);
+    const row = (title, value, go) => `<button class="me-row" data-go="${go}"><span><span class="label">${title}</span><span class="me-value">${value}</span></span><span class="muted">Edit ›</span></button>`;
+    return `${header(null)}
+    <main class="fade">
+      <div class="who"><div class="avatar big">You</div>
+        <div class="meta"><h2>You, ${state.age}</h2><p class="small muted">Friends mode · ${state.mode === "dating" ? "dating coming later" : "matching with ages " + state.minAge + "–" + state.maxAge}</p></div></div>
+      <div class="list">
+        ${row("Daily commute", `${esc(state.commute.from)} → ${esc(state.commute.to)} · ${state.commute.time}${r ? ` · ${r.legs.map(l => pill(l.line)).join(" ")}` : ""}`, 1)}
+        ${row("Interests", [...state.interests].map(esc).join(", "), 2)}
+        ${row("Who you want to meet", `Ages ${state.minAge}–${state.maxAge} · within ${state.window} min of your train`, 3)}
+      </div>
+      <div class="note">Your daily commute is what Rides and Waves use, so you can check them anytime without searching. Use the Map for one-off trips.</div>
+    </main>`;
+  },
   9() {
-    const { out: inWin, outsideWindow: other } = findMatches(), all = [...inWin, ...other];
+    const { out: inWin, outsideWindow: other } = findMatches(state.commute), all = [...inWin, ...other];
     const incoming = wavedAtMe();
     const ready = all.filter(m => state.waves[m.p.n] === "mutual" && !state.friends[m.p.n]);
     const sent = all.filter(m => state.waves[m.p.n] === "sent");
@@ -873,11 +910,10 @@ const screens = {
       <div><h3>${title}</h3>${hint ? `<p class="small muted">${hint}</p>` : ""}</div>
       ${items.length ? items.join("") : `<p class="note">${empty}</p>`}
     </section>`;
-    return `${header(0)}
+    return `${header(null)}
     <main class="fade">
-      ${tabs(9)}
       <div>
-        <p class="label">Waves</p>
+        <p class="label">Waves · your daily commute</p>
         <h2>Who you want to meet, and who wants to meet you</h2>
       </div>
       ${section(`Waved at you <span class="count">${incoming.length}</span>`, "They want to ride with you. Wave back to plan a ride.",
@@ -920,9 +956,8 @@ const screens = {
       </article>`;
     }).join("");
     const friends = list.filter(m => m.status === "friends").length;
-    return `${header(3)}
+    return `${header(null)}
     <main class="fade">
-      ${tabs(8)}
       <div>
         <p class="label">Your rides so far</p>
         <h2>${MET.length} people met · ${friends} friend${friends === 1 ? "" : "s"}</h2>
@@ -980,7 +1015,21 @@ const screens = {
   }
 };
 
-function render() { app.innerHTML = screens[state.step](); }
+const ICONS = {
+  map: '<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Zm0 0v14m6-12v14"/>',
+  rides: '<rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M8 21l2-4m6 4-2-4"/><circle cx="9" cy="14" r=".5"/><circle cx="15" cy="14" r=".5"/>',
+  waves: '<path d="M7 11V6a1.5 1.5 0 0 1 3 0v5m0-1V4.5a1.5 1.5 0 0 1 3 0V10m0-.5a1.5 1.5 0 0 1 3 0V11m0-.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-1a6 6 0 0 1-5-2.7L4 14.5a1.5 1.5 0 0 1 2.5-1.7L7 13.5"/>',
+  met: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5a6.5 6.5 0 0 1 3.5 5.5"/>',
+  me: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+};
+function tabBar() {
+  const on = { 0: "map", 4: "rides", 5: "rides", 6: "rides", 7: "rides", 9: "waves", 8: "met", 10: "me", 1: "me", 2: "me", 3: "me" }[state.step];
+  const fresh = wavedAtMe().length;
+  const tab = (key, label, step) => `<button class="tab" data-tab="${step}" aria-current="${on === key ? "page" : "false"}">
+    <svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[key]}</svg>${label}${key === "waves" && fresh ? `<span class="tab-badge">${fresh}</span>` : ""}</button>`;
+  return `<nav class="tabbar" aria-label="Main">${tab("map", "Map", 0)}${tab("rides", "Rides", 4)}${tab("waves", "Waves", 9)}${tab("met", "Met", 8)}${tab("me", "Me", 10)}</nav>`;
+}
+function render() { app.innerHTML = `<div class="screen">${screens[state.step]()}</div>${tabBar()}`; }
 
 function toast(msg) {
   const t = document.getElementById("toast");
@@ -991,7 +1040,6 @@ function toast(msg) {
 app.addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
   const d = b.dataset;
-  if (d.setup !== undefined) state.setup = true;
   if (d.go !== undefined) { if (Number(d.go) === 4) state.plan = null; go(Number(d.go)); }
   else if (d.interest) { state.interests.has(d.interest) ? state.interests.delete(d.interest) : state.interests.add(d.interest); render(); }
   else if (d.mode) { state.mode = d.mode; render(); }
@@ -1027,10 +1075,12 @@ app.addEventListener("click", e => {
     render();
   }
   else if (d.mapwhole !== undefined) { state.mapWhole = !state.mapWhole; render(); }
-  else if (d.meet !== undefined) go(state.setup ? 4 : 2);
-  else if (d.swap !== undefined) { [state.from, state.to] = [state.to, state.from]; render(); }
-  else if (d.trip) { [state.from, state.to] = d.trip.split("|"); render(); }
-  else if (d.try !== undefined) { state.from = "Marine Terrace"; state.to = "Raffles Place"; render(); }
+  else if (d.tab) { state.showAll = false; go(Number(d.tab)); }
+  else if (d.meet !== undefined) { Object.assign(state, { from: state.nav.from, to: state.nav.to, time: state.nav.time, showAll: false }); go(4); }
+  else if (d.commute !== undefined) { Object.assign(state, state.commute); render(); }
+  else if (d.swap !== undefined) { [state.nav.from, state.nav.to] = [state.nav.to, state.nav.from]; render(); }
+  else if (d.trip) { [state.nav.from, state.nav.to] = d.trip.split("|"); render(); }
+  else if (d.try !== undefined) { state.commute.from = "Marine Terrace"; state.commute.to = "Raffles Place"; Object.assign(state, state.commute); render(); }
   else if (d.widen !== undefined) { state.window = 15; render(); }
   else if (d.day) { state.day = d.day; render(); }
   else if (d.car) { state.car = Number(d.car); render(); }
@@ -1054,9 +1104,13 @@ app.addEventListener("input", e => {
 app.addEventListener("change", e => {
   const t = e.target;
   if (t.dataset.keep) return;
-  if (t.id === "from") state.from = t.value;
-  if (t.id === "to") state.to = t.value;
-  if (t.id === "time" && t.value) state.time = t.value;
+  if (t.id === "navFrom") state.nav.from = t.value;
+  if (t.id === "navTo") state.nav.to = t.value;
+  if (t.id === "navTime" && t.value) state.nav.time = t.value;
+  if (t.id === "from") state.commute.from = t.value;
+  if (t.id === "to") state.commute.to = t.value;
+  if (t.id === "time" && t.value) state.commute.time = t.value;
+  if (["from", "to", "time"].includes(t.id)) Object.assign(state, state.commute);
   if (t.id === "window") state.window = Number(t.value);
   if (t.id === "minAge") { state.minAge = Number(t.value); if (state.maxAge < state.minAge) state.maxAge = state.minAge; }
   if (t.id === "maxAge") { state.maxAge = Number(t.value); if (state.minAge > state.maxAge) state.minAge = state.maxAge; }

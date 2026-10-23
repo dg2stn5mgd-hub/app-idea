@@ -8,13 +8,17 @@ People in Singapore spend their train and bus rides scrolling on their phones. M
 
 ## How it works
 
-**The home screen works like a maps app.** You pick where you're going (or tap a saved trip like "Home → School") and see your route. Then you choose:
+**Five tabs at the bottom, always one tap away:** Map (navigation), Rides (people on your commute), Waves (who you waved at and who waved at you, with a badge for new ones), Met (people you've ridden with) and Me (your commute, interests and who you want to meet).
+
+Rides and Waves use your saved **daily commute**, so you never have to search a destination to check them. A one-off trip searched on the Map can be shown on Rides too, with a button to switch back to your commute.
+
+**The Map tab works like a maps app.** You pick where you're going (or tap a saved trip like "Home → School") and see your route. Then you choose:
 - **Just navigate**: opens Google Maps with the route filled in. Google does the turn-by-turn directions.
 - **Meet someone on this ride**: Carriage's own feature, described below.
 
 You can't add features inside Google Maps itself (Google doesn't allow it), so Carriage has its own maps-style front screen and hands off to Google Maps for directions. It doesn't try to compete with Google on navigation. The people are the point.
 
-The first time you tap "Meet someone", you set up:
+Your profile (set up once, editable on the Me tab) covers:
 
 1. **Set your commute**: the station where you start, the one where you get off, and the time you're usually on the train. The app works out your route across all MRT lines, including where you change.
 2. **Pick your interests**, for example investing or cars.
