@@ -50,6 +50,7 @@ You're already on your way to school or work. If the other person runs late, get
 
 ## Maps and data for the real app
 
+- **Route map** (in the prototype now): Singapore's outline with every MRT line drawn faintly and your route highlighted, zoomed to your trip, with a "Whole map" view. Station positions come from LTA station data on GitHub (hxchua/datadoubleconfirm), with stations opened since 2020 placed approximately. The coastline comes from world-geojson (OpenStreetMap). It's drawn by the app itself, with no Google map inside.
 - **Google Maps links** (in the prototype now): open directions with the route filled in. Free, no sign-up.
 - **A real map inside the app**: Google Maps API or **OneMap** (Singapore's free official map). Google needs an API key and charges after a free amount.
 - **Address search** ("Blk 50 Marine Terrace" → nearest station): Google Places or OneMap search.
