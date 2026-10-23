@@ -69,7 +69,7 @@ p { margin: 0; }
 .mono { font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; }
 .label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); font-weight: 600; }
 .field { display: flex; flex-direction: column; gap: 6px; }
-select, input[type="time"] {
+select, input[type="time"], input[type="text"] {
   font: inherit; color: var(--fg); background: var(--surface-2);
   border: 1px solid var(--line); border-radius: 10px; padding: 11px 12px; width: 100%;
 }
@@ -82,7 +82,7 @@ select, input[type="time"] {
 .btn.ghost { background: var(--surface-2); color: var(--fg); border: 1px solid var(--line); }
 .btn.small-btn { width: auto; padding: 9px 14px; font-size: 14px; }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
-button:focus-visible, select:focus-visible, input:focus-visible, .chip:focus-visible {
+button:focus-visible, select:focus-visible, input:focus-visible, .chip:focus-visible, .rating button:focus-visible, .seg button:focus-visible {
   outline: 2px solid var(--accent); outline-offset: 2px;
 }
 .spacer { flex: 1; }
@@ -112,6 +112,11 @@ button:focus-visible, select:focus-visible, input:focus-visible, .chip:focus-vis
 .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--surface-2); padding: 5px; border-radius: 12px; border: 1px solid var(--line); }
 .seg button { font: inherit; font-weight: 600; border: 0; border-radius: 9px; padding: 10px; background: transparent; color: var(--muted); cursor: pointer; }
 .seg button[aria-pressed="true"] { background: var(--surface); color: var(--fg); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.seg.three { grid-template-columns: repeat(3, 1fr); }
+.rating { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.rating button { font: inherit; font-weight: 600; padding: 14px 10px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); color: var(--fg); cursor: pointer; }
+.rating button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.qa { display: flex; flex-direction: column; gap: 10px; border-left: 3px solid var(--accent); padding-left: 12px; }
 .note { background: var(--surface-2); border-radius: 12px; padding: 12px 14px; font-size: 13.5px; color: var(--muted); }
 
 /* Match cards */
@@ -198,10 +203,27 @@ const PEOPLE = [
   { n:"Kenji", a:31, from:"Tanjong Katong", to:"Great World", t:"07:52", i:["Reading","Movies","Cars"], bio:"Ask me for book recs" },
 ];
 
+const QUESTIONS = ["What's your go-to food spot?", "What are you into right now?", "Best thing that happened this week?",
+  "What would you do with $1,000?", "Song on repeat?", "Dream car or dream trip?"];
+
+// Made-up details a match shares once you've both waved
+const EXTRA = {
+  "Wei Ling": { spot:"Green tote bag, usually reading", handle:"@weiling.reads", qa:[["What would you do with $1,000?","Half into an ETF, half on books"],["Song on repeat?","Anything by Laufey"],["What's your go-to food spot?","Prawn mee near Bayshore"]] },
+  "Arjun": { spot:"Red Ferrari cap", handle:"@arjun.f1", qa:[["Dream car or dream trip?","A 911 GT3. Or Monza for the F1"],["What are you into right now?","Learning to sim race"],["Best thing that happened this week?","Scored in the inter-class match"]] },
+  "Hui Min": { spot:"Film camera around my neck", handle:"@huimin.35mm", qa:[["What's your go-to food spot?","Katong laksa, no contest"],["What are you into right now?","Shooting on expired film"],["What would you do with $1,000?","A trip to Japan for photos"]] },
+  "Nur Aisyah": { spot:"Badminton racket bag", handle:"@aisyah.smash", qa:[["Song on repeat?","NewJeans, always"],["Best thing that happened this week?","Won my CCA friendly"],["What's your go-to food spot?","Nasi lemak at Marine Parade"]] },
+  "Daniel": { spot:"Grey hoodie, laptop out", handle:"@dan.builds", qa:[["What are you into right now?","Coding a robot arm"],["Dream car or dream trip?","Any EV I can take apart"],["What would you do with $1,000?","More motors for the robot"]] },
+};
+const extra = p => EXTRA[p.n] || { spot:"I'll wave when I see you", handle:"@" + p.n.toLowerCase().replace(/\s+/g, ""), qa:[["What are you into right now?", p.i.join(", ")]] };
+
 const state = {
   step: 0, board: idx("Marine Terrace"), alight: idx("Katong Park"), time: "07:45",
   interests: new Set(["Investing","Cars"]), age: 17, mode: "friends", minAge: 15, maxAge: 17,
-  window: 10, waves: {}, planFor: null, car: 3, day: "Tomorrow", plan: null
+  window: 10, waves: {}, planFor: null, car: 3, day: "Tomorrow", plan: null,
+  spot: "Black backpack, standing by the door",
+  questions: new Set(["What are you into right now?", "Dream car or dream trip?"]),
+  answers: { "What are you into right now?": "Reading about index funds", "Dream car or dream trip?": "Nissan GT-R" },
+  fb: null, friends: {}
 };
 
 const toMin = t => { const [h,m] = t.split(":").map(Number); return h*60 + m; };
@@ -347,7 +369,9 @@ const screens = {
       const firstHop = Math.abs(o.start - state.board);
       const segs = Array.from({ length: total }, (_, k) => k >= firstHop && k < firstHop + o.stops);
       const w = state.waves[p.n];
-      const action = w === "mutual"
+      const action = state.friends[p.n]
+        ? `<span class="status">Friends · contacts shared</span>`
+        : w === "mutual"
         ? `<span class="status">You both waved</span><span class="spacer"></span><button class="btn small-btn" data-plan="${esc(p.n)}">Plan a ride</button>`
         : w === "sent"
         ? `<span class="small muted">Wave sent. Waiting for ${esc(p.n)}…</span>`
@@ -380,10 +404,12 @@ const screens = {
     const m = findMatches().out.find(x => x.p.n === state.planFor);
     if (!m) return screens[4]();
     const { p, o, shared } = m;
+    const x = extra(p);
     if (state.plan) {
       const tip = shared.length
         ? `You both like ${shared[0]}. Ask ${p.n} how they got into it.`
         : `Ask ${p.n} about "${p.bio}".`;
+      const mine = [...state.questions].filter(q => (state.answers[q] || "").trim());
       return `${header(4)}
       <main class="fade">
         <h2>Ride planned</h2>
@@ -392,9 +418,20 @@ const screens = {
           <span class="big">${fmt(o.at)} at ${st(o.start)[1]}</span>
           <span class="mono">${st(o.start)[0]} → ${st(o.end)[0]} · ${o.stops} stop${o.stops > 1 ? "s" : ""} together</span>
           <span><b>Carriage ${state.car}</b>, counting from the front of the train</span>
+          <span class="small"><b>How to spot ${esc(p.n)}:</b> ${esc(x.spot)}</span>
         </div>
+        <div class="field"><span class="label">${esc(p.n)}'s warm-up answers</span>
+          <div class="qa">${x.qa.map(([q, a]) => `<div><p class="small muted">${esc(q)}</p><p>${esc(a)}</p></div>`).join("")}</div>
+        </div>
+        ${mine.length ? `<div class="field"><span class="label">What ${esc(p.n)} sees from you</span>
+          <div class="qa">${mine.map(q => `<div><p class="small muted">${esc(q)}</p><p>${esc(state.answers[q])}</p></div>`).join("")}</div></div>` : ""}
         <div class="note"><b style="color:var(--fg)">Conversation starter</b><br>${esc(tip)}</div>
-        <button class="btn ghost" data-late>I'm running late</button>
+        <div class="field"><span class="label">Quick messages</span>
+          <div class="chips">${["I'm on the train", "Running late, I'll take the next one", "Can't make it today"].map(msg =>
+            `<button class="chip" data-toast="Sent to ${esc(p.n)}: &quot;${msg}&quot;">${msg}</button>`).join("")}</div>
+          <span class="small muted">No chat before you meet. Save the talking for the ride.</span>
+        </div>
+        <button class="btn" data-go="6">Ride's over? Tell us how it went</button>
         <div class="row">
           <button class="btn ghost" data-toast="Plan cancelled. ${esc(p.n)} has been told.">Cancel plan</button>
           <button class="btn ghost" data-toast="Report sent. ${esc(p.n)} can no longer see you.">Block or report</button>
@@ -415,8 +452,84 @@ const screens = {
         <div class="train">${[1,2,3,4].map(c => `<button class="car" data-car="${c}" aria-pressed="${state.car === c}"><b>${c}</b><span class="small">${c === 1 ? "Front" : c === 4 ? "Back" : ""}&nbsp;</span></button>`).join("")}</div>
         <span class="small muted">TEL trains have 4 carriages. Pick one near your exit to save time.</span>
       </div>
-      <div class="spacer"></div>
+      <div class="field"><label class="label" for="spot">How can ${esc(p.n)} spot you?</label>
+        <input type="text" id="spot" data-keep="spot" value="${esc(state.spot)}" placeholder="e.g. black backpack, standing by the door">
+      </div>
+      <div class="field"><span class="label">Warm-up questions</span>
+        <span class="small muted">Pick up to 3 and answer them. ${esc(p.n)} sees your answers before the ride and you see theirs. Keep it short and leave the rest for the ride.</span>
+        <div class="chips">${QUESTIONS.map(q => `<button class="chip" data-q="${esc(q)}" aria-pressed="${state.questions.has(q)}">${esc(q)}</button>`).join("")}</div>
+        ${[...state.questions].map((q, k) => `<div class="field"><label class="small" for="ans-${k}">${esc(q)}</label>
+          <input type="text" id="ans-${k}" data-keep="ans" data-question="${esc(q)}" value="${esc(state.answers[q] || "")}" placeholder="Your answer"></div>`).join("")}
+      </div>
       <button class="btn" data-confirm>Send plan to ${esc(p.n)}</button>
+    </main>`;
+  },
+  6() {
+    const p = PEOPLE.find(x => x.n === state.planFor);
+    const f = state.fb;
+    const opt = (key, val, label) => `<button data-fb="${key}" data-val="${val}" aria-pressed="${f[key] === val}">${label}</button>`;
+    const showed = f.rate && f.rate !== "noshow";
+    return `${header(5)}
+    <main class="fade">
+      <div>
+        <p class="label">After your ride with ${esc(p.n)}</p>
+        <h2>How did it go?</h2>
+      </div>
+      <div class="rating">
+        ${opt("rate", "great", "Great")}${opt("rate", "okay", "Okay")}${opt("rate", "meh", "Not for me")}${opt("rate", "noshow", "They didn't show up")}
+      </div>
+      ${f.rate === "meh" ? `<div class="note">Did ${esc(p.n)} do anything that made you uncomfortable? <button class="back" data-toast="Report sent. Our team will look at it, and ${esc(p.n)} can no longer see you." style="color:var(--accent);font-weight:600">Report it</button></div>` : ""}
+      ${showed ? `
+      <div class="field"><span class="label">Ride together again?</span>
+        <div class="seg">${opt("again", "yes", "Yes")}${opt("again", "no", "No thanks")}</div>
+      </div>
+      <div class="field"><span class="label">Share contacts so you can hang out outside the commute?</span>
+        <div class="seg">${opt("share", "yes", "Yes")}${opt("share", "no", "Not yet")}</div>
+      </div>
+      ${f.share === "yes" ? `<div class="field"><span class="label">What to share</span>
+        <div class="seg three">${["Telegram","Instagram","Phone"].map(t => `<button data-fb="ctype" data-val="${t}" aria-pressed="${f.ctype === t}">${t}</button>`).join("")}</div>
+        <input type="text" id="handle" data-keep="handle" value="${esc(f.handle)}" placeholder="${f.ctype === "Phone" ? "8123 4567" : "@yourhandle"}" aria-label="Your ${f.ctype}">
+        ${f.ctype === "Phone" ? `<span class="small muted">Tip: a Telegram or Instagram handle is easier to block later than a phone number.</span>` : ""}
+      </div>` : ""}` : ""}
+      <div class="note">Your answers are private. ${esc(p.n)} never sees your rating, and only finds out about a second ride or contacts if you <b>both</b> say yes.</div>
+      <div class="spacer"></div>
+      <button class="btn" data-submit ${f.rate ? "" : "disabled"}>Send feedback</button>
+    </main>`;
+  },
+  7() {
+    const p = PEOPLE.find(x => x.n === state.planFor);
+    const x = extra(p), f = state.fb;
+    const m = findMatches().out.find(r => r.p.n === p.n);
+    if (f.rate === "noshow") {
+      return `${header(null)}<main class="fade">
+        <h2>Sorry ${esc(p.n)} didn't show</h2>
+        <p class="muted">We've noted the missed ride. People who often miss rides get fewer matches, so the people who turn up get better ones.</p>
+        <div class="spacer"></div><button class="btn" data-go="4">Back to my matches</button></main>`;
+    }
+    const again = f.again === "yes", share = f.share === "yes";
+    const blocks = [];
+    if (again) blocks.push(`<div class="ticket">
+      <span class="label" style="color:var(--match)">You both want to ride again</span>
+      <span class="big">Next Monday, ${m ? fmt(m.o.at) : state.time}</span>
+      <span>Same train${m ? ` at ${st(m.o.start)[1]}` : ""}, carriage ${state.car}</span>
+      <button class="btn small-btn" data-toast="Next ride with ${esc(p.n)} is booked for Monday.">Book it</button>
+    </div>`);
+    if (share) blocks.push(`<div class="card">
+      <span class="label">Contacts shared</span>
+      <div class="who"><div class="avatar">${esc(p.n[0])}</div>
+        <div class="meta"><h3>${esc(p.n)}</h3><p class="mono">Telegram ${esc(x.handle)}</p></div></div>
+      <p class="small muted">${esc(p.n)} got your ${esc(f.ctype)}${f.handle.trim() ? `: <span class="mono">${esc(f.handle)}</span>` : ""}. Plan something outside the commute!</p>
+    </div>`);
+    return `${header(null)}
+    <main class="fade">
+      <div>
+        <p class="label">Feedback sent</p>
+        <h2>${share ? `You and ${esc(p.n)} are now friends` : again ? "See you on the train" : "Thanks for the feedback"}</h2>
+      </div>
+      ${blocks.join("") || `<p class="muted">${esc(p.n)} won't see your answers. We'll use them to find you better matches.</p>`}
+      ${blocks.length ? `<p class="small muted">In this demo ${esc(p.n)} always says yes. In the real app, if only one of you says yes, nothing happens and nobody is told.</p>` : ""}
+      <div class="spacer"></div>
+      <button class="btn ghost" data-go="4">Back to my matches</button>
     </main>`;
   }
 };
@@ -440,16 +553,40 @@ app.addEventListener("click", e => {
     setTimeout(() => { state.waves[n] = "mutual"; if (state.step === 4) render(); toast(n + " waved back"); }, 1400);
   }
   else if (d.plan) { state.planFor = d.plan; state.plan = null; go(5); }
+  else if (d.q) {
+    if (state.questions.has(d.q)) state.questions.delete(d.q);
+    else if (state.questions.size >= 3) { toast("Pick up to 3. Tap one to remove it first."); return; }
+    else state.questions.add(d.q);
+    render();
+  }
+  else if (d.fb) { state.fb[d.fb] = d.val; render(); }
+  else if (d.submit !== undefined) {
+    if (state.fb.rate !== "noshow" && state.fb.share === "yes") state.friends[state.planFor] = true;
+    go(7);
+  }
   else if (d.widen !== undefined) { state.window = 15; render(); }
   else if (d.day) { state.day = d.day; render(); }
   else if (d.car) { state.car = Number(d.car); render(); }
-  else if (d.confirm !== undefined) { state.plan = true; render(); toast("Plan sent to " + state.planFor); }
+  else if (d.confirm !== undefined) {
+    if (!state.spot.trim()) { toast("Add how " + state.planFor + " can spot you."); document.getElementById("spot").focus(); return; }
+    state.plan = true; state.fb = { rate: null, again: null, share: null, ctype: "Telegram", handle: "" };
+    render(); window.scrollTo(0, 0); toast("Plan sent to " + state.planFor);
+  }
   else if (d.late !== undefined) { toast(state.planFor + " knows you're running late. They'll save you a spot."); }
   else if (d.toast) { toast(d.toast); }
 });
 
+// Text fields update quietly so typing isn't interrupted by a re-render
+app.addEventListener("input", e => {
+  const t = e.target, k = t.dataset.keep;
+  if (k === "spot") state.spot = t.value;
+  if (k === "ans") state.answers[t.dataset.question] = t.value;
+  if (k === "handle") state.fb.handle = t.value;
+});
+
 app.addEventListener("change", e => {
   const t = e.target;
+  if (t.dataset.keep) return;
   if (t.id === "board") state.board = Number(t.value);
   if (t.id === "alight") state.alight = Number(t.value);
   if (t.id === "time" && t.value) state.time = t.value;

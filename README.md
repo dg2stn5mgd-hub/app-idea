@@ -13,6 +13,9 @@ People in Singapore spend their train and bus rides scrolling on their phones. M
 3. **Choose who to meet**: friends mode now, dating mode (18+) later, plus an age range and how flexible your timing is.
 4. **See matches**: people who share at least one stop with you, going the same way, within your time window.
 5. **Wave**: if both people wave, you plan a ride together and pick a day and a carriage to meet in.
+6. **Warm up, don't chat**: there's no free chat before you meet. Each person adds a "how to spot me" note and answers up to 3 fun warm-up questions, so there's a hint but plenty left to talk about. Quick preset messages ("Running late", "Can't make it today") cover plan changes.
+7. **Feedback after the ride**: rate it privately (Great / Okay / Not for me / They didn't show up). Then choose whether to ride together again and whether to share contacts (Telegram, Instagram or phone).
+8. **Become friends**: a second ride or a contact swap only happens if **both** people say yes. If only one does, nothing happens and nobody is told.
 
 ## Safety rules (from day one)
 
@@ -20,6 +23,7 @@ People in Singapore spend their train and bus rides scrolling on their phones. M
 - Nobody can see your stations or your time until you both wave.
 - Matches show only the part of the ride you share, never your full route.
 - Block and report are always one tap away.
+- Ratings are private and never shown to the other person. People who often miss rides get fewer matches.
 
 ## Known challenges
 
