@@ -8,6 +8,14 @@ People in Singapore spend their train and bus rides scrolling on their phones. M
 
 ## How it works
 
+**The home screen works like a maps app.** You pick where you're going (or tap a saved trip like "Home → School") and see your route. Then you choose:
+- **Just navigate**: opens Google Maps with the route filled in. Google does the turn-by-turn directions.
+- **Meet someone on this ride**: Carriage's own feature, described below.
+
+You can't add features inside Google Maps itself (Google doesn't allow it), so Carriage has its own maps-style front screen and hands off to Google Maps for directions. It doesn't try to compete with Google on navigation. The people are the point.
+
+The first time you tap "Meet someone", you set up:
+
 1. **Set your commute**: the station where you start, the one where you get off, and the time you're usually on the train. The app works out your route across all MRT lines, including where you change.
 2. **Pick your interests**, for example investing or cars.
 3. **Choose who to meet**: friends mode now, dating mode (18+) later, plus an age range and how flexible your timing is.
@@ -39,6 +47,13 @@ You're already on your way to school or work. If the other person runs late, get
   - Carriage choice matters: people board near the stairs for their change or exit. That's a good hint for where to meet.
   - Trains have different lengths (TEL 4 carriages, NSL/EWL/NEL 6, Circle/Downtown 3).
   - Delays and breakdowns break plans. Live train data could warn both people.
+
+## Maps and data for the real app
+
+- **Google Maps links** (in the prototype now): open directions with the route filled in. Free, no sign-up.
+- **A real map inside the app**: Google Maps API or **OneMap** (Singapore's free official map). Google needs an API key and charges after a free amount.
+- **Address search** ("Blk 50 Marine Terrace" → nearest station): Google Places or OneMap search.
+- **LTA DataMall** (free, from Singapore's Land Transport Authority): live bus arrivals, train service alerts and bus routes. Useful for adding buses and for warning both people when a train is delayed.
 
 ## Prototype
 
