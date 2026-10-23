@@ -359,6 +359,44 @@ const MET = [
 ].map(m => ({ ...m, met: true, from:"Marine Terrace", to:"Katong Park", t:"07:45" }));
 PEOPLE.push(...MET);
 
+// ~285 more made-up riders spread over every line, so any route has people on it.
+// Generated the same way every time (fixed seed), morning rush 07:15–08:30.
+(function addRiders() {
+  let seed = 20261023;
+  const rnd = () => { seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  const pick = a => a[Math.floor(rnd() * a.length)];
+  const FIRST = ["Wei Jie","Jia Hui","Sharifah","Aditya","Kavya","Isabelle","Haziq","Siti","Ravi","Shu Ting","Darren","Nadia",
+    "Chloe","Irfan","Divya","Jun Hao","Xin Yi","Aaron","Hannah","Faris","Lakshmi","Zachary","Yi Xuan","Syafiq","Meera","Joel",
+    "Gabrielle","Amirul","Pei Shan","Rohan","Nicole","Danish","Ananya","Javier","Alicia","Hakim","Kiran","Rui En","Sean","Aisha",
+    "Vikram","Jolene","Ming Hui","Ahmad","Tanvi","Caleb","Jasmin","Wen Xuan","Iskandar","Shreya","Dylan","Hui Wen","Luqman",
+    "Rachel","Ishaan","Valerie","Zhi Wei","Natasha","Harith","Pooja","Elijah","Kai Xin","Rizwan","Clarissa","Ben","Yu Ting"];
+  const TEEN = ["Sec 2","Sec 3","Sec 4","JC1","JC2","Poly Y1","Poly Y2","ITE Y1"];
+  const ADULT = ["Uni Y1","Uni Y3","Intern","Nurse","Engineer","Designer","Teacher","Accountant","Barista","Analyst"];
+  const ABOUT = { Investing:"reads the Business Times on the train", Cars:"spots every supercar on the PIE",
+    Gaming:"ranked grinder, ask me about Valorant", Football:"Arsenal fan, unfortunately", Basketball:"plays at the void deck court",
+    Badminton:"badminton every Saturday", Music:"always has earphones in", Anime:"rewatching One Piece, again",
+    "K-drama":"cries at every K-drama", Fitness:"gym before school or work", Photography:"street photos on weekends",
+    Coding:"building my own app", Food:"knows the best hawker stalls", Startups:"wants to start a company",
+    Reading:"always has a book", Travel:"planning the next trip", Fashion:"thrifts on weekends", Movies:"Letterboxd addict" };
+  const HUBS = ["Raffles Place","Orchard","Bishan","Jurong East","Dhoby Ghaut","Tampines","one-north","Paya Lebar","Woodlands",
+    "Serangoon","Buona Vista","Novena","Bugis","City Hall","Outram Park","HarbourFront","Kent Ridge","Ang Mo Kio","Clementi",
+    "Toa Payoh","Tanjong Pagar","Downtown","Punggol","Changi Airport","Expo"];
+  const used = new Set(PEOPLE.map(p => p.n));
+  while (PEOPLE.length < 300) {
+    const from = pick(STATION_NAMES), to = rnd() < 0.7 ? pick(HUBS) : pick(STATION_NAMES);
+    if (from === to) continue;
+    let n; do n = pick(FIRST) + " " + String.fromCharCode(65 + Math.floor(rnd() * 26)) + "."; while (used.has(n));
+    used.add(n);
+    const teen = rnd() < 0.6, a = teen ? 14 + Math.floor(rnd() * 4) : 18 + Math.floor(rnd() * 17);
+    const i = [];
+    while (i.length < 3) { const x = pick(INTERESTS); if (!i.includes(x)) i.push(x); }
+    const m = 15 + Math.floor(rnd() * 76), t = String(7 + Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
+    const role = teen ? pick(TEEN) : rnd() < 0.4 ? "Works near " + to : pick(ADULT);
+    PEOPLE.push({ n, a, from, to, t, i, bio: role + " · " + ABOUT[i[0]], gen: true });
+  }
+})();
+
 const QUESTIONS = ["What's your go-to food spot?", "What are you into right now?", "Best thing that happened this week?",
   "What would you do with $1,000?", "Song on repeat?", "Dream car or dream trip?"];
 
@@ -379,7 +417,7 @@ const state = {
   spot: "Black backpack, standing by the door",
   questions: new Set(["What are you into right now?", "Dream car or dream trip?"]),
   answers: { "What are you into right now?": "Reading about index funds", "Dream car or dream trip?": "Nissan GT-R" },
-  fb: null, friends: {}, theySayNo: false, fromMet: false, done: {}, setup: false, mapWhole: false,
+  fb: null, friends: {}, theySayNo: false, fromMet: false, done: {}, setup: false, mapWhole: false, showAll: false,
   incoming: { "Hui Min": "this morning", "Nur Aisyah": "yesterday", "Mei Xuan": "2 days ago" },
   declined: {}, sentWhen: { "Wei Ling": "yesterday", "Bryan": "3 days ago" }
 };
@@ -404,9 +442,9 @@ function overlap(p) {
       const common = u.idx.filter(i => v.idx.includes(i));
       if (common.length < 2) continue;
       const a = u.idx.indexOf(common[0]), at = u.times[a];
-      const diff = Math.abs(at - v.times[v.idx.indexOf(common[0])]);
+      const theirAt = v.times[v.idx.indexOf(common[0])], diff = Math.abs(at - theirAt);
       segs.push({ line: u.line, start: nameOf(u.line, common[0]), end: nameOf(u.line, common[common.length - 1]),
-        stops: common.length - 1, at, diff, offset: offset + a });
+        stops: common.length - 1, at, theirAt, diff, offset: offset + a });
     }
     offset += u.idx.length - 1;
   }
@@ -415,7 +453,8 @@ function overlap(p) {
   const use = near.length ? near : segs;
   return { segs: use, inWindow: near.length > 0, total: mine.stops,
     stops: use.reduce((a, x) => a + x.stops, 0), start: use[0].start, end: use[use.length - 1].end,
-    at: use[0].at, diff: use[0].diff, line: use[0].line };
+    at: near.length ? use[0].at : use[0].theirAt, yourAt: use[0].at, later: use[0].theirAt - use[0].at,
+    diff: use[0].diff, line: use[0].line };
 }
 
 function sameAgeBand(p) { return state.age < 18 ? p.a < 18 : p.a >= 18; }
@@ -432,8 +471,10 @@ function findMatches() {
     (o.inWindow ? out : outsideWindow).push(m);
   }
   out.sort((a, b) => b.score - a.score);
-  return { out, outsideWindow };
+  const later = outsideWindow.filter(m => m.o.diff <= 30).sort((a, b) => a.o.diff - b.o.diff || b.score - a.score);
+  return { out, outsideWindow: later };
 }
+const findPerson = name => { const { out, outsideWindow } = findMatches(); return [...out, ...outsideWindow].find(m => m.p.n === name); };
 
 const app = document.getElementById("app");
 function go(step) { state.step = step; render(); window.scrollTo(0, 0); }
@@ -669,7 +710,7 @@ const screens = {
   },
   4() {
     const { out, outsideWindow } = findMatches();
-    const cards = out.map(({ p, o, shared }) => {
+    const card = ({ p, o, shared }, other) => {
       const segs = Array.from({ length: o.total }, (_, k) => o.segs.some(x => k >= x.offset && k < x.offset + x.stops));
       const lines = [...new Set(o.segs.map(x => x.line))];
       const w = state.waves[p.n];
@@ -681,19 +722,26 @@ const screens = {
         ? `<span class="status">You both waved</span><span class="spacer"></span><button class="btn small-btn" data-plan="${esc(p.n)}">Plan a ride</button>`
         : w === "sent"
         ? `<span class="small muted">Wave sent. Waiting for ${esc(p.n)}…</span>`
-        : `<button class="btn small-btn" data-wave="${esc(p.n)}">Wave</button><span class="small muted">It's a match if they wave back</span>`;
+        : `<button class="btn small-btn" data-wave="${esc(p.n)}">Wave</button><span class="small muted">${other ? `You'd catch their ${fmt(o.at)} train` : "It's a match if they wave back"}</span>`;
+      const when = other
+        ? `<b>Rides your route ${Math.abs(o.later)} min ${o.later > 0 ? "later" : "earlier"}</b> · ${fmt(o.at)} at ${esc(o.start)} · ${o.stops} stop${o.stops > 1 ? "s" : ""} together`
+        : `<b>Rides with you for ${o.stops} stop${o.stops > 1 ? "s" : ""}</b> · about ${o.stops * MIN_PER_STOP} min · ${o.diff === 0 ? "same train" : "usually within " + o.diff + " min"}`;
       return `<article class="card">
         <div class="who"><div class="avatar">${esc(p.n[0])}</div>
           <div class="meta"><h3>${esc(p.n)}, ${p.a}</h3><p class="small muted">${esc(p.bio)}</p></div></div>
         <div class="overlap">
-          <span class="small">${lines.map(pill).join(" ")} <b>Rides with you for ${o.stops} stop${o.stops > 1 ? "s" : ""}</b> · about ${o.stops * MIN_PER_STOP} min · ${o.diff === 0 ? "same train" : "usually within " + o.diff + " min"}</span>
+          <span class="small">${lines.map(pill).join(" ")} ${when}</span>
           <div class="bar">${segs.map(on => `<span class="${on ? "on" : ""}"></span>`).join("")}</div>
           <div class="ends small muted"><span>${esc(state.from)}</span><span>${esc(state.to)}</span></div>
         </div>
         <div class="chips">${p.i.map(x => `<span class="tag ${shared.includes(x) ? "shared" : ""}">${x}</span>`).join("")}</div>
         <div class="actions">${action}</div>
       </article>`;
-    }).join("");
+    };
+    const shown = state.showAll ? out : out.slice(0, 8);
+    const cards = shown.map(m => card(m)).join("")
+      + (out.length > shown.length ? `<button class="btn ghost" data-showall>Show all ${out.length} people on your ride</button>` : "");
+    const others = outsideWindow.slice(0, 5);
     const empty = `<div class="note">Nobody rides with you within ${state.window} minutes yet. ${state.window < 15 ? `<button class="btn ghost small-btn" data-widen>Try 15 minutes</button>` : "Invite a friend who takes your train."}</div>`;
     const pending = MET.filter(m => metStatus(m).status === "feedback");
     return `${header(0)}
@@ -707,12 +755,16 @@ const screens = {
         <p class="muted">${out.length} ${out.length === 1 ? "person is" : "people are"} on your ride. Tap <b>Wave</b> on anyone you'd like to meet. If they wave back, you can plan a ride together.</p>
       </div>
       <div class="list">${out.length ? cards : empty}</div>
-      ${outsideWindow.length ? `<p class="small muted">${outsideWindow.length} more share part of your route but ride outside your ${state.window}-minute window.${state.window < 15 ? ` <button class="back" data-widen style="color:var(--accent);font-weight:600">Widen to 15 min</button>` : ""}</p>` : ""}
+      ${others.length ? `<section class="list">
+        <div><h3>Same route, a bit earlier or later</h3>
+        <p class="small muted">They ride your route outside your ${state.window}-minute window. Wave if you'd leave a bit earlier or later to meet them.</p></div>
+        ${others.map(m => card(m, true)).join("")}
+      </section>` : ""}
       <div class="note">Shown: only the part of the ride you share. Their full route stays private, and so does yours.</div>
     </main>`;
   },
   5() {
-    const m = findMatches().out.find(x => x.p.n === state.planFor);
+    const m = findPerson(state.planFor);
     if (!m) return screens[4]();
     const { p, o, shared } = m;
     const x = extra(p);
@@ -813,7 +865,7 @@ const screens = {
     </main>`;
   },
   9() {
-    const all = findMatches().out;
+    const { out: inWin, outsideWindow: other } = findMatches(), all = [...inWin, ...other];
     const incoming = wavedAtMe();
     const ready = all.filter(m => state.waves[m.p.n] === "mutual" && !state.friends[m.p.n]);
     const sent = all.filter(m => state.waves[m.p.n] === "sent");
@@ -884,7 +936,7 @@ const screens = {
     const x = extra(p), f = state.fb;
     if (state.fromMet) state.done[p.n] = { fb: { ...f }, theySayNo: state.theySayNo };
     const home = state.fromMet ? 8 : 4, homeLabel = state.fromMet ? "Back to people you've met" : "Back to my matches";
-    const m = findMatches().out.find(r => r.p.n === p.n);
+    const m = findPerson(p.n);
     if (f.rate === "noshow") {
       return `${header(null)}<main class="fade">
         <h2>Sorry ${esc(p.n)} didn't show</h2>
@@ -947,6 +999,7 @@ app.addEventListener("click", e => {
     const n = d.wave; state.waves[n] = "sent"; render();
     setTimeout(() => { state.waves[n] = "mutual"; if (state.step === 4 || state.step === 9) render(); toast(n + " waved back"); }, 1400);
   }
+  else if (d.showall !== undefined) { state.showAll = true; render(); }
   else if (d.waveback) { state.waves[d.waveback] = "mutual"; render(); toast("You both waved. Plan a ride with " + d.waveback + "."); }
   else if (d.notnow) { state.declined[d.notnow] = true; render(); toast(d.notnow + " won't be told."); }
   else if (d.unwave) { delete state.waves[d.unwave]; render(); toast("Wave taken back."); }
