@@ -703,7 +703,8 @@ const screens = {
         <button class="btn small-btn" data-feedback="${esc(m.n)}">Rate it</button></div>`).join("")}
       <div>
         <p class="label">Friends · ${esc(state.from)} → ${esc(state.to)} · ${state.time}</p>
-        <h2>${out.length} ${out.length === 1 ? "person rides" : "people ride"} with you</h2>
+        <h2>Who do you want to meet?</h2>
+        <p class="muted">${out.length} ${out.length === 1 ? "person is" : "people are"} on your ride. Tap <b>Wave</b> on anyone you'd like to meet. If they wave back, you can plan a ride together.</p>
       </div>
       <div class="list">${out.length ? cards : empty}</div>
       ${outsideWindow.length ? `<p class="small muted">${outsideWindow.length} more share part of your route but ride outside your ${state.window}-minute window.${state.window < 15 ? ` <button class="back" data-widen style="color:var(--accent);font-weight:600">Widen to 15 min</button>` : ""}</p>` : ""}
