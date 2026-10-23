@@ -123,6 +123,13 @@ button:focus-visible, select:focus-visible, input:focus-visible, .chip:focus-vis
 .rating button { font: inherit; font-weight: 600; padding: 14px 10px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); color: var(--fg); cursor: pointer; }
 .rating button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .qa { display: flex; flex-direction: column; gap: 10px; border-left: 3px solid var(--accent); padding-left: 12px; }
+.note.nudge { display: flex; align-items: center; gap: 10px; background: var(--accent-soft); color: var(--fg); }
+.nudge span { flex: 1; min-width: 0; }
+.pill-status { font-size: 12.5px; font-weight: 600; border-radius: 999px; padding: 3px 10px; }
+.pill-status.good { background: var(--match-soft); color: var(--match); }
+.pill-status.warn { background: var(--warn-soft); color: var(--warn-fg); }
+.card.faded { opacity: 0.7; }
+.actions { flex-wrap: wrap; }
 .note { background: var(--surface-2); border-radius: 12px; padding: 12px 14px; font-size: 13.5px; color: var(--muted); }
 
 /* Match cards */
@@ -306,6 +313,20 @@ const PEOPLE = [
   { n:"Kenji", a:31, from:"Tanjong Katong", to:"Great World", t:"07:52", i:["Reading","Movies","Cars"], bio:"Ask me for book recs" },
 ];
 
+const MET = [
+  { n:"Rachel", a:17, i:["Investing","Music","Food"], bio:"Saves her allowance in a robo-advisor",
+    when:"Today · 07:47 · Marine Terrace → Katong Park", status:"feedback" },
+  { n:"Zhi Hao", a:17, i:["Cars","Basketball","Gaming"], bio:"Knows every car at the Katong showrooms",
+    when:"Mon 20 Oct · 3 stops", status:"friends", handle:"@zhihao.kicks" },
+  { n:"Amira", a:16, i:["Investing","Reading"], bio:"Reads one book a week on the train",
+    when:"Fri 17 Oct · 2 stops", status:"again", next:"Thu 30 Oct · 07:45 · carriage 2" },
+  { n:"Kai", a:17, i:["Football","Cars"], bio:"Plays for his school team",
+    when:"Wed 15 Oct", status:"noshow" },
+  { n:"Sarah", a:16, i:["Music","Fashion"], bio:"Plays bass in a band",
+    when:"Tue 14 Oct · 1 stop", status:"nosecond" },
+].map(m => ({ ...m, met: true, from:"Marine Terrace", to:"Katong Park", t:"07:45" }));
+PEOPLE.push(...MET);
+
 const QUESTIONS = ["What's your go-to food spot?", "What are you into right now?", "Best thing that happened this week?",
   "What would you do with $1,000?", "Song on repeat?", "Dream car or dream trip?"];
 
@@ -326,7 +347,7 @@ const state = {
   spot: "Black backpack, standing by the door",
   questions: new Set(["What are you into right now?", "Dream car or dream trip?"]),
   answers: { "What are you into right now?": "Reading about index funds", "Dream car or dream trip?": "Nissan GT-R" },
-  fb: null, friends: {}, theySayNo: false
+  fb: null, friends: {}, theySayNo: false, fromMet: false, done: {}
 };
 
 const toMin = t => { const [h,m] = t.split(":").map(Number); return h*60 + m; };
@@ -368,6 +389,7 @@ function sameAgeBand(p) { return state.age < 18 ? p.a < 18 : p.a >= 18; }
 function findMatches() {
   const out = [], outsideWindow = [];
   for (const p of PEOPLE) {
+    if (p.met) continue;
     if (!sameAgeBand(p) || p.a < state.minAge || p.a > state.maxAge) continue;
     const o = overlap(p);
     if (!o) continue;
@@ -405,6 +427,26 @@ function routeDiagram(r) {
         : `<div class="stop ${j === 0 || j === shown.length - 1 ? "end" : ""}"><span class="pin"></span><span>${esc(nameOf(leg.line, i))}</span><span class="mono code">${LINES[leg.line].st[i][0]}</span></div>`).join("")}</div>
     </div>`;
   }).join("");
+}
+
+function tabs(active, count) {
+  return `<div class="seg">
+    <button data-go="4" aria-pressed="${active === 4}">On your train${count !== undefined ? ` (${count})` : ""}</button>
+    <button data-go="8" aria-pressed="${active === 8}">People met (${MET.length})</button>
+  </div>`;
+}
+
+// A met person's current stage: the made-up starting point, or whatever your feedback led to
+function metStatus(m) {
+  const d = state.done[m.n];
+  if (!d) return m;
+  const f = d.fb;
+  if (f.rate === "noshow") return { ...m, status: "noshow" };
+  const wanted = f.again === "yes" || f.share === "yes";
+  if (wanted && d.theySayNo) return { ...m, status: "nosecond" };
+  if (f.share === "yes") return { ...m, status: "friends", handle: extra(m).handle, next: f.again === "yes" ? "Next Monday · same train" : null };
+  if (f.again === "yes") return { ...m, status: "again", next: "Next Monday · same train" };
+  return { ...m, status: "done" };
 }
 
 const screens = {
@@ -509,8 +551,12 @@ const screens = {
       </article>`;
     }).join("");
     const empty = `<div class="note">Nobody rides with you within ${state.window} minutes yet. ${state.window < 15 ? `<button class="btn ghost small-btn" data-widen>Try 15 minutes</button>` : "Invite a friend who takes your train."}</div>`;
+    const pending = MET.filter(m => metStatus(m).status === "feedback");
     return `${header(3)}
     <main class="fade">
+      ${tabs(4, out.length)}
+      ${pending.map(m => `<div class="note nudge"><span>You rode with <b>${esc(m.n)}</b> this morning. How did it go?</span>
+        <button class="btn small-btn" data-feedback="${esc(m.n)}">Rate it</button></div>`).join("")}
       <div>
         <p class="label">Friends · ${esc(state.from)} → ${esc(state.to)} · ${state.time}</p>
         <h2>${out.length} ${out.length === 1 ? "person rides" : "people ride"} with you</h2>
@@ -593,7 +639,7 @@ const screens = {
     const f = state.fb;
     const opt = (key, val, label) => `<button data-fb="${key}" data-val="${val}" aria-pressed="${f[key] === val}">${label}</button>`;
     const showed = f.rate && f.rate !== "noshow";
-    return `${header(5)}
+    return `${header(state.fromMet ? 8 : 5)}
     <main class="fade">
       <div>
         <p class="label">After your ride with ${esc(p.n)}</p>
@@ -620,15 +666,52 @@ const screens = {
       <button class="btn" data-submit ${f.rate ? "" : "disabled"}>Send feedback</button>
     </main>`;
   },
+  8() {
+    const order = { feedback: 0, friends: 1, again: 2, done: 3, nosecond: 4, noshow: 5 };
+    const list = MET.map(metStatus).sort((a, b) => order[a.status] - order[b.status]);
+    const cards = list.map(m => {
+      const row = {
+        feedback: `<span class="pill-status warn">Waiting for your feedback</span><span class="spacer"></span><button class="btn small-btn" data-feedback="${esc(m.n)}">How did it go?</button>`,
+        friends: `<span class="pill-status good">Friends</span><span class="mono small">Telegram ${esc(m.handle)}</span>`,
+        again: `<span class="pill-status good">Riding again</span>`,
+        done: `<span class="small muted">Feedback sent. No second ride planned.</span>`,
+        nosecond: `<span class="small muted">No second ride this time</span>`,
+        noshow: `<span class="small muted">Didn't show up. Ride missed.</span>`,
+      }[m.status];
+      const extraRow = m.status === "friends"
+        ? `<div class="actions"><button class="btn ghost small-btn" data-toast="Ride request sent to ${esc(m.n)}.">Plan another ride</button><button class="btn ghost small-btn" data-toast="Opening Telegram…">Message</button></div>`
+        : m.next ? `<p class="small"><b>Next ride:</b> ${esc(m.next)}</p>` : "";
+      return `<article class="card ${m.status === "noshow" || m.status === "nosecond" ? "faded" : ""}">
+        <div class="who"><div class="avatar">${esc(m.n[0])}</div>
+          <div class="meta"><h3>${esc(m.n)}, ${m.a}</h3><p class="small muted">${esc(m.when)}</p></div></div>
+        <p class="small muted">${esc(m.bio)}</p>
+        <div class="actions">${row}</div>
+        ${extraRow}
+      </article>`;
+    }).join("");
+    const friends = list.filter(m => m.status === "friends").length;
+    return `${header(3)}
+    <main class="fade">
+      ${tabs(8, findMatches().out.length)}
+      <div>
+        <p class="label">Your rides so far</p>
+        <h2>${MET.length} people met · ${friends} friend${friends === 1 ? "" : "s"}</h2>
+      </div>
+      <div class="list">${cards}</div>
+      <div class="note">Only you can see this list. Ratings stay private, and people who said no are never named as the ones who said no.</div>
+    </main>`;
+  },
   7() {
     const p = PEOPLE.find(x => x.n === state.planFor);
     const x = extra(p), f = state.fb;
+    if (state.fromMet) state.done[p.n] = { fb: { ...f }, theySayNo: state.theySayNo };
+    const home = state.fromMet ? 8 : 4, homeLabel = state.fromMet ? "Back to people you've met" : "Back to my matches";
     const m = findMatches().out.find(r => r.p.n === p.n);
     if (f.rate === "noshow") {
       return `${header(null)}<main class="fade">
         <h2>Sorry ${esc(p.n)} didn't show</h2>
         <p class="muted">We've noted the missed ride. People who often miss rides get fewer matches, so the people who turn up get better ones.</p>
-        <div class="spacer"></div><button class="btn" data-go="4">Back to my matches</button></main>`;
+        <div class="spacer"></div><button class="btn" data-go="${home}">${homeLabel}</button></main>`;
     }
     const wanted = f.again === "yes" || f.share === "yes";
     if (wanted && state.theySayNo) {
@@ -637,7 +720,7 @@ const screens = {
         <p class="muted">${esc(p.n)} didn't pick a second ride or a contact swap. That happens, and it's not about you. Nobody saw what you chose.</p>
         <p class="muted">There are other people on your train.</p>
         <button class="back" data-they style="color:var(--accent);font-weight:600;text-align:left">Demo: switch back to ${esc(p.n)} saying yes</button>
-        <div class="spacer"></div><button class="btn" data-go="4">See my matches</button></main>`;
+        <div class="spacer"></div><button class="btn" data-go="${home}">${homeLabel}</button></main>`;
     }
     const again = f.again === "yes", share = f.share === "yes";
     const blocks = [];
@@ -662,7 +745,7 @@ const screens = {
       ${blocks.join("") || `<p class="muted">${esc(p.n)} won't see your answers. We'll use them to find you better matches.</p>`}
       ${blocks.length ? `<button class="back" data-they style="color:var(--accent);font-weight:600;text-align:left">Demo: see what happens if ${esc(p.n)} says no</button>` : ""}
       <div class="spacer"></div>
-      <button class="btn ghost" data-go="4">Back to my matches</button>
+      <button class="btn ghost" data-go="${home}">${homeLabel}</button>
     </main>`;
   }
 };
@@ -685,7 +768,12 @@ app.addEventListener("click", e => {
     const n = d.wave; state.waves[n] = "sent"; render();
     setTimeout(() => { state.waves[n] = "mutual"; if (state.step === 4) render(); toast(n + " waved back"); }, 1400);
   }
-  else if (d.plan) { state.planFor = d.plan; state.plan = null; go(5); }
+  else if (d.plan) { state.planFor = d.plan; state.plan = null; state.fromMet = false; go(5); }
+  else if (d.feedback) {
+    state.planFor = d.feedback; state.fromMet = true;
+    state.fb = { rate: null, again: null, share: null, ctype: "Telegram", handle: "" };
+    go(6);
+  }
   else if (d.q) {
     if (state.questions.has(d.q)) state.questions.delete(d.q);
     else if (state.questions.size >= 3) { toast("Pick up to 3. Tap one to remove it first."); return; }
@@ -709,7 +797,7 @@ app.addEventListener("click", e => {
   else if (d.car) { state.car = Number(d.car); render(); }
   else if (d.confirm !== undefined) {
     if (!state.spot.trim()) { toast("Add how " + state.planFor + " can spot you."); document.getElementById("spot").focus(); return; }
-    state.plan = true; state.fb = { rate: null, again: null, share: null, ctype: "Telegram", handle: "" };
+    state.plan = true; state.fromMet = false; state.fb = { rate: null, again: null, share: null, ctype: "Telegram", handle: "" };
     render(); window.scrollTo(0, 0); toast("Plan sent to " + state.planFor);
   }
   else if (d.late !== undefined) { toast(state.planFor + " knows you're running late. They'll save you a spot."); }
