@@ -91,9 +91,15 @@ button:focus-visible, select:focus-visible, input:focus-visible, .chip:focus-vis
 /* Line diagram */
 .route { display: flex; flex-direction: column; gap: 0; padding: 4px 0; }
 .stop { display: grid; grid-template-columns: 22px 1fr auto; align-items: center; gap: 10px; min-height: 30px; position: relative; }
-.stop .pin { width: 14px; height: 14px; border-radius: 50%; border: 3px solid var(--accent); background: var(--surface); justify-self: center; z-index: 1; }
-.stop.end .pin { background: var(--accent); }
-.stop::before { content: ""; position: absolute; left: 9px; top: 0; bottom: 0; width: 4px; background: var(--accent); }
+.route { --lc: var(--accent); }
+.stop .pin { width: 14px; height: 14px; border-radius: 50%; border: 3px solid var(--lc); background: var(--surface); justify-self: center; z-index: 1; }
+.stop.end .pin { background: var(--lc); }
+.stop::before { content: ""; position: absolute; left: 9px; top: 0; bottom: 0; width: 4px; background: var(--lc); }
+.stop.gap::before { background: repeating-linear-gradient(var(--lc) 0 4px, transparent 4px 8px); }
+.leg { display: flex; flex-direction: column; gap: 4px; }
+.leg-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.change { border: 1px dashed var(--line); border-radius: 10px; padding: 8px 12px; color: var(--muted); margin: 6px 0; }
+.pill { display: inline-block; color: #fff; font-family: var(--font-mono); font-size: 11px; font-weight: 500; padding: 2px 7px; border-radius: 6px; vertical-align: 1px; }
 .stop:first-child::before { top: 50%; }
 .stop:last-child::before { bottom: 50%; }
 .stop .code { color: var(--muted); }
@@ -171,17 +177,109 @@ button:focus-visible, select:focus-visible, input:focus-visible, .chip:focus-vis
 <div id="toast" class="toast" hidden></div>
 
 <script>
-// Thomson-East Coast Line, north to east (stations open as of 2026)
-const TEL = [
-  ["TE1","Woodlands North"],["TE2","Woodlands"],["TE3","Woodlands South"],["TE4","Springleaf"],
-  ["TE5","Lentor"],["TE6","Mayflower"],["TE7","Bright Hill"],["TE8","Upper Thomson"],["TE9","Caldecott"],
-  ["TE11","Stevens"],["TE12","Napier"],["TE13","Orchard Boulevard"],["TE14","Orchard"],["TE15","Great World"],
-  ["TE16","Havelock"],["TE17","Outram Park"],["TE18","Maxwell"],["TE19","Shenton Way"],["TE20","Marina Bay"],
-  ["TE22","Gardens by the Bay"],["TE23","Tanjong Rhu"],["TE24","Katong Park"],["TE25","Tanjong Katong"],
-  ["TE26","Marine Parade"],["TE27","Marine Terrace"],["TE28","Siglap"],["TE29","Bayshore"]
-];
-const idx = name => TEL.findIndex(s => s[1] === name);
-const MIN_PER_STOP = 2;
+// Singapore MRT network (stations open as of 2026). Each line lists its stations in order.
+// Branches (Changi Airport, Marina Bay) are their own short lists; shared names are interchanges.
+const LINES = {
+  NS: { name:"North-South Line", short:"NSL", color:"#d42e12", cars:6, st:[
+    ["NS1","Jurong East"],["NS2","Bukit Batok"],["NS3","Bukit Gombak"],["NS4","Choa Chu Kang"],["NS5","Yew Tee"],
+    ["NS7","Kranji"],["NS8","Marsiling"],["NS9","Woodlands"],["NS10","Admiralty"],["NS11","Sembawang"],["NS12","Canberra"],
+    ["NS13","Yishun"],["NS14","Khatib"],["NS15","Yio Chu Kang"],["NS16","Ang Mo Kio"],["NS17","Bishan"],["NS18","Braddell"],
+    ["NS19","Toa Payoh"],["NS20","Novena"],["NS21","Newton"],["NS22","Orchard"],["NS23","Somerset"],["NS24","Dhoby Ghaut"],
+    ["NS25","City Hall"],["NS26","Raffles Place"],["NS27","Marina Bay"],["NS28","Marina South Pier"]] },
+  EW: { name:"East-West Line", short:"EWL", color:"#009645", cars:6, st:[
+    ["EW1","Pasir Ris"],["EW2","Tampines"],["EW3","Simei"],["EW4","Tanah Merah"],["EW5","Bedok"],["EW6","Kembangan"],
+    ["EW7","Eunos"],["EW8","Paya Lebar"],["EW9","Aljunied"],["EW10","Kallang"],["EW11","Lavender"],["EW12","Bugis"],
+    ["EW13","City Hall"],["EW14","Raffles Place"],["EW15","Tanjong Pagar"],["EW16","Outram Park"],["EW17","Tiong Bahru"],
+    ["EW18","Redhill"],["EW19","Queenstown"],["EW20","Commonwealth"],["EW21","Buona Vista"],["EW22","Dover"],["EW23","Clementi"],
+    ["EW24","Jurong East"],["EW25","Chinese Garden"],["EW26","Lakeside"],["EW27","Boon Lay"],["EW28","Pioneer"],["EW29","Joo Koon"],
+    ["EW30","Gul Circle"],["EW31","Tuas Crescent"],["EW32","Tuas West Road"],["EW33","Tuas Link"]] },
+  CG: { name:"East-West Line (Changi Airport branch)", short:"EWL", color:"#009645", cars:6, st:[
+    ["EW4","Tanah Merah"],["CG1","Expo"],["CG2","Changi Airport"]] },
+  NE: { name:"North East Line", short:"NEL", color:"#9900aa", cars:6, st:[
+    ["NE1","HarbourFront"],["NE3","Outram Park"],["NE4","Chinatown"],["NE5","Clarke Quay"],["NE6","Dhoby Ghaut"],
+    ["NE7","Little India"],["NE8","Farrer Park"],["NE9","Boon Keng"],["NE10","Potong Pasir"],["NE11","Woodleigh"],
+    ["NE12","Serangoon"],["NE13","Kovan"],["NE14","Hougang"],["NE15","Buangkok"],["NE16","Sengkang"],["NE17","Punggol"],
+    ["NE18","Punggol Coast"]] },
+  CC: { name:"Circle Line", short:"CCL", color:"#fa9e0d", cars:3, st:[
+    ["CC1","Dhoby Ghaut"],["CC2","Bras Basah"],["CC3","Esplanade"],["CC4","Promenade"],["CC5","Nicoll Highway"],
+    ["CC6","Stadium"],["CC7","Mountbatten"],["CC8","Dakota"],["CC9","Paya Lebar"],["CC10","MacPherson"],["CC11","Tai Seng"],
+    ["CC12","Bartley"],["CC13","Serangoon"],["CC14","Lorong Chuan"],["CC15","Bishan"],["CC16","Marymount"],["CC17","Caldecott"],
+    ["CC19","Botanic Gardens"],["CC20","Farrer Road"],["CC21","Holland Village"],["CC22","Buona Vista"],["CC23","one-north"],
+    ["CC24","Kent Ridge"],["CC25","Haw Par Villa"],["CC26","Pasir Panjang"],["CC27","Labrador Park"],["CC28","Telok Blangah"],
+    ["CC29","HarbourFront"]] },
+  CE: { name:"Circle Line (Marina Bay branch)", short:"CCL", color:"#fa9e0d", cars:3, st:[
+    ["CC4","Promenade"],["CE1","Bayfront"],["CE2","Marina Bay"]] },
+  DT: { name:"Downtown Line", short:"DTL", color:"#005ec4", cars:3, st:[
+    ["DT1","Bukit Panjang"],["DT2","Cashew"],["DT3","Hillview"],["DT4","Hume"],["DT5","Beauty World"],["DT6","King Albert Park"],
+    ["DT7","Sixth Avenue"],["DT8","Tan Kah Kee"],["DT9","Botanic Gardens"],["DT10","Stevens"],["DT11","Newton"],
+    ["DT12","Little India"],["DT13","Rochor"],["DT14","Bugis"],["DT15","Promenade"],["DT16","Bayfront"],["DT17","Downtown"],
+    ["DT18","Telok Ayer"],["DT19","Chinatown"],["DT20","Fort Canning"],["DT21","Bencoolen"],["DT22","Jalan Besar"],
+    ["DT23","Bendemeer"],["DT24","Geylang Bahru"],["DT25","Mattar"],["DT26","MacPherson"],["DT27","Ubi"],["DT28","Kaki Bukit"],
+    ["DT29","Bedok North"],["DT30","Bedok Reservoir"],["DT31","Tampines West"],["DT32","Tampines"],["DT33","Tampines East"],
+    ["DT34","Upper Changi"],["DT35","Expo"]] },
+  TE: { name:"Thomson-East Coast Line", short:"TEL", color:"#9d5b25", cars:4, st:[
+    ["TE1","Woodlands North"],["TE2","Woodlands"],["TE3","Woodlands South"],["TE4","Springleaf"],["TE5","Lentor"],
+    ["TE6","Mayflower"],["TE7","Bright Hill"],["TE8","Upper Thomson"],["TE9","Caldecott"],["TE11","Stevens"],["TE12","Napier"],
+    ["TE13","Orchard Boulevard"],["TE14","Orchard"],["TE15","Great World"],["TE16","Havelock"],["TE17","Outram Park"],
+    ["TE18","Maxwell"],["TE19","Shenton Way"],["TE20","Marina Bay"],["TE22","Gardens by the Bay"],["TE23","Tanjong Rhu"],
+    ["TE24","Katong Park"],["TE25","Tanjong Katong"],["TE26","Marine Parade"],["TE27","Marine Terrace"],["TE28","Siglap"],
+    ["TE29","Bayshore"]] },
+};
+const MIN_PER_STOP = 2, TRANSFER_MIN = 5;
+
+// Every station name with all of its codes, e.g. "Outram Park" -> ["EW16","NE3","TE17"]
+const STATIONS = {};
+for (const [L, line] of Object.entries(LINES)) line.st.forEach(([c, n], i) => {
+  (STATIONS[n] ||= { codes: [], nodes: [] });
+  if (!STATIONS[n].codes.includes(c)) STATIONS[n].codes.push(c);
+  STATIONS[n].nodes.push(L + "|" + i);
+});
+const STATION_NAMES = Object.keys(STATIONS).sort((a, b) => a.localeCompare(b));
+const codes = n => STATIONS[n].codes.join(" / ");
+
+// Fastest route between two stations (Dijkstra over line stops plus interchange walks).
+// Returns legs: [{ line, idx: [station indexes on that line], times: [minute at each station] }]
+const routeCache = {};
+function route(from, to, t0) {
+  const key = from + ">" + to;
+  if (!routeCache[key]) routeCache[key] = shortest(from, to);
+  const path = routeCache[key];
+  if (!path) return null;
+  const legs = [];
+  let t = toMin(t0), prev = null;
+  for (const node of path) {
+    const [L, i] = node.split("|"); const n = Number(i);
+    if (prev && prev.L === L) t += MIN_PER_STOP;
+    else if (prev) t += TRANSFER_MIN;
+    if (!prev || prev.L !== L) legs.push({ line: L, idx: [], times: [] });
+    const leg = legs[legs.length - 1];
+    leg.idx.push(n); leg.times.push(t);
+    prev = { L };
+  }
+  const real = legs.filter(l => l.idx.length > 1);
+  return { legs: real, minutes: t - toMin(t0), stops: real.reduce((a, l) => a + l.idx.length - 1, 0) };
+}
+function shortest(from, to) {
+  if (from === to) return null;
+  const dist = {}, back = {}, done = new Set(), goal = new Set(STATIONS[to].nodes);
+  for (const n of STATIONS[from].nodes) dist[n] = 0;
+  while (true) {
+    let cur = null;
+    for (const n in dist) if (!done.has(n) && (cur === null || dist[n] < dist[cur])) cur = n;
+    if (cur === null) return null;
+    if (goal.has(cur)) { const path = [cur]; while (back[path[0]]) path.unshift(back[path[0]]); return path; }
+    done.add(cur);
+    const [L, i] = cur.split("|"); const n = Number(i), line = LINES[L];
+    const next = [];
+    if (n > 0) next.push([L + "|" + (n - 1), MIN_PER_STOP]);
+    if (n < line.st.length - 1) next.push([L + "|" + (n + 1), MIN_PER_STOP]);
+    for (const other of STATIONS[line.st[n][1]].nodes) if (other !== cur) next.push([other, TRANSFER_MIN]);
+    for (const [m, c] of next) if (!done.has(m) && (dist[m] === undefined || dist[cur] + c < dist[m])) { dist[m] = dist[cur] + c; back[m] = cur; }
+  }
+}
+const nameOf = (L, i) => LINES[L].st[i][1];
+const towards = leg => nameOf(leg.line, leg.idx[leg.idx.length - 1] > leg.idx[0] ? LINES[leg.line].st.length - 1 : 0);
+const pill = L => `<span class="pill" style="background:${LINES[L].color}">${LINES[L].short}</span>`;
 
 const INTERESTS = ["Investing","Cars","Gaming","Football","Basketball","Badminton","Music","Anime","K-drama",
   "Fitness","Photography","Coding","Food","Startups","Reading","Travel","Fashion","Movies"];
@@ -200,6 +298,11 @@ const PEOPLE = [
   { n:"Marcus", a:27, from:"Siglap", to:"Orchard", t:"07:44", i:["Cars","Photography"], bio:"Weekend car meets" },
   { n:"Clara", a:22, from:"Marine Parade", to:"Havelock", t:"07:48", i:["Startups","Coding","Investing"], bio:"Uni intern at a fintech" },
   { n:"Hafiz", a:29, from:"Marine Terrace", to:"Marina Bay", t:"07:46", i:["Football","Food"], bio:"Supports Liverpool, sorry" },
+  { n:"Bryan", a:17, from:"Bayshore", to:"Raffles Place", t:"07:40", i:["Investing","Basketball","Gaming"], bio:"Changes to the red line at Marina Bay" },
+  { n:"Mei Xuan", a:16, from:"Siglap", to:"Bishan", t:"07:44", i:["Anime","Music","Cars"], bio:"Long ride up north, always has snacks" },
+  { n:"Farah", a:17, from:"Gardens by the Bay", to:"Dhoby Ghaut", t:"07:55", i:["Reading","Investing","Food"], bio:"Debate club, will argue with you nicely" },
+  { n:"Jun Wei", a:17, from:"Tampines", to:"Bugis", t:"07:45", i:["Cars","Football"], bio:"East side, blue line" },
+  { n:"Priya", a:26, from:"Marine Parade", to:"Raffles Place", t:"07:47", i:["Investing","Travel","Food"], bio:"Works in Raffles Place" },
   { n:"Kenji", a:31, from:"Tanjong Katong", to:"Great World", t:"07:52", i:["Reading","Movies","Cars"], bio:"Ask me for book recs" },
 ];
 
@@ -217,33 +320,47 @@ const EXTRA = {
 const extra = p => EXTRA[p.n] || { spot:"I'll wave when I see you", handle:"@" + p.n.toLowerCase().replace(/\s+/g, ""), qa:[["What are you into right now?", p.i.join(", ")]] };
 
 const state = {
-  step: 0, board: idx("Marine Terrace"), alight: idx("Katong Park"), time: "07:45",
+  step: 0, from: "Marine Terrace", to: "Katong Park", time: "07:45",
   interests: new Set(["Investing","Cars"]), age: 17, mode: "friends", minAge: 15, maxAge: 17,
   window: 10, waves: {}, planFor: null, car: 3, day: "Tomorrow", plan: null,
   spot: "Black backpack, standing by the door",
   questions: new Set(["What are you into right now?", "Dream car or dream trip?"]),
   answers: { "What are you into right now?": "Reading about index funds", "Dream car or dream trip?": "Nissan GT-R" },
-  fb: null, friends: {}
+  fb: null, friends: {}, theySayNo: false
 };
 
 const toMin = t => { const [h,m] = t.split(":").map(Number); return h*60 + m; };
 const fmt = m => String(Math.floor(m/60)).padStart(2,"0") + ":" + String(m%60).padStart(2,"0");
-const st = i => TEL[i];
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+const myRoute = () => route(state.from, state.to, state.time);
 
-// Where does this person's ride overlap yours, going the same way, and how close in time?
+// Where does this person's ride overlap yours? Checks each of your legs against each of theirs:
+// same line, same direction, sharing at least one stop.
 function overlap(p) {
-  const pb = idx(p.from), pa = idx(p.to);
-  const ud = Math.sign(state.alight - state.board), pd = Math.sign(pa - pb);
-  if (ud === 0 || ud !== pd) return null;
-  let start, end;
-  if (ud < 0) { start = Math.min(state.board, pb); end = Math.max(state.alight, pa); }
-  else        { start = Math.max(state.board, pb); end = Math.min(state.alight, pa); }
-  const stops = (start - end) * -ud;
-  if (stops < 1) return null;
-  const youAt = toMin(state.time) + Math.abs(start - state.board) * MIN_PER_STOP;
-  const themAt = toMin(p.t) + Math.abs(start - pb) * MIN_PER_STOP;
-  return { start, end, stops, diff: Math.abs(youAt - themAt), at: youAt };
+  const mine = myRoute(), theirs = route(p.from, p.to, p.t);
+  if (!mine || !theirs) return null;
+  const segs = [];
+  let offset = 0;
+  for (const u of mine.legs) {
+    for (const v of theirs.legs) {
+      if (u.line !== v.line) continue;
+      const ud = Math.sign(u.idx[u.idx.length - 1] - u.idx[0]), vd = Math.sign(v.idx[v.idx.length - 1] - v.idx[0]);
+      if (ud !== vd) continue;
+      const common = u.idx.filter(i => v.idx.includes(i));
+      if (common.length < 2) continue;
+      const a = u.idx.indexOf(common[0]), at = u.times[a];
+      const diff = Math.abs(at - v.times[v.idx.indexOf(common[0])]);
+      segs.push({ line: u.line, start: nameOf(u.line, common[0]), end: nameOf(u.line, common[common.length - 1]),
+        stops: common.length - 1, at, diff, offset: offset + a });
+    }
+    offset += u.idx.length - 1;
+  }
+  if (!segs.length) return null;
+  const near = segs.filter(x => x.diff <= state.window);
+  const use = near.length ? near : segs;
+  return { segs: use, inWindow: near.length > 0, total: mine.stops,
+    stops: use.reduce((a, x) => a + x.stops, 0), start: use[0].start, end: use[use.length - 1].end,
+    at: use[0].at, diff: use[0].diff, line: use[0].line };
 }
 
 function sameAgeBand(p) { return state.age < 18 ? p.a < 18 : p.a >= 18; }
@@ -256,7 +373,7 @@ function findMatches() {
     if (!o) continue;
     const shared = p.i.filter(x => state.interests.has(x));
     const m = { p, o, shared, score: shared.length * 3 + o.stops - o.diff / 4 };
-    (o.diff <= state.window ? out : outsideWindow).push(m);
+    (o.inWindow ? out : outsideWindow).push(m);
   }
   out.sort((a, b) => b.score - a.score);
   return { out, outsideWindow };
@@ -272,17 +389,22 @@ function header(backTo, dotsOn) {
 }
 
 function stationOptions(sel) {
-  return TEL.map((s, i) => `<option value="${i}" ${i === sel ? "selected" : ""}>${s[0]} · ${s[1]}</option>`).join("");
+  return STATION_NAMES.map(n => `<option value="${esc(n)}" ${n === sel ? "selected" : ""}>${esc(n)} · ${codes(n)}</option>`).join("");
 }
 
-function routeDiagram() {
-  const step = state.alight > state.board ? 1 : -1;
-  const ids = [];
-  for (let i = state.board; i !== state.alight + step; i += step) ids.push(i);
-  return `<div class="route">${ids.map((i, k) => `
-    <div class="stop ${k === 0 || k === ids.length - 1 ? "end" : ""}">
-      <span class="pin"></span><span>${st(i)[1]}</span><span class="mono code">${st(i)[0]}</span>
-    </div>`).join("")}</div>`;
+// Your route, leg by leg, with the interchange walks in between
+function routeDiagram(r) {
+  return r.legs.map((leg, k) => {
+    const ids = leg.idx, long = ids.length > 6;
+    const shown = long ? [ids[0], ids[1], null, ids[ids.length - 2], ids[ids.length - 1]] : ids;
+    const change = k > 0 ? `<div class="change small">Change at <b>${esc(nameOf(leg.line, ids[0]))}</b> · about ${TRANSFER_MIN} min walk</div>` : "";
+    return `${change}<div class="leg">
+      <div class="leg-head">${pill(leg.line)}<span class="small">towards ${esc(towards(leg))} · ${ids.length - 1} stop${ids.length > 2 ? "s" : ""}</span></div>
+      <div class="route" style="--lc:${LINES[leg.line].color}">${shown.map((i, j) => i === null
+        ? `<div class="stop gap"><span></span><span class="small muted">${ids.length - 4} more stops</span><span></span></div>`
+        : `<div class="stop ${j === 0 || j === shown.length - 1 ? "end" : ""}"><span class="pin"></span><span>${esc(nameOf(leg.line, i))}</span><span class="mono code">${LINES[leg.line].st[i][0]}</span></div>`).join("")}</div>
+    </div>`;
+  }).join("");
 }
 
 const screens = {
@@ -302,21 +424,20 @@ const screens = {
     </main>`;
   },
   1() {
-    const err = state.board === state.alight ? `<p class="error">Pick two different stations.</p>` : "";
+    const r = myRoute();
+    const err = !r ? `<p class="error">Pick two different stations.</p>` : "";
+    const changes = r ? r.legs.length - 1 : 0;
     return `${header(0, 1)}
     <main class="fade">
       <h2>How do you get to school or work?</h2>
-      <div class="field"><span class="label">Line</span>
-        <select id="line"><option>Thomson-East Coast Line</option></select>
-        <span class="small muted">Other MRT lines and buses come in a later version.</span>
-      </div>
-      <div class="row">
-        <div class="field"><label class="label" for="board">You board at</label><select id="board">${stationOptions(state.board)}</select></div>
-        <div class="field"><label class="label" for="alight">You get off at</label><select id="alight">${stationOptions(state.alight)}</select></div>
-      </div>
+      <div class="field"><label class="label" for="from">You start at</label><select id="from">${stationOptions(state.from)}</select></div>
+      <div class="field"><label class="label" for="to">You get off at</label><select id="to">${stationOptions(state.to)}</select></div>
       <div class="field"><label class="label" for="time">You're usually on the train at</label><input type="time" id="time" value="${state.time}"></div>
       ${err}
-      ${state.board !== state.alight ? `<div class="field"><span class="label">Your ride · ${Math.abs(state.board - state.alight)} stops · about ${Math.abs(state.board - state.alight) * MIN_PER_STOP} min</span>${routeDiagram()}</div>` : ""}
+      ${r ? `<div class="field"><span class="label">Your ride · ${r.stops} stops · ${changes ? changes + " change" + (changes > 1 ? "s" : "") : "no changes"} · about ${r.minutes} min</span>${routeDiagram(r)}
+        <span class="small muted">We picked the fastest route. You'll be matched on every line you ride, including after you change.</span></div>` : ""}
+      ${r && !changes ? `<button class="back" data-try style="color:var(--accent);font-weight:600;text-align:left">Try a route with a change: Marine Terrace → Raffles Place</button>` : ""}
+      <span class="small muted">All MRT lines are in. Buses come in a later version.</span>
       <div class="spacer"></div>
       <button class="btn" data-go="2" ${err ? "disabled" : ""}>Next</button>
     </main>`;
@@ -365,9 +486,8 @@ const screens = {
   4() {
     const { out, outsideWindow } = findMatches();
     const cards = out.map(({ p, o, shared }) => {
-      const total = Math.abs(state.board - state.alight);
-      const firstHop = Math.abs(o.start - state.board);
-      const segs = Array.from({ length: total }, (_, k) => k >= firstHop && k < firstHop + o.stops);
+      const segs = Array.from({ length: o.total }, (_, k) => o.segs.some(x => k >= x.offset && k < x.offset + x.stops));
+      const lines = [...new Set(o.segs.map(x => x.line))];
       const w = state.waves[p.n];
       const action = state.friends[p.n]
         ? `<span class="status">Friends · contacts shared</span>`
@@ -380,9 +500,9 @@ const screens = {
         <div class="who"><div class="avatar">${esc(p.n[0])}</div>
           <div class="meta"><h3>${esc(p.n)}, ${p.a}</h3><p class="small muted">${esc(p.bio)}</p></div></div>
         <div class="overlap">
-          <span class="small"><b>Rides with you for ${o.stops} stop${o.stops > 1 ? "s" : ""}</b> · about ${o.stops * MIN_PER_STOP} min · ${o.diff === 0 ? "same train" : "usually within " + o.diff + " min"}</span>
+          <span class="small">${lines.map(pill).join(" ")} <b>Rides with you for ${o.stops} stop${o.stops > 1 ? "s" : ""}</b> · about ${o.stops * MIN_PER_STOP} min · ${o.diff === 0 ? "same train" : "usually within " + o.diff + " min"}</span>
           <div class="bar">${segs.map(on => `<span class="${on ? "on" : ""}"></span>`).join("")}</div>
-          <div class="ends small muted"><span>${st(state.board)[1]}</span><span>${st(state.alight)[1]}</span></div>
+          <div class="ends small muted"><span>${esc(state.from)}</span><span>${esc(state.to)}</span></div>
         </div>
         <div class="chips">${p.i.map(x => `<span class="tag ${shared.includes(x) ? "shared" : ""}">${x}</span>`).join("")}</div>
         <div class="actions">${action}</div>
@@ -392,11 +512,11 @@ const screens = {
     return `${header(3)}
     <main class="fade">
       <div>
-        <p class="label">Friends · ${st(state.board)[0]} → ${st(state.alight)[0]} · ${state.time}</p>
+        <p class="label">Friends · ${esc(state.from)} → ${esc(state.to)} · ${state.time}</p>
         <h2>${out.length} ${out.length === 1 ? "person rides" : "people ride"} with you</h2>
       </div>
       <div class="list">${out.length ? cards : empty}</div>
-      ${outsideWindow.length ? `<p class="small muted">${outsideWindow.length} more on your route ride outside your ${state.window}-minute window.${state.window < 15 ? ` <button class="back" data-widen style="color:var(--accent);font-weight:600">Widen to 15 min</button>` : ""}</p>` : ""}
+      ${outsideWindow.length ? `<p class="small muted">${outsideWindow.length} more share part of your route but ride outside your ${state.window}-minute window.${state.window < 15 ? ` <button class="back" data-widen style="color:var(--accent);font-weight:600">Widen to 15 min</button>` : ""}</p>` : ""}
       <div class="note">Shown: only the part of the ride you share. Their full route stays private, and so does yours.</div>
     </main>`;
   },
@@ -405,6 +525,9 @@ const screens = {
     if (!m) return screens[4]();
     const { p, o, shared } = m;
     const x = extra(p);
+    const line = LINES[o.line], car = Math.min(state.car, line.cars);
+    const together = o.segs.length > 1
+      ? `You change to the ${LINES[o.segs[1].line].name} together at ${o.segs[1].start}, so you can walk over together.` : "";
     if (state.plan) {
       const tip = shared.length
         ? `You both like ${shared[0]}. Ask ${p.n} how they got into it.`
@@ -415,9 +538,10 @@ const screens = {
         <h2>Ride planned</h2>
         <div class="ticket">
           <span class="label" style="color:var(--match)">${state.day} · with ${esc(p.n)}</span>
-          <span class="big">${fmt(o.at)} at ${st(o.start)[1]}</span>
-          <span class="mono">${st(o.start)[0]} → ${st(o.end)[0]} · ${o.stops} stop${o.stops > 1 ? "s" : ""} together</span>
-          <span><b>Carriage ${state.car}</b>, counting from the front of the train</span>
+          <span class="big">${fmt(o.at)} at ${esc(o.start)}</span>
+          <span>${pill(o.line)} <span class="mono">${esc(o.start)} → ${esc(o.end)} · ${o.stops} stop${o.stops > 1 ? "s" : ""} together</span></span>
+          <span><b>Carriage ${car}</b>, counting from the front of the train</span>
+          ${together ? `<span class="small">${esc(together)}</span>` : ""}
           <span class="small"><b>How to spot ${esc(p.n)}:</b> ${esc(x.spot)}</span>
         </div>
         <div class="field"><span class="label">${esc(p.n)}'s warm-up answers</span>
@@ -444,13 +568,13 @@ const screens = {
         <p class="label">You and ${esc(p.n)} both waved</p>
         <h2>Plan your ride together</h2>
       </div>
-      <p class="muted">You share ${o.stops} stop${o.stops > 1 ? "s" : ""}, from ${st(o.start)[1]} to ${st(o.end)[1]}. ${p.n} gets on around ${fmt(o.at)}.</p>
+      <p class="muted">You share ${o.stops} stop${o.stops > 1 ? "s" : ""}, from ${esc(o.start)} to ${esc(o.end)}. You meet on the ${line.name} at ${esc(o.start)} around ${fmt(o.at)}. ${esc(together)}</p>
       <div class="field"><span class="label">Which day?</span>
         <div class="seg">${["Tomorrow","Next Monday"].map(d => `<button data-day="${d}" aria-pressed="${state.day === d}">${d}</button>`).join("")}</div>
       </div>
       <div class="field"><span class="label">Meet in carriage</span>
-        <div class="train">${[1,2,3,4].map(c => `<button class="car" data-car="${c}" aria-pressed="${state.car === c}"><b>${c}</b><span class="small">${c === 1 ? "Front" : c === 4 ? "Back" : ""}&nbsp;</span></button>`).join("")}</div>
-        <span class="small muted">TEL trains have 4 carriages. Pick one near your exit to save time.</span>
+        <div class="train" style="grid-template-columns:repeat(${line.cars},1fr)">${Array.from({ length: line.cars }, (_, k) => k + 1).map(c => `<button class="car" data-car="${c}" aria-pressed="${car === c}"><b>${c}</b><span class="small">${c === 1 ? "Front" : c === line.cars ? "Back" : ""}&nbsp;</span></button>`).join("")}</div>
+        <span class="small muted">${line.short} trains have ${line.cars} carriages. Pick one near your exit or your change, to save time.</span>
       </div>
       <div class="field"><label class="label" for="spot">How can ${esc(p.n)} spot you?</label>
         <input type="text" id="spot" data-keep="spot" value="${esc(state.spot)}" placeholder="e.g. black backpack, standing by the door">
@@ -506,12 +630,21 @@ const screens = {
         <p class="muted">We've noted the missed ride. People who often miss rides get fewer matches, so the people who turn up get better ones.</p>
         <div class="spacer"></div><button class="btn" data-go="4">Back to my matches</button></main>`;
     }
+    const wanted = f.again === "yes" || f.share === "yes";
+    if (wanted && state.theySayNo) {
+      return `${header(null)}<main class="fade">
+        <div><p class="label">Two days later</p><h2>No second ride this time</h2></div>
+        <p class="muted">${esc(p.n)} didn't pick a second ride or a contact swap. That happens, and it's not about you. Nobody saw what you chose.</p>
+        <p class="muted">There are other people on your train.</p>
+        <button class="back" data-they style="color:var(--accent);font-weight:600;text-align:left">Demo: switch back to ${esc(p.n)} saying yes</button>
+        <div class="spacer"></div><button class="btn" data-go="4">See my matches</button></main>`;
+    }
     const again = f.again === "yes", share = f.share === "yes";
     const blocks = [];
     if (again) blocks.push(`<div class="ticket">
       <span class="label" style="color:var(--match)">You both want to ride again</span>
       <span class="big">Next Monday, ${m ? fmt(m.o.at) : state.time}</span>
-      <span>Same train${m ? ` at ${st(m.o.start)[1]}` : ""}, carriage ${state.car}</span>
+      <span>Same train${m ? ` at ${esc(m.o.start)}` : ""}, carriage ${state.car}</span>
       <button class="btn small-btn" data-toast="Next ride with ${esc(p.n)} is booked for Monday.">Book it</button>
     </div>`);
     if (share) blocks.push(`<div class="card">
@@ -527,7 +660,7 @@ const screens = {
         <h2>${share ? `You and ${esc(p.n)} are now friends` : again ? "See you on the train" : "Thanks for the feedback"}</h2>
       </div>
       ${blocks.join("") || `<p class="muted">${esc(p.n)} won't see your answers. We'll use them to find you better matches.</p>`}
-      ${blocks.length ? `<p class="small muted">In this demo ${esc(p.n)} always says yes. In the real app, if only one of you says yes, nothing happens and nobody is told.</p>` : ""}
+      ${blocks.length ? `<button class="back" data-they style="color:var(--accent);font-weight:600;text-align:left">Demo: see what happens if ${esc(p.n)} says no</button>` : ""}
       <div class="spacer"></div>
       <button class="btn ghost" data-go="4">Back to my matches</button>
     </main>`;
@@ -561,9 +694,16 @@ app.addEventListener("click", e => {
   }
   else if (d.fb) { state.fb[d.fb] = d.val; render(); }
   else if (d.submit !== undefined) {
+    state.theySayNo = false;
     if (state.fb.rate !== "noshow" && state.fb.share === "yes") state.friends[state.planFor] = true;
     go(7);
   }
+  else if (d.they !== undefined) {
+    state.theySayNo = !state.theySayNo;
+    if (state.fb.share === "yes") { if (state.theySayNo) delete state.friends[state.planFor]; else state.friends[state.planFor] = true; }
+    render();
+  }
+  else if (d.try !== undefined) { state.from = "Marine Terrace"; state.to = "Raffles Place"; state.waves = {}; render(); }
   else if (d.widen !== undefined) { state.window = 15; render(); }
   else if (d.day) { state.day = d.day; render(); }
   else if (d.car) { state.car = Number(d.car); render(); }
@@ -587,8 +727,8 @@ app.addEventListener("input", e => {
 app.addEventListener("change", e => {
   const t = e.target;
   if (t.dataset.keep) return;
-  if (t.id === "board") state.board = Number(t.value);
-  if (t.id === "alight") state.alight = Number(t.value);
+  if (t.id === "from") state.from = t.value;
+  if (t.id === "to") state.to = t.value;
   if (t.id === "time" && t.value) state.time = t.value;
   if (t.id === "window") state.window = Number(t.value);
   if (t.id === "minAge") { state.minAge = Number(t.value); if (state.maxAge < state.minAge) state.maxAge = state.minAge; }
