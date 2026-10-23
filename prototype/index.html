@@ -158,6 +158,10 @@ button:focus-visible, select:focus-visible, input:focus-visible, .chip:focus-vis
 a.btn { display: block; text-align: center; text-decoration: none; }
 .stops summary { cursor: pointer; color: var(--accent); font-weight: 600; padding: 4px 0; }
 .stops[open] summary { margin-bottom: 8px; }
+.tabs button { padding: 10px 4px; font-size: 13.5px; }
+.badge { display: inline-block; min-width: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: var(--on-accent); font-size: 11.5px; line-height: 18px; }
+.count { font-family: var(--font-mono); font-size: 12px; color: var(--muted); font-weight: 500; }
+section.list > div { display: flex; flex-direction: column; gap: 2px; }
 .note { background: var(--surface-2); border-radius: 12px; padding: 12px 14px; font-size: 13.5px; color: var(--muted); }
 
 /* Match cards */
@@ -371,11 +375,13 @@ const extra = p => EXTRA[p.n] || { spot:"I'll wave when I see you", handle:"@" +
 const state = {
   step: 0, from: "Marine Terrace", to: "Katong Park", time: "07:45",
   interests: new Set(["Investing","Cars"]), age: 17, mode: "friends", minAge: 15, maxAge: 17,
-  window: 10, waves: {}, planFor: null, car: 3, day: "Tomorrow", plan: null,
+  window: 10, waves: { "Wei Ling": "sent", "Bryan": "sent" }, planFor: null, car: 3, day: "Tomorrow", plan: null,
   spot: "Black backpack, standing by the door",
   questions: new Set(["What are you into right now?", "Dream car or dream trip?"]),
   answers: { "What are you into right now?": "Reading about index funds", "Dream car or dream trip?": "Nissan GT-R" },
-  fb: null, friends: {}, theySayNo: false, fromMet: false, done: {}, setup: false, mapWhole: false
+  fb: null, friends: {}, theySayNo: false, fromMet: false, done: {}, setup: false, mapWhole: false,
+  incoming: { "Hui Min": "this morning", "Nur Aisyah": "yesterday", "Mei Xuan": "2 days ago" },
+  declined: {}, sentWhen: { "Wei Ling": "yesterday", "Bryan": "3 days ago" }
 };
 
 const toMin = t => { const [h,m] = t.split(":").map(Number); return h*60 + m; };
@@ -527,11 +533,29 @@ function routeDiagram(r) {
   }).join("");
 }
 
-function tabs(active, count) {
-  return `<div class="seg">
-    <button data-go="4" aria-pressed="${active === 4}">On your train${count !== undefined ? ` (${count})` : ""}</button>
-    <button data-go="8" aria-pressed="${active === 8}">People met (${MET.length})</button>
+function tabs(active) {
+  const rides = findMatches().out.length, fresh = wavedAtMe().length;
+  return `<div class="seg three tabs">
+    <button data-go="4" aria-pressed="${active === 4}">Rides (${rides})</button>
+    <button data-go="9" aria-pressed="${active === 9}">Waves${fresh ? ` <span class="badge">${fresh}</span>` : ""}</button>
+    <button data-go="8" aria-pressed="${active === 8}">Met (${MET.length})</button>
   </div>`;
+}
+
+// People on your ride who waved at you and you haven't answered yet
+const wavedAtMe = () => findMatches().out.filter(m => state.incoming[m.p.n] && !state.waves[m.p.n] && !state.declined[m.p.n] && !state.friends[m.p.n]);
+
+// One person on the Waves page: where you'd ride together and what you share
+function waveCard(m, actions, note) {
+  const { p, o, shared } = m;
+  return `<article class="card">
+    <div class="who"><div class="avatar">${esc(p.n[0])}</div>
+      <div class="meta"><h3>${esc(p.n)}, ${p.a}</h3><p class="small muted">${esc(p.bio)}</p></div></div>
+    <span class="small">${[...new Set(o.segs.map(x => x.line))].map(pill).join(" ")} <b>${o.stops} stop${o.stops > 1 ? "s" : ""} together</b> · from ${esc(o.start)} · around ${fmt(o.at)}</span>
+    ${shared.length ? `<div class="chips">${shared.map(x => `<span class="tag shared">${x}</span>`).join("")}</div>` : ""}
+    ${note ? `<p class="small muted">${note}</p>` : ""}
+    <div class="actions">${actions}</div>
+  </article>`;
 }
 
 // A met person's current stage: the made-up starting point, or whatever your feedback led to
@@ -651,11 +675,13 @@ const screens = {
       const w = state.waves[p.n];
       const action = state.friends[p.n]
         ? `<span class="status">Friends · contacts shared</span>`
+        : state.incoming[p.n] && !w && !state.declined[p.n]
+        ? `<span class="pill-status good">Waved at you</span><span class="spacer"></span><button class="btn small-btn" data-waveback="${esc(p.n)}">Wave back</button>`
         : w === "mutual"
         ? `<span class="status">You both waved</span><span class="spacer"></span><button class="btn small-btn" data-plan="${esc(p.n)}">Plan a ride</button>`
         : w === "sent"
         ? `<span class="small muted">Wave sent. Waiting for ${esc(p.n)}…</span>`
-        : `<button class="btn small-btn" data-wave="${esc(p.n)}">Wave</button><span class="small muted">They'll only know if they wave back</span>`;
+        : `<button class="btn small-btn" data-wave="${esc(p.n)}">Wave</button><span class="small muted">It's a match if they wave back</span>`;
       return `<article class="card">
         <div class="who"><div class="avatar">${esc(p.n[0])}</div>
           <div class="meta"><h3>${esc(p.n)}, ${p.a}</h3><p class="small muted">${esc(p.bio)}</p></div></div>
@@ -672,7 +698,7 @@ const screens = {
     const pending = MET.filter(m => metStatus(m).status === "feedback");
     return `${header(0)}
     <main class="fade">
-      ${tabs(4, out.length)}
+      ${tabs(4)}
       ${pending.map(m => `<div class="note nudge"><span>You rode with <b>${esc(m.n)}</b> this morning. How did it go?</span>
         <button class="btn small-btn" data-feedback="${esc(m.n)}">Rate it</button></div>`).join("")}
       <div>
@@ -785,6 +811,38 @@ const screens = {
       <button class="btn" data-submit ${f.rate ? "" : "disabled"}>Send feedback</button>
     </main>`;
   },
+  9() {
+    const all = findMatches().out;
+    const incoming = wavedAtMe();
+    const ready = all.filter(m => state.waves[m.p.n] === "mutual" && !state.friends[m.p.n]);
+    const sent = all.filter(m => state.waves[m.p.n] === "sent");
+    const section = (title, hint, items, empty) => `<section class="list">
+      <div><h3>${title}</h3>${hint ? `<p class="small muted">${hint}</p>` : ""}</div>
+      ${items.length ? items.join("") : `<p class="note">${empty}</p>`}
+    </section>`;
+    return `${header(0)}
+    <main class="fade">
+      ${tabs(9)}
+      <div>
+        <p class="label">Waves</p>
+        <h2>Who you want to meet, and who wants to meet you</h2>
+      </div>
+      ${section(`Waved at you <span class="count">${incoming.length}</span>`, "They want to ride with you. Wave back to plan a ride.",
+        incoming.map(m => waveCard(m,
+          `<button class="btn small-btn" data-waveback="${esc(m.p.n)}">Wave back</button><button class="btn ghost small-btn" data-notnow="${esc(m.p.n)}">Not now</button>`,
+          `Waved ${esc(state.incoming[m.p.n])}`)),
+        "Nobody new. When someone on your ride waves at you, they show up here.")}
+      ${section(`Ready to plan <span class="count">${ready.length}</span>`, "You both waved.",
+        ready.map(m => waveCard(m, `<button class="btn small-btn" data-plan="${esc(m.p.n)}">Plan a ride</button>`)),
+        "When you and someone both wave, you can plan a ride here.")}
+      ${section(`You waved at <span class="count">${sent.length}</span>`, "The people you want to meet. You'll get a match when they wave back.",
+        sent.map(m => waveCard(m,
+          `<span class="pill-status warn">Waiting</span><span class="spacer"></span><button class="btn ghost small-btn" data-unwave="${esc(m.p.n)}">Take back wave</button>`,
+          state.sentWhen[m.p.n] ? `Sent ${esc(state.sentWhen[m.p.n])}` : "Sent just now")),
+        `Nobody yet. Go to <b>Rides</b> and wave at someone you'd like to meet.`)}
+      <div class="note">Waves last 7 days. If nobody waves back, the wave quietly ends. "Not now" is private: they're never told.</div>
+    </main>`;
+  },
   8() {
     const order = { feedback: 0, friends: 1, again: 2, done: 3, nosecond: 4, noshow: 5 };
     const list = MET.map(metStatus).sort((a, b) => order[a.status] - order[b.status]);
@@ -811,7 +869,7 @@ const screens = {
     const friends = list.filter(m => m.status === "friends").length;
     return `${header(3)}
     <main class="fade">
-      ${tabs(8, findMatches().out.length)}
+      ${tabs(8)}
       <div>
         <p class="label">Your rides so far</p>
         <h2>${MET.length} people met · ${friends} friend${friends === 1 ? "" : "s"}</h2>
@@ -886,8 +944,11 @@ app.addEventListener("click", e => {
   else if (d.mode) { state.mode = d.mode; render(); }
   else if (d.wave) {
     const n = d.wave; state.waves[n] = "sent"; render();
-    setTimeout(() => { state.waves[n] = "mutual"; if (state.step === 4) render(); toast(n + " waved back"); }, 1400);
+    setTimeout(() => { state.waves[n] = "mutual"; if (state.step === 4 || state.step === 9) render(); toast(n + " waved back"); }, 1400);
   }
+  else if (d.waveback) { state.waves[d.waveback] = "mutual"; render(); toast("You both waved. Plan a ride with " + d.waveback + "."); }
+  else if (d.notnow) { state.declined[d.notnow] = true; render(); toast(d.notnow + " won't be told."); }
+  else if (d.unwave) { delete state.waves[d.unwave]; render(); toast("Wave taken back."); }
   else if (d.plan) { state.planFor = d.plan; state.plan = null; state.fromMet = false; go(5); }
   else if (d.feedback) {
     state.planFor = d.feedback; state.fromMet = true;
@@ -913,9 +974,9 @@ app.addEventListener("click", e => {
   }
   else if (d.mapwhole !== undefined) { state.mapWhole = !state.mapWhole; render(); }
   else if (d.meet !== undefined) go(state.setup ? 4 : 2);
-  else if (d.swap !== undefined) { [state.from, state.to] = [state.to, state.from]; state.waves = {}; render(); }
-  else if (d.trip) { [state.from, state.to] = d.trip.split("|"); state.waves = {}; render(); }
-  else if (d.try !== undefined) { state.from = "Marine Terrace"; state.to = "Raffles Place"; state.waves = {}; render(); }
+  else if (d.swap !== undefined) { [state.from, state.to] = [state.to, state.from]; render(); }
+  else if (d.trip) { [state.from, state.to] = d.trip.split("|"); render(); }
+  else if (d.try !== undefined) { state.from = "Marine Terrace"; state.to = "Raffles Place"; render(); }
   else if (d.widen !== undefined) { state.window = 15; render(); }
   else if (d.day) { state.day = d.day; render(); }
   else if (d.car) { state.car = Number(d.car); render(); }
@@ -952,7 +1013,6 @@ app.addEventListener("change", e => {
       else { state.minAge = 18; state.maxAge = Math.min(60, state.age + 5); }
     }
   }
-  state.waves = {};
   render();
 });
 
