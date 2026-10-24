@@ -925,7 +925,10 @@ function searchOnline(q) {
     let html;
     try {
       const body = await getLive(`/search?q=${encodeURIComponent(q.trim())}`);
-      html = body.results.length ? `<p class="label">Places</p>${body.results.map(r => pickRow(makeLoc(r.lat, r.lng, r.name, r.address))).join("")}`
+      // OneMap lists each block of an estate separately; show each place name once
+      const seen = new Set(), places = body.results.filter(r => !seen.has(r.name.toLowerCase()) && seen.add(r.name.toLowerCase()));
+      html = places.length ? `<p class="label">Places</p>${places.map(r => pickRow(makeLoc(r.lat, r.lng, r.name, r.address))).join("")}
+          ${places.length < body.results.length ? `<p class="small muted">Not the one? Add a word or two, like "${esc(q.trim())} changi".</p>` : ""}`
         : `<p class="small muted">No places called "${esc(q.trim())}" on OneMap.</p>`;
     } catch (e) { html = `<p class="small muted">Couldn't search places: ${esc(e.message)} Stations and bus stops still work.</p>`; }
     const box = document.getElementById("online-results");
