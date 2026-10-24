@@ -70,12 +70,20 @@ body {
   font-family: var(--font-body); font-size: 15px; line-height: 1.5;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 20px 40px;
+  padding-block: 20px 0;
 }
 .phone {
   max-width: 420px; margin: 0 auto; background: var(--surface);
   border: 1px solid var(--line); border-radius: 22px; overflow: clip;
-  min-height: 640px; display: flex; flex-direction: column;
+  display: flex; flex-direction: column;
+  /* Reaches the bottom of the screen; the tab bar is pinned there (see .tabbar) */
+  min-height: calc(100vh - 20px); min-height: calc(100dvh - 20px);
+  border-bottom: 0; border-radius: 22px 22px 0 0;
+}
+/* On a phone, or opened from the home screen: edge to edge, like a normal app */
+@media (max-width: 480px), (display-mode: standalone) {
+  body { padding-block: 0; padding-left: 0; padding-right: 0; }
+  .phone { max-width: none; border: 0; border-radius: 0; min-height: 100vh; min-height: 100dvh; }
 }
 .banner {
   background: var(--warn-soft); color: var(--warn-fg); font-size: 12.5px;
@@ -189,8 +197,9 @@ a.btn { display: block; text-align: center; text-decoration: none; }
 section.list > div { display: flex; flex-direction: column; gap: 2px; }
 .phone { position: relative; }
 #app { flex: 1; display: flex; flex-direction: column; }
+#app:has(.tabbar) { padding-bottom: calc(66px + env(safe-area-inset-bottom, 0px)); }   /* room for the pinned tab bar */
 .screen { flex: 1; display: flex; flex-direction: column; }
-.tabbar { position: sticky; bottom: 0; z-index: 5; display: grid; grid-template-columns: repeat(5, 1fr);
+.tabbar { position: fixed; bottom: 0; left: 0; right: 0; margin-inline: auto; width: min(420px, 100%); z-index: 600; display: grid; grid-template-columns: repeat(5, 1fr);
   background: var(--surface); border-top: 1px solid var(--line); padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px)); }
 .tab { position: relative; font: inherit; font-size: 11.5px; font-weight: 600; background: none; border: 0; color: var(--muted);
   display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0; cursor: pointer; border-radius: 10px; }
@@ -236,7 +245,7 @@ img.avatar { object-fit: cover; }
 .place-icon.mrt { background: var(--accent); color: var(--on-accent); }
 .place-icon.bus { background: #56627a; }
 .place-icon svg { width: 16px; height: 16px; fill: #fff; }
-.picker { position: fixed; z-index: 30; top: 0; bottom: 0; left: 0; right: 0; margin-inline: auto; width: min(420px, 100%);
+.picker { position: fixed; z-index: 700; top: 0; bottom: 0; left: 0; right: 0; margin-inline: auto; width: min(420px, 100%);
   background: var(--surface); display: flex; flex-direction: column; gap: 10px;
   padding: calc(14px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 14px max(16px, env(safe-area-inset-left, 0px)); }
 .picker-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -362,7 +371,7 @@ img.avatar { object-fit: cover; }
 .ticket { border: 2px dashed var(--match); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 8px; background: var(--match-soft); }
 .ticket .big { font-family: var(--font-display); font-size: 22px; font-weight: 700; }
 .toast {
-  position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+  position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 800;
   background: var(--fg); color: var(--surface); padding: 10px 16px; border-radius: 10px; font-size: 14px; max-width: 90vw;
 }
 .hero-line { display: flex; align-items: center; gap: 8px; }
