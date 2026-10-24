@@ -64,6 +64,7 @@ Once the app has its own website, add another variable called `ALLOWED_ORIGIN` w
 | `/arrivals?stop=92071&service=150` | The next 3 buses of service 150 at stop 92071 |
 | `/arrivals?stop=92071` | The next buses of every service at that stop |
 | `/train-alerts` | Whether MRT lines are running normally, and any delay messages |
+| `/check` | Whether your saved key looks right and LTA accepts it (never shows the key) |
 
 Each bus has: the arrival time, minutes away, whether it's **tracked by GPS** or just from the timetable, how full it is (seats available, standing available, limited standing), and whether it's single-deck, double-deck or bendy.
 

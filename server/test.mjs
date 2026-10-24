@@ -59,4 +59,23 @@ globalThis.fetch = async () => new Response("down", { status: 503 });
 [status, body] = await get("/arrivals?stop=92071");
 assert.equal(status, 502); assert.match(body.error, /Couldn't reach LTA/);
 
+// A key pasted with a space and quote marks still works, and /check explains what's wrong without showing the key
+calls = [];
+globalThis.fetch = async (url, opts) => { calls.push({ url: String(url), key: opts.headers.AccountKey });
+  return new Response(JSON.stringify(sampleArrival), { status: opts.headers.AccountKey === "test-key" ? 200 : 401 }); };
+const messy = { LTA_ACCOUNT_KEY: '  "test-key"\n' };
+let r = await worker.fetch(new Request("https://live.example.com/arrivals?stop=92071"), messy, { waitUntil() {} });
+assert.equal(r.status, 200, "spaces and quotes around the key are removed");
+r = await worker.fetch(new Request("https://live.example.com/check"), messy, {});
+body = await r.json();
+assert.equal(body.ltaAcceptsKey, true);
+assert.equal(body.keyLength, 8);
+assert.equal(body.notes.length, 2);
+assert.ok(!JSON.stringify(body).includes("test-key"), "never shows the key");
+r = await worker.fetch(new Request("https://live.example.com/check"), { LTA_ACCOUNT_KEY: "wrong-key" }, {});
+body = await r.json();
+assert.equal(body.ltaAcceptsKey, false); assert.equal(body.ltaAnswers.busArrival, 401); assert.match(body.advice, /doesn't accept/);
+r = await worker.fetch(new Request("https://live.example.com/check"), {}, {});
+assert.equal((await r.json()).keySaved, false);
+
 console.log("All server checks passed.");
