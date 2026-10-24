@@ -20,11 +20,11 @@ You can't add features inside Google Maps itself (Google doesn't allow it), so C
 
 Your profile (set up once, editable on the Me tab) covers:
 
-1. **Set your commute**: the station where you start, the one where you get off, and the time you're usually on the train. The app works out your route across all MRT lines, including where you change.
+1. **Set your commute**: where you start and where you get off (any MRT station or bus stop), the time you set off, and how you travel: **Bus + MRT**, **MRT only** or **Bus only**. The app works out the fastest route across every MRT line and bus service, including changes and short walks between a bus stop and a station.
 2. **Pick your interests**, for example investing or cars.
 3. **Choose who to meet**: friends mode now, dating mode (18+) later, plus an age range and how flexible your timing is.
-4. **See matches**: people who share at least one stop with you, going the same way, within your time window. Every line of your trip counts, so someone can join you before or after a change, or change lines with you.
-5. **Wave**: if both people wave, you plan a ride together and pick a day and a carriage to meet in.
+4. **See matches**: people who share at least one stop with you, going the same way, within your time window. Every train and bus of your trip counts, so someone can join you before or after a change, or change with you.
+5. **Wave**: if both people wave, you plan a ride together and pick a day and where to meet: a carriage on a train, or a seat on a bus (upper deck front, upper deck back, lower deck).
    - **Same route, a bit earlier or later**: people who ride your route outside your time window (up to 30 min away). You can wave at them too, and you'd catch their train.
    - **Waves page**: one place for everyone you've waved at (the people you want to meet, with "Take back wave"), everyone who waved at you first ("Wave back" or a private "Not now"), and matches ready to plan. Waves end quietly after 7 days.
 6. **Warm up, don't chat**: there's no free chat before you meet. Each person adds a "how to spot me" note and answers up to 3 fun warm-up questions, so there's a hint but plenty left to talk about. Quick preset messages ("Running late", "Can't make it today") cover plan changes.
@@ -47,6 +47,7 @@ You're already on your way to school or work. If the other person runs late, get
 
 - **Not enough users at the start.** Matching needs people on the same route at the same time. Plan: launch on one line (Thomson-East Coast) or one school first, and allow a wider time window early on.
 - **Timing.** People may need to leave a few minutes early to catch the same train. Buses may be easier because they come less often.
+- **Bus timing is estimated.** The prototype uses real stops and routes but estimates the time (about 25 km/h between stops, 5 min average wait, walks at 75 m a minute). The real app should use LTA DataMall bus arrivals, so two people catch the same bus rather than one 8 minutes later.
 - **Transfers and route choice.** Most people change lines. The prototype picks the fastest route (2 min per stop, 5 min per change) and matches on every line. Still to work out:
   - People don't always take the fastest route. They should be able to edit their route.
   - Walking time at a change differs a lot by station (Dhoby Ghaut vs a cross-platform change), which shifts everyone's timing after it.
@@ -60,7 +61,8 @@ You're already on your way to school or work. If the other person runs late, get
 - **Google Maps links** (in the prototype now): open directions with the route filled in. Free, no sign-up.
 - **A real map inside the app**: Google Maps API or **OneMap** (Singapore's free official map). Google needs an API key and charges after a free amount.
 - **Address search** ("Blk 50 Marine Terrace" → nearest station): Google Places or OneMap search.
-- **LTA DataMall** (free, from Singapore's Land Transport Authority): live bus arrivals, train service alerts and bus routes. Useful for adding buses and for warning both people when a train is delayed.
+- **Bus stops and services** (in the prototype now): all 5,208 bus stops and 602 services with their stops in order, from [sgbusdata](https://github.com/cheeaun/sgbusdata) by Lim Chee Aun, built from LTA data.
+- **LTA DataMall** (free, from Singapore's Land Transport Authority): live bus arrivals, train service alerts and bus routes. Useful for matching people onto the exact same bus and for warning both people when a train is delayed.
 
 ## Prototype
 
@@ -70,5 +72,7 @@ There are two versions, built from the same code:
 - `prototype/new-user.html`: **a new user** signing up: mobile number and code, name, birthday, school or work, optional photo, daily commute and days, interests, who to meet, and the safety rules. It ends in the app with an empty history.
 
 `new-user.html` is generated. After changing `index.html`, run `python3 prototype/make_new_user.py` to rebuild it.
+
+Places are picked with a search (station, bus stop name, road or 5-digit stop number). Made-up riders appear on each bus service the first time a route uses it.
 
 It has about 300 made-up riders on every MRT line (a handful written by hand on the TEL, the rest generated with Singapore names, schools and jobs, and morning times from 07:15 to 08:30), so any route you demo has people on it.
