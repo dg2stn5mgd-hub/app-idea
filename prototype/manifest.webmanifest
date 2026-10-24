@@ -13,7 +13,7 @@
     { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "Waves", "url": "/#waves", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Chats", "url": "/#chats", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
     { "name": "Rides", "url": "/#rides", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
   ]
 }

@@ -190,7 +190,7 @@ section.list > div { display: flex; flex-direction: column; gap: 2px; }
 .phone { position: relative; }
 #app { flex: 1; display: flex; flex-direction: column; }
 .screen { flex: 1; display: flex; flex-direction: column; }
-.tabbar { position: sticky; bottom: 0; z-index: 5; display: grid; grid-template-columns: repeat(6, 1fr);
+.tabbar { position: sticky; bottom: 0; z-index: 5; display: grid; grid-template-columns: repeat(5, 1fr);
   background: var(--surface); border-top: 1px solid var(--line); padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px)); }
 .tab { position: relative; font: inherit; font-size: 11.5px; font-weight: 600; background: none; border: 0; color: var(--muted);
   display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0; cursor: pointer; border-radius: 10px; }
@@ -269,7 +269,6 @@ img.avatar { object-fit: cover; }
 .map-label-tip { font-family: var(--font-body); font-weight: 700; font-size: 12px; padding: 3px 7px; }
 .map-locate { width: 34px; height: 34px; border-radius: 4px; border: 2px solid rgba(0,0,0,.2); background: #fff; color: #2f6fdb; display: grid; place-items: center; cursor: pointer; }
 .map-locate svg { width: 16px; height: 16px; fill: currentColor; }
-.tab { font-size: 10.5px; }
 .chat-row { font: inherit; color: var(--fg); display: flex; align-items: center; gap: 12px; text-align: left; width: 100%;
   border: 1px solid var(--line); border-radius: 14px; padding: 12px; background: var(--surface); cursor: pointer; }
 .chat-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
@@ -284,6 +283,7 @@ img.avatar { object-fit: cover; }
 .composer { display: flex; gap: 8px; }
 .composer input { flex: 1; min-width: 0; }
 .quick { display: flex; flex-wrap: wrap; gap: 8px; }
+.waved .card { border-color: var(--match); background: var(--match-soft); }
 .note { background: var(--surface-2); border-radius: 12px; padding: 12px 14px; font-size: 13.5px; color: var(--muted); }
 
 /* Match cards */
@@ -1261,11 +1261,11 @@ const screens = {
       const action = state.friends[p.n]
         ? `<span class="status">Friends · contacts shared</span>`
         : state.incoming[p.n] && !w && !state.declined[p.n]
-        ? `<span class="pill-status good">Waved at you</span><span class="spacer"></span><button class="btn small-btn" data-waveback="${esc(p.n)}">Wave back</button>`
+        ? `<button class="btn small-btn" data-waveback="${esc(p.n)}">Wave back</button><button class="btn ghost small-btn" data-notnow="${esc(p.n)}">Not now</button><span class="small muted">Waved ${esc(state.incoming[p.n])}</span>`
         : w === "mutual"
         ? `<span class="status">You both waved</span><span class="spacer"></span><button class="btn small-btn" data-plan="${esc(p.n)}">Plan a ride</button>`
         : w === "sent"
-        ? `<span class="small muted">Wave sent. Waiting for ${esc(p.n)}…</span>`
+        ? `<span class="pill-status warn">Waiting</span><span class="small muted">Sent ${esc(state.sentWhen[p.n] || "just now")}</span><span class="spacer"></span><button class="btn ghost small-btn" data-unwave="${esc(p.n)}">Take back</button>`
         : `<button class="btn small-btn" data-wave="${esc(p.n)}">Wave</button><span class="small muted">${other ? `You'd catch their ${fmt(o.at)} ${vehicle(o.line)}` : "It's a match if they wave back"}</span>`;
       const when = other
         ? `<b>Rides your route ${Math.abs(o.later)} min ${o.later > 0 ? "later" : "earlier"}</b> · ${fmt(o.at)} at ${esc(o.start)} · ${o.stops} stop${o.stops > 1 ? "s" : ""} together`
@@ -1282,9 +1282,12 @@ const screens = {
         <div class="actions">${action}</div>
       </article>`;
     };
-    const shown = state.showAll ? out : out.slice(0, 8);
+    const onCommute = sameTrip(state, state.commute);
+    const incoming = onCommute ? wavedAtMe() : [], incomingNames = new Set(incoming.map(m => m.p.n));
+    const rest = out.filter(m => !incomingNames.has(m.p.n));
+    const shown = state.showAll ? rest : rest.slice(0, 8);
     const cards = shown.map(m => card(m)).join("")
-      + (out.length > shown.length ? `<button class="btn ghost" data-showall>Show all ${out.length} people on your ride</button>` : "");
+      + (rest.length > shown.length ? `<button class="btn ghost" data-showall>Show all ${rest.length} people on your ride</button>` : "");
     const others = outsideWindow.slice(0, 5);
     const empty = `<div class="note">Nobody rides with you within ${state.window} minutes yet. ${state.window < 15 ? `<button class="btn ghost small-btn" data-widen>Try 15 minutes</button>` : "Invite a friend who takes your train."}</div>`;
     const pending = metList().filter(m => metStatus(m).status === "feedback");
@@ -1299,13 +1302,20 @@ const screens = {
         <h2 style="margin-top:8px">Who do you want to meet?</h2>
         <p class="muted">${out.length} ${out.length === 1 ? "person is" : "people are"} on your ride. Tap <b>Wave</b> on anyone you'd like to meet. If they wave back, you can plan a ride together.</p>
       </div>
-      <div class="list">${out.length ? cards : empty}</div>
+      ${incoming.length ? `<section class="list waved">
+        <div><h3>Waved at you <span class="count">${incoming.length}</span></h3><p class="small muted">They want to ride with you. "Not now" is private: they're never told.</p></div>
+        ${incoming.map(m => card(m)).join("")}
+      </section>` : ""}
+      <section class="list">
+        ${incoming.length ? `<div><h3>On your ride <span class="count">${rest.length}</span></h3></div>` : ""}
+        ${rest.length ? cards : incoming.length ? "" : empty}
+      </section>
       ${others.length ? `<section class="list">
         <div><h3>Same route, a bit earlier or later</h3>
         <p class="small muted">They ride your route outside your ${state.window}-minute window. Wave if you'd leave a bit earlier or later to meet them.</p></div>
         ${others.map(m => card(m, true)).join("")}
       </section>` : ""}
-      <div class="note">Shown: only the part of the ride you share. Their full route stays private, and so does yours.</div>
+      <div class="note">Shown: only the part of the ride you share. Their full route stays private, and so does yours. Waves last 7 days. When you both wave, plan the ride here or in Chats.</div>
     </main>`;
   },
   5() {
@@ -1956,11 +1966,11 @@ const ICONS = {
   chats: '<path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-5 4V6a1 1 0 0 1 1-1Z"/><path d="M8 10h8M8 13h5"/>',
 };
 function tabBar() {
-  const on = { 0: "map", 4: "rides", 5: "rides", 6: "rides", 7: "rides", 11: "rides", 9: "waves", 12: "chats", 13: "chats", 8: "met", 10: "me", 1: "me", 2: "me", 3: "me" }[state.step];
-  const badge = { waves: wavedAtMe().length, chats: Object.values(state.unread).reduce((a, n) => a + n, 0) };
+  const on = { 0: "map", 4: "rides", 5: "rides", 6: "rides", 7: "rides", 11: "rides", 9: "rides", 12: "chats", 13: "chats", 8: "met", 10: "me", 1: "me", 2: "me", 3: "me" }[state.step];
+  const badge = { rides: wavedAtMe().length, chats: Object.values(state.unread).reduce((a, n) => a + n, 0) };
   const tab = (key, label, step) => `<button class="tab" data-tab="${step}" aria-current="${on === key ? "page" : "false"}">
     <svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[key]}</svg>${label}${badge[key] ? `<span class="tab-badge">${badge[key]}</span>` : ""}</button>`;
-  return `<nav class="tabbar" aria-label="Main">${tab("map", "Map", 0)}${tab("rides", "Rides", 4)}${tab("waves", "Waves", 9)}${tab("chats", "Chats", 12)}${tab("met", "Met", 8)}${tab("me", "Me", 10)}</nav>`;
+  return `<nav class="tabbar" aria-label="Main">${tab("map", "Map", 0)}${tab("rides", "Rides", 4)}${tab("chats", "Chats", 12)}${tab("met", "Met", 8)}${tab("me", "Me", 10)}</nav>`;
 }
 function render() {
   mapJob = null;
@@ -2119,7 +2129,8 @@ app.addEventListener("change", e => {
   render();
 });
 
-const TAB_LINKS = { rides: 4, waves: 9, chats: 12, met: 8, me: 10 };
+const TAB_LINKS = { rides: 4, waves: 4, chats: 12, met: 8, me: 10 };
+screens[9] = screens[4];   // the old Waves page now lives at the top of Rides
 if (!state.isNew && TAB_LINKS[location.hash.slice(1)] !== undefined) state.step = TAB_LINKS[location.hash.slice(1)];
 if (state.isNew) {
   Object.assign(state, { step: 20, interests: new Set(), waves: {}, incoming: {}, sentWhen: {}, friends: {}, chats: {}, unread: {} });

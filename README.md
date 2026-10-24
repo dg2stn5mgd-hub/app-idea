@@ -8,7 +8,9 @@ People in Singapore spend their train and bus rides scrolling on their phones. M
 
 ## How it works
 
-**Six tabs at the bottom, always one tap away:** Map (navigation), Rides (people on your commute), Waves (who you waved at and who waved at you, with a badge for new ones), Chats (messages, with a badge for unread ones), Met (people you've ridden with) and Me (your commute, interests and who you want to meet).
+**Five tabs at the bottom, always one tap away:** Map (navigation), Rides (people on your commute and your waves, with a badge for new ones), Chats (messages, with a badge for unread ones), Met (people you've ridden with) and Me (your commute, interests and who you want to meet).
+
+**Rides** shows, from the top: **Waved at you** (wave back, or a private "Not now"), **On your ride** (everyone you can wave at; people you've waved at show "Waiting" with "Take back"), and **a bit earlier or later**.
 
 **Chats** has three groups, each with its own rules:
 - **About to meet** (a ride is planned): **quick messages only**, like "Running late, I'll take the next one" or "I'm in the carriage now". The quick messages on the ride ticket land here too.
@@ -31,7 +33,7 @@ Your profile (set up once, editable on the Me tab) covers:
 4. **See matches**: people who share at least one stop with you, going the same way, within your time window. Every train and bus of your trip counts, so someone can join you before or after a change, or change with you.
 5. **Wave**: if both people wave, you plan a ride together and pick a day and where to meet: a carriage on a train, or a seat on a bus (upper deck front, upper deck back, lower deck).
    - **Same route, a bit earlier or later**: people who ride your route outside your time window (up to 30 min away). You can wave at them too, and you'd catch their train.
-   - **Waves page**: one place for everyone you've waved at (the people you want to meet, with "Take back wave"), everyone who waved at you first ("Wave back" or a private "Not now"), and matches ready to plan. Waves end quietly after 7 days.
+   - **Waves** live on the Rides tab: people who waved at you first are at the top ("Wave back" or a private "Not now"), and people you waved at show "Waiting" ("Take back" to undo). Waves end quietly after 7 days. When you both wave, plan the ride from Rides or Chats.
 6. **Warm up, don't chat**: there's no free chat before you meet. Each person adds a "how to spot me" note and answers up to 3 fun warm-up questions, so there's a hint but plenty left to talk about. Quick preset messages ("Running late", "Can't make it today") cover plan changes.
 7. **Ride day**: shortly before you leave, the app checks **live bus arrivals from LTA** and picks the exact bus you and your match should catch: the first one at or after your planned time. It shows whether each bus is GPS-tracked, how full it is, and whether it's single-deck (so "upper deck" won't work). Tapping another bus tells your match. For trains, it shows whether the line is running normally or delayed.
 8. **Feedback after the ride**: rate it privately (Great / Okay / Not for me / They didn't show up). Then choose whether to ride together again and whether to share contacts (Telegram, Instagram or phone).
