@@ -2,13 +2,16 @@
 //
 // The app asks this server for live bus arrivals and train service status. The server asks
 // LTA DataMall using the secret LTA_ACCOUNT_KEY, so the key never ends up inside the app.
+// It also looks up places (schools, buildings, addresses, postal codes) on OneMap, Singapore's official map.
 //
 //   GET /arrivals?stop=92071&service=150   next 3 buses of one service at one stop
 //   GET /arrivals?stop=92071               every service at that stop
 //   GET /train-alerts                      MRT service status (normal or disrupted)
+//   GET /search?q=dunman%20high%20school   find a place: name, address and where it is
 //   GET /check                             is the saved key OK? (never shows the key itself)
 
 const DATAMALL = "https://datamall2.mytransport.sg/ltaodataservice";
+const ONEMAP_SEARCH = "https://www.onemap.gov.sg/api/common/elastic/search";
 const CACHE_SECONDS = 20;   // LTA updates arrivals about every 20 s; caching saves your quota
 
 // What LTA's short codes mean
@@ -21,6 +24,10 @@ export default {
     if (request.method === "OPTIONS") return reply(null, 204, env);
     if (request.method !== "GET") return reply({ error: "Use GET." }, 405, env);
     if (url.pathname === "/check") return await check(env);
+    if (url.pathname === "/search") {
+      try { return await search(url, env, ctx); }
+      catch (e) { return reply({ error: "Couldn't reach OneMap. Try again in a moment.", detail: String(e && e.message || e) }, 502, env); }
+    }
     if (!cleanKey(env)) return reply({ error: "The server has no LTA_ACCOUNT_KEY yet. Add it in Settings → Variables and Secrets." }, 500, env);
 
     try {
@@ -36,6 +43,24 @@ export default {
 // The key as LTA expects it: no spaces, line breaks or quote marks around it (easy to paste by accident)
 const cleanKey = env => String(env.LTA_ACCOUNT_KEY || "").trim().replace(/^["'“”‘’]+|["'“”‘’]+$/g, "").trim();
 
+// Place search on OneMap. No key needed; if OneMap ever asks for one, add ONEMAP_TOKEN as a secret.
+async function search(url, env, ctx) {
+  const q = (url.searchParams.get("q") || "").trim();
+  if (q.length < 2 || q.length > 60) return reply({ error: "q must be 2 to 60 characters, like dunman high school or 436895." }, 400, env);
+  const target = ONEMAP_SEARCH + "?" + new URLSearchParams({ searchVal: q, returnGeom: "Y", getAddrDetails: "Y", pageNum: "1" });
+  const data = await cachedJson(target, env.ONEMAP_TOKEN ? { Authorization: env.ONEMAP_TOKEN } : {}, 86400, ctx);
+  const seen = new Set();
+  const results = (data.results || []).map(r => ({
+    name: titleCase(r.BUILDING && r.BUILDING !== "NIL" ? r.BUILDING : r.SEARCHVAL),
+    address: titleCase(r.ADDRESS || ""),
+    postal: r.POSTAL && r.POSTAL !== "NIL" ? r.POSTAL : null,
+    lat: Number(r.LATITUDE), lng: Number(r.LONGITUDE),
+  })).filter(r => r.lat && r.lng && !seen.has(r.name + r.postal) && seen.add(r.name + r.postal)).slice(0, 8);
+  return reply({ query: q, results }, 200, env);
+}
+// OneMap answers in capitals: "DUNMAN HIGH SCHOOL" -> "Dunman High School"
+const titleCase = t => String(t).toLowerCase().replace(/\b([a-z])/g, c => c.toUpperCase()).replace(/\bSingapore (\d{6})\b/, "Singapore $1");
+
 // Self-check: describes the saved key and asks LTA whether it accepts it, without revealing the key
 async function check(env) {
   const raw = String(env.LTA_ACCOUNT_KEY || ""), key = cleanKey(env);
@@ -45,6 +70,9 @@ async function check(env) {
     catch (e) { return "no answer"; }
   };
   const [bus, train] = await Promise.all([ask("/v3/BusArrival?BusStopCode=92071"), ask("/TrainServiceAlerts")]);
+  let places;
+  try { places = (await fetch(ONEMAP_SEARCH + "?searchVal=dunman%20high%20school&returnGeom=Y&getAddrDetails=Y&pageNum=1")).status; }
+  catch (e) { places = "no answer"; }
   const notes = [];
   if (raw !== raw.trim()) notes.push("The saved key has spaces or line breaks at the start or end. This check removes them before asking LTA.");
   if (/["'“”‘’]/.test(raw)) notes.push("The saved key has quote marks around it. This check removes them before asking LTA.");
@@ -58,6 +86,7 @@ async function check(env) {
     keyEndsWith: "…" + key.slice(-2),
     ltaAcceptsKey: ok,
     ltaAnswers: { busArrival: bus, trainAlerts: train },
+    placeSearch: places === 200 ? "working" : `OneMap answered ${places}`,
     notes,
     advice: ok ? "All good: LTA accepts the key. Try /arrivals?stop=92071."
       : bus === 401 || bus === 403 ? "LTA doesn't accept this key. Compare the length and first/last characters with the key in LTA's email. If they match, the key may not be switched on yet: wait an hour, or check LTA's email for an activation step."
@@ -110,17 +139,21 @@ async function trainAlerts(env, ctx) {
 
 // Calls DataMall with the secret key, reusing an answer for CACHE_SECONDS
 async function datamall(path, env, ctx) {
-  const target = DATAMALL + path;
+  return cachedJson(DATAMALL + path, { AccountKey: cleanKey(env) }, CACHE_SECONDS, ctx);
+}
+
+// Fetches JSON, reusing the answer for `seconds` so repeat questions don't use up quotas
+async function cachedJson(target, headers, seconds, ctx) {
   const cache = typeof caches !== "undefined" ? caches.default : null;
   const cacheKey = new Request(target);
   if (cache) {
     const hit = await cache.match(cacheKey);
     if (hit) return hit.json();
   }
-  const res = await fetch(target, { headers: { AccountKey: cleanKey(env), accept: "application/json" } });
-  if (!res.ok) throw new Error(`DataMall answered ${res.status}`);
+  const res = await fetch(target, { headers: { ...headers, accept: "application/json" } });
+  if (!res.ok) throw new Error(`${new URL(target).hostname.includes("onemap") ? "OneMap" : "DataMall"} answered ${res.status}`);
   const body = await res.text();
-  if (cache && ctx) ctx.waitUntil(cache.put(cacheKey, new Response(body, { headers: { "cache-control": `max-age=${CACHE_SECONDS}`, "content-type": "application/json" } })));
+  if (cache && ctx) ctx.waitUntil(cache.put(cacheKey, new Response(body, { headers: { "cache-control": `max-age=${seconds}`, "content-type": "application/json" } })));
   return JSON.parse(body);
 }
 

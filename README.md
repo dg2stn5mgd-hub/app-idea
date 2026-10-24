@@ -12,7 +12,7 @@ People in Singapore spend their train and bus rides scrolling on their phones. M
 
 Rides and Waves use your saved **daily commute**, so you never have to search a destination to check them. A one-off trip searched on the Map can be shown on Rides too, with a button to switch back to your commute.
 
-**The Map tab works like a maps app.** You pick where you're going (or tap a saved trip like "Home → School") and see your route. Then you choose:
+**The Map tab works like a maps app.** You pick where you're going (or tap **Home → School**), start from **your current location** (GPS) or anywhere else, tap **Now** to leave now, and see your route. For a place that isn't a station or stop, the route includes the walk to and from whichever nearby station or bus stop makes the whole trip fastest (stations up to 1 km away, bus stops up to 500 m). Then you choose:
 - **Just navigate**: opens Google Maps with the route filled in. Google does the turn-by-turn directions.
 - **Meet someone on this ride**: Carriage's own feature, described below.
 
@@ -20,7 +20,7 @@ You can't add features inside Google Maps itself (Google doesn't allow it), so C
 
 Your profile (set up once, editable on the Me tab) covers:
 
-1. **Set your commute**: where you start and where you get off (any MRT station or bus stop), the time you set off, and how you travel: **Bus + MRT**, **MRT only** or **Bus only**. The app works out the fastest route across every MRT line and bus service, including changes and short walks between a bus stop and a station.
+1. **Set your commute**: where you start and where you get off (any MRT station, bus stop, or real place like a school, building, address or postal code, found through OneMap), the time you set off, and how you travel: **Bus + MRT**, **MRT only** or **Bus only**. The app works out the fastest route across every MRT line and bus service, including changes and short walks between a bus stop and a station.
 2. **Pick your interests**, for example investing or cars.
 3. **Choose who to meet**: friends mode now, dating mode (18+) later, plus an age range and how flexible your timing is.
 4. **See matches**: people who share at least one stop with you, going the same way, within your time window. Every train and bus of your trip counts, so someone can join you before or after a change, or change with you.
@@ -62,7 +62,8 @@ You're already on your way to school or work. If the other person runs late, get
 - **Route map** (in the prototype now): Singapore's outline with every MRT line drawn faintly and your route highlighted, zoomed to your trip, with a "Whole map" view. Station positions come from LTA station data on GitHub (hxchua/datadoubleconfirm), with stations opened since 2020 placed approximately. The coastline comes from world-geojson (OpenStreetMap). It's drawn by the app itself, with no Google map inside.
 - **Google Maps links** (in the prototype now): open directions with the route filled in. Free, no sign-up.
 - **A real map inside the app**: Google Maps API or **OneMap** (Singapore's free official map). Google needs an API key and charges after a free amount.
-- **Address search** ("Blk 50 Marine Terrace" → nearest station): Google Places or OneMap search.
+- **Place search** (in the prototype now): schools, buildings, addresses and postal codes from **OneMap**, through the live-data server. Free, no key.
+- **Checking routes against Google Maps:** not automatic (Google's directions API is paid and its terms don't allow reusing its routes in another app). The "Just navigate, in Google Maps" button opens the same trip in Google Maps to compare.
 - **Bus stops and services** (in the prototype now): all 5,208 bus stops and 602 services with their stops in order, from [sgbusdata](https://github.com/cheeaun/sgbusdata) by Lim Chee Aun, built from LTA data.
 - **LTA DataMall** (free, from Singapore's Land Transport Authority; the same data MyTransport.SG uses): live bus arrivals and train service alerts, through the small server in [`server/`](server/README.md), which keeps the LTA key secret. Setup guide: [server/README.md](server/README.md).
 

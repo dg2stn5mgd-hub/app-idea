@@ -78,4 +78,23 @@ assert.equal(body.ltaAcceptsKey, false); assert.equal(body.ltaAnswers.busArrival
 r = await worker.fetch(new Request("https://live.example.com/check"), {}, {});
 assert.equal((await r.json()).keySaved, false);
 
+// Place search: OneMap's capitals become normal names, duplicates are dropped, no LTA key needed
+calls = [];
+globalThis.fetch = async (url, opts) => { calls.push({ url: String(url), headers: opts && opts.headers });
+  return new Response(JSON.stringify({ found: 3, results: [
+    { SEARCHVAL: "DUNMAN HIGH SCHOOL", BLK_NO: "10", ROAD_NAME: "TANJONG RHU ROAD", BUILDING: "DUNMAN HIGH SCHOOL", ADDRESS: "10 TANJONG RHU ROAD DUNMAN HIGH SCHOOL SINGAPORE 436895", POSTAL: "436895", LATITUDE: "1.2994", LONGITUDE: "103.8834" },
+    { SEARCHVAL: "DUNMAN HIGH SCHOOL", BLK_NO: "10", ROAD_NAME: "TANJONG RHU ROAD", BUILDING: "DUNMAN HIGH SCHOOL", ADDRESS: "10 TANJONG RHU ROAD DUNMAN HIGH SCHOOL SINGAPORE 436895", POSTAL: "436895", LATITUDE: "1.2994", LONGITUDE: "103.8834" },
+    { SEARCHVAL: "NO PLACE", BUILDING: "NIL", ADDRESS: "", POSTAL: "NIL", LATITUDE: "", LONGITUDE: "" }] }), { status: 200 }); };
+r = await worker.fetch(new Request("https://live.example.com/search?q=dunman%20high%20school"), {}, { waitUntil() {} });
+body = await r.json();
+assert.equal(r.status, 200, "search works even without the LTA key");
+assert.match(calls[0].url, /onemap\.gov\.sg\/api\/common\/elastic\/search\?searchVal=dunman\+high\+school&returnGeom=Y/);
+assert.equal(body.results.length, 1, "duplicates and places without a location are dropped");
+assert.deepEqual(body.results[0], { name: "Dunman High School", address: "10 Tanjong Rhu Road Dunman High School Singapore 436895", postal: "436895", lat: 1.2994, lng: 103.8834 });
+r = await worker.fetch(new Request("https://live.example.com/search?q=a"), {}, {});
+assert.equal(r.status, 400);
+globalThis.fetch = async () => new Response("no", { status: 500 });
+r = await worker.fetch(new Request("https://live.example.com/search?q=dunman"), {}, {});
+assert.equal(r.status, 502); assert.match((await r.json()).error, /OneMap/);
+
 console.log("All server checks passed.");
