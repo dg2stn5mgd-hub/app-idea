@@ -1,4 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Carriage Sign-up</title>
+<meta name="description" content="Meet people on your daily train or bus ride.">
+<meta name="theme-color" content="#9d5b25">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Carriage">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/icons/icon-192.png">
+<style>
+:root { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;700&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
@@ -223,6 +246,9 @@ img.avatar { object-fit: cover; }
   border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: var(--surface); cursor: pointer; }
 .bus-row[aria-pressed="true"] { border-color: var(--match); background: var(--match-soft); }
 .bus-row b { font-family: var(--font-display); font-size: 18px; }
+.install { align-items: center; }
+.tip-icon { width: 40px; height: 40px; border-radius: 10px; flex: none; }
+.share-ico { width: 14px; height: 14px; vertical-align: -2px; }
 .note { background: var(--surface-2); border-radius: 12px; padding: 12px 14px; font-size: 13.5px; color: var(--muted); }
 
 /* Match cards */
@@ -936,6 +962,7 @@ const screens = {
     return `
     <main class="fade">
       <div class="brand"><span class="logo">C</span><b>Carriage</b></div>
+      ${installTip()}
       <div class="search">
         <div class="search-fields">
           ${placeButton("navFrom", "From", state.nav.from)}
@@ -1514,6 +1541,25 @@ Object.assign(screens, {
   },
 });
 
+// ---------- Home-screen install (only on the real website, not inside the claude.ai preview) ----------
+const onWebsite = window.top === window && location.protocol === "https:";
+const installed = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+let installPrompt = null;
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installPrompt = e; if (state.step === 0) render(); });
+const tipHidden = () => { try { return localStorage.getItem("carriage-hide-install") === "1"; } catch (e) { return false; } };
+function installTip() {
+  if (!onWebsite || installed || tipHidden() || state.tipClosed) return "";
+  const how = installPrompt ? `<button class="btn small-btn" data-install>Install</button>`
+    : isIOS ? `<span class="small">Tap <b>Share</b> <svg class="share-ico" viewBox="0 0 16 16" aria-label="Share"><path d="M8 1v9M4.5 4.5 8 1l3.5 3.5M3 7.5V14h10V7.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg> then <b>Add to Home Screen</b>.</span>`
+    : /Android/.test(navigator.userAgent) ? `<span class="small">Tap <b>⋮</b> then <b>Install app</b> or <b>Add to Home screen</b>.</span>` : "";
+  if (!how) return "";
+  return `<div class="note nudge install"><img src="/icons/icon-192.png" alt="" class="tip-icon">
+    <span><b>Put Carriage on your home screen</b><br>${how}</span>
+    <button class="back" data-hidetip aria-label="Not now">Not now</button></div>`;
+}
+if (onWebsite && "serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
+
 // ---------- Ride day: live bus arrivals and train status from LTA DataMall ----------
 const sgClock = iso => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Singapore" });
 
@@ -1678,6 +1724,8 @@ app.addEventListener("click", e => {
   else if (d.rideday !== undefined) { state.live = { status: "loading" }; go(11); loadRideDay(); }
   else if (d.refresh !== undefined) loadRideDay();
   else if (d.catch !== undefined) { state.catchIdx = Number(d.catch); render(); toast(state.planFor + " has been told."); }
+  else if (d.hidetip !== undefined) { state.tipClosed = true; try { localStorage.setItem("carriage-hide-install", "1"); } catch (e) {} render(); }
+  else if (d.install !== undefined && installPrompt) { installPrompt.prompt(); installPrompt.userChoice.finally(() => { installPrompt = null; render(); }); }
   else if (d.showall !== undefined) { state.showAll = true; render(); }
   else if (d.waveback) { state.waves[d.waveback] = "mutual"; render(); toast("You both waved. Plan a ride with " + d.waveback + "."); }
   else if (d.notnow) { state.declined[d.notnow] = true; render(); toast(d.notnow + " won't be told."); }
@@ -1768,8 +1816,13 @@ app.addEventListener("change", e => {
   render();
 });
 
+const TAB_LINKS = { rides: 4, waves: 9, met: 8, me: 10 };
+if (!state.isNew && TAB_LINKS[location.hash.slice(1)] !== undefined) state.step = TAB_LINKS[location.hash.slice(1)];
 if (state.isNew) {
   Object.assign(state, { step: 20, interests: new Set(), waves: {}, incoming: {}, sentWhen: {}, friends: {} });
 }
 render();
 </script>
+
+</body>
+</html>

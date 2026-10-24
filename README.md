@@ -70,12 +70,14 @@ You're already on your way to school or work. If the other person runs late, get
 
 **Live site:** https://carriage-eob.pages.dev (sign-up version at `/new-user`), hosted on Cloudflare Pages from this branch's `prototype/` folder. It updates by itself on every push. Live bus times come from the `carriage-live` server.
 
-There are two versions, built from the same code:
+There are two versions, built from one source file, `prototype/src/carriage.html`:
 
-- `prototype/index.html`: **an existing user** already using the app (bottom tabs, waves, people met).
-- `prototype/new-user.html`: **a new user** signing up: mobile number and code, name, birthday, school or work, optional photo, daily commute and days, interests, who to meet, and the safety rules. It ends in the app with an empty history.
+- **an existing user** already using the app (bottom tabs, waves, people met): `prototype/index.html` on the website
+- **a new user** signing up (mobile number and code, name, birthday, school or work, optional photo, daily commute and days, interests, who to meet, safety rules), ending in the app with an empty history: `prototype/new-user.html` on the website
 
-`new-user.html` is generated. After changing `index.html`, run `python3 prototype/make_new_user.py` to rebuild it.
+After changing `src/carriage.html`, run `python3 prototype/build.py`. It writes the two website pages (full pages with the home-screen icon and app settings) and the two claude.ai preview copies in `prototype/artifact/`.
+
+**On the home screen:** open the site in Safari, tap Share, then **Add to Home Screen**. Carriage then opens full-screen with its own icon. The app tells people how on the Map tab, and on Android it shows an **Install** button. A small offline helper (`sw.js`) keeps a copy on the phone, so it opens even with weak signal on the MRT; live bus times always come fresh. Links like `/#waves` or `/#rides` open straight to that tab.
 
 Places are picked with a search (station, bus stop name, road or 5-digit stop number). Made-up riders appear on each bus service the first time a route uses it.
 
