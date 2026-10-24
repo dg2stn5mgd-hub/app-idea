@@ -29,7 +29,7 @@ You can't add features inside Google Maps itself (Google doesn't allow it), so C
 
 Your profile (set up once, editable on the Me tab) covers:
 
-1. **Set your commute**: where you start and where you get off (any MRT station, bus stop, or real place like a school, building, address or postal code, found through OneMap), the time you set off, and how you travel: **Bus + MRT**, **MRT only** or **Bus only**. The app works out the fastest route across every MRT line and bus service, including changes and short walks between a bus stop and a station.
+1. **Set your commute**: where you start and where you get off (any MRT station, bus stop, or real place like a school, building, address or postal code, found through OneMap), the time you set off, and how you travel: **Fastest** (any mix of bus, MRT and walking), **MRT only** or **Bus only**. The app works out the fastest route across every MRT line and bus service, including changes and short walks between a bus stop and a station.
 2. **Pick your interests**, for example investing or cars.
 3. **Choose who to meet**: friends mode now, dating mode (18+) later, plus an age range and how flexible your timing is.
 4. **See matches**: people who share at least one stop with you, going the same way, within your time window. Every train and bus of your trip counts, so someone can join you before or after a change, or change with you.

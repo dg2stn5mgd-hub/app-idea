@@ -1022,10 +1022,10 @@ function noRouteReason(trip) {
   if (trip.from === trip.to) return "Pick two different places.";
   const m = metres(placeXY(trip.from), placeXY(trip.to));
   if (m < 1200) return `It's only about ${Math.max(1, Math.round(walkMin(m)))} min on foot. No train or bus needed.`;
-  return (trip.via || "any") === "any" ? "No route found for that." : "No route found for that. Try Bus + MRT.";
+  return (trip.via || "any") === "any" ? "No route found for that." : "No route found for that. Try Fastest.";
 }
 function viaChips(target, via) {
-  return `<div class="seg three">${[["any", "Bus + MRT"], ["mrt", "MRT only"], ["bus", "Bus only"]].map(([v, l]) =>
+  return `<div class="seg three">${[["any", "Fastest"], ["mrt", "MRT only"], ["bus", "Bus only"]].map(([v, l]) =>
     `<button data-via="${v}" data-viatarget="${target}" aria-pressed="${(via || "any") === v}">${l}</button>`).join("")}</div>`;
 }
 const pickRow = id => `<button class="pick-row" data-place="${esc(id)}">${placeIcon(id)}<span class="place-text"><b>${esc(placeName(id))}</b><span class="small muted">${esc(placeSub(id))}</span></span></button>`;
