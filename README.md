@@ -28,8 +28,9 @@ Your profile (set up once, editable on the Me tab) covers:
    - **Same route, a bit earlier or later**: people who ride your route outside your time window (up to 30 min away). You can wave at them too, and you'd catch their train.
    - **Waves page**: one place for everyone you've waved at (the people you want to meet, with "Take back wave"), everyone who waved at you first ("Wave back" or a private "Not now"), and matches ready to plan. Waves end quietly after 7 days.
 6. **Warm up, don't chat**: there's no free chat before you meet. Each person adds a "how to spot me" note and answers up to 3 fun warm-up questions, so there's a hint but plenty left to talk about. Quick preset messages ("Running late", "Can't make it today") cover plan changes.
-7. **Feedback after the ride**: rate it privately (Great / Okay / Not for me / They didn't show up). Then choose whether to ride together again and whether to share contacts (Telegram, Instagram or phone).
-8. **Become friends**: a second ride or a contact swap only happens if **both** people say yes. If only one does, they get a gentle "no second ride this time" note after a couple of days instead of waiting forever. Nobody is told who said what.
+7. **Ride day**: shortly before you leave, the app checks **live bus arrivals from LTA** and picks the exact bus you and your match should catch: the first one at or after your planned time. It shows whether each bus is GPS-tracked, how full it is, and whether it's single-deck (so "upper deck" won't work). Tapping another bus tells your match. For trains, it shows whether the line is running normally or delayed.
+8. **Feedback after the ride**: rate it privately (Great / Okay / Not for me / They didn't show up). Then choose whether to ride together again and whether to share contacts (Telegram, Instagram or phone).
+9. **Become friends**: a second ride or a contact swap only happens if **both** people say yes. If only one does, they get a gentle "no second ride this time" note after a couple of days instead of waiting forever. Nobody is told who said what.
 
 ## Why it's low-risk to try
 
@@ -47,7 +48,8 @@ You're already on your way to school or work. If the other person runs late, get
 
 - **Not enough users at the start.** Matching needs people on the same route at the same time. Plan: launch on one line (Thomson-East Coast) or one school first, and allow a wider time window early on.
 - **Timing.** People may need to leave a few minutes early to catch the same train. Buses may be easier because they come less often.
-- **Bus timing is estimated.** The prototype uses real stops and routes but estimates the time (about 25 km/h between stops, 5 min average wait, walks at 75 m a minute). The real app should use LTA DataMall bus arrivals, so two people catch the same bus rather than one 8 minutes later.
+- **Planning ahead is estimated; ride day is live.** LTA's live arrivals only cover the next ~30 minutes, so nobody can know tomorrow's exact bus. Matching ahead of time uses estimated times (about 25 km/h between stops, 5 min average wait, walks at 75 m a minute). On the day, the Ride day screen uses LTA's live arrivals ([server/](server/README.md)) to pick the actual bus, which takes care of rush-hour delays.
+- **Trains have no live arrival times.** LTA DataMall gives train disruptions, not the minute each train comes. Trains run every 2 to 5 minutes at peak, so the app says "be on the platform by 07:43, take the next train together".
 - **Transfers and route choice.** Most people change lines. The prototype picks the fastest route (2 min per stop, 5 min per change) and matches on every line. Still to work out:
   - People don't always take the fastest route. They should be able to edit their route.
   - Walking time at a change differs a lot by station (Dhoby Ghaut vs a cross-platform change), which shifts everyone's timing after it.
@@ -62,7 +64,7 @@ You're already on your way to school or work. If the other person runs late, get
 - **A real map inside the app**: Google Maps API or **OneMap** (Singapore's free official map). Google needs an API key and charges after a free amount.
 - **Address search** ("Blk 50 Marine Terrace" → nearest station): Google Places or OneMap search.
 - **Bus stops and services** (in the prototype now): all 5,208 bus stops and 602 services with their stops in order, from [sgbusdata](https://github.com/cheeaun/sgbusdata) by Lim Chee Aun, built from LTA data.
-- **LTA DataMall** (free, from Singapore's Land Transport Authority): live bus arrivals, train service alerts and bus routes. Useful for matching people onto the exact same bus and for warning both people when a train is delayed.
+- **LTA DataMall** (free, from Singapore's Land Transport Authority; the same data MyTransport.SG uses): live bus arrivals and train service alerts, through the small server in [`server/`](server/README.md), which keeps the LTA key secret. Setup guide: [server/README.md](server/README.md).
 
 ## Prototype
 

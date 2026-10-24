@@ -219,6 +219,10 @@ img.avatar { object-fit: cover; }
 .pick-list { overflow-y: auto; flex: 1; display: flex; flex-direction: column; }
 .pick-list .label { margin: 12px 0 2px; }
 .seats { display: flex; flex-wrap: wrap; gap: 8px; }
+.bus-row { font: inherit; color: var(--fg); display: grid; grid-template-columns: 64px 80px 1fr; align-items: center; gap: 8px; text-align: left;
+  border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: var(--surface); cursor: pointer; }
+.bus-row[aria-pressed="true"] { border-color: var(--match); background: var(--match-soft); }
+.bus-row b { font-family: var(--font-display); font-size: 18px; }
 .note { background: var(--surface-2); border-radius: 12px; padding: 12px 14px; font-size: 13.5px; color: var(--muted); }
 
 /* Match cards */
@@ -275,6 +279,10 @@ img.avatar { object-fit: cover; }
 <script>
 // Which version of the prototype this page shows. new-user.html is the same file with this set to "new".
 const START_AS = "existing";
+
+// Address of your live-data server (see server/README.md), e.g. "https://carriage-live.yourname.workers.dev".
+// Empty, or unreachable, means the Ride day screen shows clearly labelled sample times instead.
+const LIVE_API = "";
 
 // Singapore MRT network (stations open as of 2026). Each line lists its stations in order.
 // Branches (Changi Airport, Marina Bay) are their own short lists; shared names are interchanges.
@@ -512,7 +520,7 @@ function overlap(p, trip = state) {
       if (common.length < 2) continue;
       const a = u.idx.indexOf(common[0]), at = u.times[a];
       const theirAt = v.times[v.idx.indexOf(common[0])], diff = Math.abs(at - theirAt);
-      segs.push({ line: u.line, start: nameOf(u.line, common[0]), end: nameOf(u.line, common[common.length - 1]), startQ: queryOf(u.line, common[0]),
+      segs.push({ line: u.line, start: nameOf(u.line, common[0]), end: nameOf(u.line, common[common.length - 1]), startQ: queryOf(u.line, common[0]), startCode: codeOf(u.line, common[0]),
         stops: common.length - 1, at, theirAt, diff, offset: offset + a });
     }
     offset += u.idx.length - 1;
@@ -523,7 +531,7 @@ function overlap(p, trip = state) {
   return { segs: use, inWindow: near.length > 0, total: mine.stops,
     stops: use.reduce((a, x) => a + x.stops, 0), start: use[0].start, end: use[use.length - 1].end,
     at: near.length ? use[0].at : use[0].theirAt, yourAt: use[0].at, later: use[0].theirAt - use[0].at,
-    diff: use[0].diff, line: use[0].line, startQ: use[0].startQ };
+    diff: use[0].diff, line: use[0].line, startQ: use[0].startQ, startCode: use[0].startCode };
 }
 
 function sameAgeBand(p) { return state.age < 18 ? p.a < 18 : p.a >= 18; }
@@ -1111,7 +1119,8 @@ const screens = {
           <span class="small muted">No chat before you meet. Save the talking for the ride.</span>
         </div>
         <a class="btn ghost" href="${gmaps("", o.startQ)}" target="_blank" rel="noopener">Directions to ${esc(o.start)}</a>
-        <button class="btn" data-go="6">Ride's over? Tell us how it went</button>
+        <button class="btn" data-rideday>Ride day: check live ${isBus(o.line) ? "bus times" : "train status"}</button>
+        <button class="btn ghost" data-go="6">Ride's over? Tell us how it went</button>
         <div class="row">
           <button class="btn ghost" data-toast="Plan cancelled. ${esc(p.n)} has been told.">Cancel plan</button>
           <button class="btn ghost" data-toast="Report sent. ${esc(p.n)} can no longer see you.">Block or report</button>
@@ -1505,6 +1514,105 @@ Object.assign(screens, {
   },
 });
 
+// ---------- Ride day: live bus arrivals and train status from LTA DataMall ----------
+const sgClock = iso => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Singapore" });
+
+async function getLive(path) {
+  if (!LIVE_API) throw new Error("not set up");
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 6000);
+  try {
+    const res = await fetch(LIVE_API.replace(/\/$/, "") + path, { signal: ctl.signal });
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.error || "server error");
+    return body;
+  } finally { clearTimeout(timer); }
+}
+
+// Sample answers shaped like the live server's, used when live data can't be reached
+function sampleBuses(o) {
+  const now = o.at - 6, types = ["Double deck", "Double deck", "Single deck"], loads = ["Seats available", "Standing available", "Seats available"];
+  return [o.at - 2, o.at + 6, o.at + 15].map((t, k) => ({ clock: fmt(t), minutes: t - now, live: k < 2, load: loads[k], type: types[k] }));
+}
+
+async function loadRideDay() {
+  const m = findPerson(state.planFor);
+  if (!m) return;
+  const o = m.o, bus = isBus(o.line);
+  state.live = { status: "loading" };
+  render();
+  try {
+    if (bus) {
+      const body = await getLive(`/arrivals?stop=${o.startCode}&service=${encodeURIComponent(svcOf(o.line))}`);
+      const svc = (body.services || [])[0];
+      if (!svc || !svc.buses.length) throw new Error("no buses");
+      state.live = { status: "live", buses: svc.buses.map(b => ({ ...b, clock: sgClock(b.at) })), fetchedAt: body.fetchedAt };
+    } else {
+      const body = await getLive("/train-alerts");
+      state.live = { status: "live", train: body, fetchedAt: new Date().toISOString() };
+    }
+  } catch (e) {
+    state.live = bus ? { status: "sample", buses: sampleBuses(o), reason: LIVE_API ? "Couldn't reach live data just now." : "Live data isn't connected in this prototype." }
+      : { status: "sample", train: { normal: true, affected: [], messages: [] }, reason: LIVE_API ? "Couldn't reach live data just now." : "Live data isn't connected in this prototype." };
+  }
+  state.catchIdx = null;
+  if (state.step === 11) render();
+}
+
+screens[11] = function () {
+  const m = findPerson(state.planFor);
+  if (!m) return screens[4]();
+  const { p, o } = m, line = lineInfo(o.line), lv = state.live || { status: "loading" };
+  const source = lv.status === "live"
+    ? `<span class="pill-status good">Live from LTA</span><span class="small muted">Updated ${sgClock(lv.fetchedAt)}</span>`
+    : lv.status === "sample" ? `<span class="pill-status warn">Sample times</span><span class="small muted">${esc(lv.reason)}</span>` : "";
+  let body;
+  if (lv.status === "loading") body = `<p class="note">Checking live times…</p>`;
+  else if (line.bus) {
+    // The bus to catch: the first one at or after the planned time (allowing 2 min early)
+    const auto = Math.max(0, lv.buses.findIndex(b => toMin(b.clock) >= o.at - 2));
+    const k = state.catchIdx ?? auto, b = lv.buses[k], late = toMin(b.clock) - o.at;
+    // LTA only knows the next ~30 minutes; far from the planned time, the plan can't be matched yet
+    const tooFar = lv.status === "live" && Math.abs(toMin(lv.buses[0].clock) - o.at) > 30;
+    if (tooFar) return `${header(5)}<main class="fade">
+      <div><p class="label">Ride day · with ${esc(p.n)}</p><h2>Check again closer to ${fmt(o.at)}</h2></div>
+      <div class="actions">${source}</div>
+      <p class="muted">Live times only cover the next 30 minutes or so. Right now the next bus ${esc(line.short)} at ${esc(o.start)} is at ${lv.buses[0].clock}. Open this again about 15 minutes before ${fmt(o.at)} and it will pick the bus you and ${esc(p.n)} should catch.</p>
+      <button class="btn ghost" data-refresh>Check again</button></main>`;
+    const deckClash = b.type === "Single deck" && state.seat.startsWith("Upper");
+    body = `<div class="ticket">
+        <span class="label" style="color:var(--match)">Catch this one with ${esc(p.n)}</span>
+        <span class="big">${pill(o.line)} ${b.clock} · in ${b.minutes} min</span>
+        <span>At <b>${esc(o.start)}</b> (stop ${esc(o.startCode)})</span>
+        <span class="small">${b.live ? "Tracked by GPS" : "From the timetable"} · ${esc(b.type || "Bus")} · ${esc(b.load || "")}</span>
+        ${late > 3 ? `<span class="small"><b>About ${late} min later than you planned.</b> ${esc(p.n)} sees the same time.</span>` : ""}
+        ${deckClash ? `<span class="small"><b>This bus is single-deck,</b> so there's no upper deck. Meet at the back instead.</span>` : `<span class="small">Meet: ${esc(state.seat.toLowerCase())}</span>`}
+      </div>
+      <div class="field"><span class="label">Next buses at this stop</span>
+        <div class="list">${lv.buses.map((x, i) => `<button class="bus-row" data-catch="${i}" aria-pressed="${i === k}">
+          <b>${x.clock}</b><span>in ${x.minutes} min</span><span class="small muted">${x.live ? "GPS" : "Timetable"} · ${esc(x.type || "")}</span></button>`).join("")}</div>
+        <span class="small muted">Tap another bus if you'd rather catch that one. ${esc(p.n)} gets told.</span>
+      </div>
+      <button class="btn" data-toast="Sent to ${esc(p.n)}: we're catching the ${b.clock} bus ${esc(line.short)}.">Tell ${esc(p.n)}: we're catching the ${b.clock}</button>`;
+  } else {
+    const t = lv.train, hit = (t.affected || []).filter(a => a.line === line.short);
+    body = `<div class="ticket" ${t.normal && !hit.length ? "" : 'style="border-color:var(--warn-fg);background:var(--warn-soft)"'}>
+        <span class="label">${esc(line.name)}</span>
+        <span class="big">${t.normal && !hit.length ? "Trains running normally" : "Delays on this line"}</span>
+        ${(t.messages || []).map(x => `<span class="small">${esc(x)}</span>`).join("")}
+        <span>Meet around <b>${fmt(o.at)}</b> at ${esc(o.start)}, carriage ${Math.min(state.car, line.cars)}</span>
+      </div>
+      <p class="small muted">LTA's live data covers bus arrivals and train disruptions, not the minute each train arrives. Trains come every 2 to 5 minutes at peak, so be on the platform by ${fmt(o.at - 2)} and take the next train together.</p>
+      <button class="btn" data-toast="Sent to ${esc(p.n)}: I'm on the platform.">Tell ${esc(p.n)}: I'm on the platform</button>`;
+  }
+  return `${header(5)}
+  <main class="fade">
+    <div><p class="label">Ride day · with ${esc(p.n)}</p><h2>${line.bus ? "Which bus are you catching?" : "Is your train on time?"}</h2></div>
+    <div class="actions">${source}</div>
+    ${body}
+    <button class="btn ghost" data-refresh>Check again</button>
+  </main>`;
+};
+
 const ICONS = {
   map: '<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Zm0 0v14m6-12v14"/>',
   rides: '<rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M8 21l2-4m6 4-2-4"/><circle cx="9" cy="14" r=".5"/><circle cx="15" cy="14" r=".5"/>',
@@ -1513,7 +1621,7 @@ const ICONS = {
   me: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
 };
 function tabBar() {
-  const on = { 0: "map", 4: "rides", 5: "rides", 6: "rides", 7: "rides", 9: "waves", 8: "met", 10: "me", 1: "me", 2: "me", 3: "me" }[state.step];
+  const on = { 0: "map", 4: "rides", 5: "rides", 6: "rides", 7: "rides", 11: "rides", 9: "waves", 8: "met", 10: "me", 1: "me", 2: "me", 3: "me" }[state.step];
   const fresh = wavedAtMe().length;
   const tab = (key, label, step) => `<button class="tab" data-tab="${step}" aria-current="${on === key ? "page" : "false"}">
     <svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[key]}</svg>${label}${key === "waves" && fresh ? `<span class="tab-badge">${fresh}</span>` : ""}</button>`;
@@ -1567,6 +1675,9 @@ app.addEventListener("click", e => {
     render();
   }
   else if (d.seat) { state.seat = d.seat; render(); }
+  else if (d.rideday !== undefined) { state.live = { status: "loading" }; go(11); loadRideDay(); }
+  else if (d.refresh !== undefined) loadRideDay();
+  else if (d.catch !== undefined) { state.catchIdx = Number(d.catch); render(); toast(state.planFor + " has been told."); }
   else if (d.showall !== undefined) { state.showAll = true; render(); }
   else if (d.waveback) { state.waves[d.waveback] = "mutual"; render(); toast("You both waved. Plan a ride with " + d.waveback + "."); }
   else if (d.notnow) { state.declined[d.notnow] = true; render(); toast(d.notnow + " won't be told."); }
