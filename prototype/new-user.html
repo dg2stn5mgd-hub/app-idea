@@ -282,7 +282,7 @@ const START_AS = "new";
 
 // Address of your live-data server (see server/README.md), e.g. "https://carriage-live.yourname.workers.dev".
 // Empty, or unreachable, means the Ride day screen shows clearly labelled sample times instead.
-const LIVE_API = "";
+const LIVE_API = "https://carriage-live.dg2stn5mgd.workers.dev";
 
 // Singapore MRT network (stations open as of 2026). Each line lists its stations in order.
 // Branches (Changi Airport, Marina Bay) are their own short lists; shared names are interchanges.
@@ -1551,8 +1551,8 @@ async function loadRideDay() {
       state.live = { status: "live", train: body, fetchedAt: new Date().toISOString() };
     }
   } catch (e) {
-    state.live = bus ? { status: "sample", buses: sampleBuses(o), reason: LIVE_API ? "Couldn't reach live data just now." : "Live data isn't connected in this prototype." }
-      : { status: "sample", train: { normal: true, affected: [], messages: [] }, reason: LIVE_API ? "Couldn't reach live data just now." : "Live data isn't connected in this prototype." };
+    state.live = bus ? { status: "sample", buses: sampleBuses(o), reason: LIVE_API ? "Couldn't reach live data from this page. Open the app from its own website for live times." : "Live data isn't connected in this prototype." }
+      : { status: "sample", train: { normal: true, affected: [], messages: [] }, reason: LIVE_API ? "Couldn't reach live data from this page. Open the app from its own website for live times." : "Live data isn't connected in this prototype." };
   }
   state.catchIdx = null;
   if (state.step === 11) render();
