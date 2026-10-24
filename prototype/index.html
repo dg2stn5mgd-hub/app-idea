@@ -250,6 +250,8 @@ img.avatar { object-fit: cover; }
 .tip-icon { width: 40px; height: 40px; border-radius: 10px; flex: none; }
 .share-ico { width: 14px; height: 14px; vertical-align: -2px; }
 .place-icon.loc { background: #2f6fdb; }
+.line-icons { display: flex; gap: 3px; flex: none; }
+.place-icon.line { width: 26px; font-size: 10.5px; letter-spacing: 0; color: #fff; font-family: var(--font-mono); }
 .place-icon.loc svg, .locate-link svg { width: 15px; height: 15px; fill: currentColor; }
 .place-icon.loc svg { fill: #fff; }
 .locate-link { color: #2f6fdb; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; padding: 0; }
@@ -902,7 +904,12 @@ const PIN_ICON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 15s5-5
 const LOCATE_ICON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M15 1 1 7l6 2 2 6 6-14Z"/></svg>';
 const placeIcon = id => isStop(id) ? `<span class="place-icon bus">${BUS_ICON}</span>`
   : isLoc(id) ? `<span class="place-icon loc">${locOf(id).name === "Current location" ? LOCATE_ICON : PIN_ICON}</span>`
-  : `<span class="place-icon mrt">M</span>`;
+  : stationIcon(id);
+// A coloured square for each line at the station, labelled like the signs: EW, NE, TE...
+function stationIcon(name) {
+  const prefixes = [...new Set(STATIONS[name].codes.map(c => c.replace(/\d+$/, "")))];
+  return `<span class="line-icons">${prefixes.map(px => `<span class="place-icon line" style="background:${LINES[px] ? LINES[px].color : "var(--accent)"}">${px}</span>`).join("")}</span>`;
+}
 function placeButton(target, label, id) {
   return `<div class="field"><span class="label">${label}</span>
     <button class="place-btn" data-pick="${target}" aria-label="${label}: ${esc(placeName(id))}">${placeIcon(id)}
@@ -941,8 +948,9 @@ function searchOnline(q) {
     let html;
     try {
       const body = await getLive(`/search?q=${encodeURIComponent(q.trim())}`);
-      html = body.results.length ? `<p class="label">Places</p>${body.results.map(r => pickRow(makeLoc(r.lat, r.lng, r.name, r.address))).join("")}` : "";
-    } catch (e) { html = `<p class="small muted">Couldn't search places just now. Stations and bus stops still work.</p>`; }
+      html = body.results.length ? `<p class="label">Places</p>${body.results.map(r => pickRow(makeLoc(r.lat, r.lng, r.name, r.address))).join("")}`
+        : `<p class="small muted">No places called "${esc(q.trim())}" on OneMap.</p>`;
+    } catch (e) { html = `<p class="small muted">Couldn't search places: ${esc(e.message)} Stations and bus stops still work.</p>`; }
     const box = document.getElementById("online-results");
     if (box && seq === searchSeq) box.innerHTML = html;
   }, 350);
@@ -1645,9 +1653,11 @@ async function getLive(path) {
   if (!LIVE_API) throw new Error("not set up");
   const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 6000);
   try {
-    const res = await fetch(LIVE_API.replace(/\/$/, "") + path, { signal: ctl.signal });
-    const body = await res.json();
-    if (!res.ok) throw new Error(body.error || "server error");
+    let res;
+    try { res = await fetch(LIVE_API.replace(/\/$/, "") + path, { signal: ctl.signal }); }
+    catch (e) { throw new Error(e.name === "AbortError" ? "Your helper took too long to answer." : "Couldn't connect to your helper. If you set ALLOWED_ORIGIN, check it is exactly " + location.origin); }
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.error || `Your helper answered ${res.status}.`);
     return body;
   } finally { clearTimeout(timer); }
 }
