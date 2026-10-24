@@ -68,6 +68,8 @@ You're already on your way to school or work. If the other person runs late, get
 
 ## Prototype
 
+**Live site:** https://carriage-eob.pages.dev (sign-up version at `/new-user`), hosted on Cloudflare Pages from this branch's `prototype/` folder. It updates by itself on every push. Live bus times come from the `carriage-live` server.
+
 There are two versions, built from the same code:
 
 - `prototype/index.html`: **an existing user** already using the app (bottom tabs, waves, people met).

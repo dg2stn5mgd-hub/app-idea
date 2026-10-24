@@ -1094,7 +1094,7 @@ const screens = {
     if (state.plan) {
       const tip = shared.length
         ? `You both like ${shared[0]}. Ask ${p.n} how they got into it.`
-        : `Ask ${p.n} about "${p.bio}".`;
+        : `Ask ${p.n} about "${p.bio.split(" · ").pop()}".`;
       const mine = [...state.questions].filter(q => (state.answers[q] || "").trim());
       return `${header(4)}
       <main class="fade">
