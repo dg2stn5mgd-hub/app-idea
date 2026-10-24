@@ -128,7 +128,7 @@ function reply(body, status, env) {
   return new Response(body === null ? null : JSON.stringify(body), {
     status,
     headers: {
-      "content-type": "application/json",
+      "content-type": "application/json; charset=utf-8",
       // Only the app's own site may call this server. Set ALLOWED_ORIGIN, e.g. https://carriage.example.com
       "access-control-allow-origin": (env && env.ALLOWED_ORIGIN) || "*",
       "access-control-allow-methods": "GET, OPTIONS",
