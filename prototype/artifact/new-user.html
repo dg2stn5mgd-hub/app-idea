@@ -271,6 +271,12 @@ img.avatar { object-fit: cover; }
 .chev { font-size: 22px; color: var(--muted); transition: transform .15s; }
 .fold.open .chev { transform: rotate(90deg); }
 .fold-body { padding: 0 12px 12px; }
+.person-row { display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 12px; row-gap: 8px; padding: 10px 2px; border-bottom: 1px solid var(--line); }
+.person-row .row-actions { grid-column: 2; }
+.person-row:last-child { border-bottom: 0; }
+.person-row.faded { opacity: .65; }
+.row-actions { display: flex; gap: 6px; flex: none; }
+.fold.friends .face { background: var(--match); }
 .note { background: var(--surface-2); border-radius: 12px; padding: 12px 14px; font-size: 13.5px; color: var(--muted); }
 
 /* Match cards */
@@ -538,7 +544,7 @@ const state = {
   fb: null, friends: {}, theySayNo: false, fromMet: false, done: {}, mapWhole: false, showAll: false,
   profile: { phone: "", otp: "", name: "", birthday: "", gender: "", schoolType: "", school: "", bio: "", photo: "" },
   days: new Set(["Mon","Tue","Wed","Thu","Fri"]), agree: false,
-  chatWith: null, draft: "", openSec: null, waveTrip: {},
+  chatWith: null, draft: "", openSec: null, openMet: null, waveTrip: {},
   chats: {
     "Zhi Hao": [
       { me: false, text: "Yo, did you see the new GT-R at the Katong showroom?", at: "Yesterday 18:20" },
@@ -1472,36 +1478,49 @@ const screens = {
     </main>`;
   },
   8() {
-    const order = { feedback: 0, friends: 1, again: 2, done: 3, nosecond: 4, noshow: 5 };
-    const list = metList().map(metStatus).sort((a, b) => order[a.status] - order[b.status]);
-    const cards = list.map(m => {
-      const row = {
-        feedback: `<span class="pill-status warn">Waiting for your feedback</span><span class="spacer"></span><button class="btn small-btn" data-feedback="${esc(m.n)}">How did it go?</button>`,
-        friends: `<span class="pill-status good">Friends</span><span class="mono small">Telegram ${esc(m.handle)}</span>`,
-        again: `<span class="pill-status good">Riding again</span>`,
-        done: `<span class="small muted">Feedback sent. No second ride planned.</span>`,
-        nosecond: `<span class="small muted">No second ride this time</span>`,
-        noshow: `<span class="small muted">Didn't show up. Ride missed.</span>`,
-      }[m.status];
-      const extraRow = m.status === "friends"
-        ? `<div class="actions"><button class="btn ghost small-btn" data-toast="Ride request sent to ${esc(m.n)}.">Plan another ride</button><button class="btn ghost small-btn" data-chat="${esc(m.n)}">Message</button></div>`
-        : m.next ? `<p class="small"><b>Next ride:</b> ${esc(m.next)}</p>` : "";
-      return `<article class="card ${m.status === "noshow" || m.status === "nosecond" ? "faded" : ""}">
-        <div class="who"><div class="avatar">${esc(m.n[0])}</div>
-          <div class="meta"><h3>${esc(m.n)}, ${m.a}</h3><p class="small muted">${esc(m.when)}</p></div></div>
-        <p class="small muted">${esc(m.bio)}</p>
-        <div class="actions">${row}</div>
-        ${extraRow}
-      </article>`;
-    }).join("");
-    const friends = list.filter(m => m.status === "friends").length;
+    const list = metList().map(metStatus);
+    const toRate = list.filter(m => m.status === "feedback");
+    const friends = list.filter(m => m.status === "friends");
+    const again = list.filter(m => m.status === "again");
+    const past = list.filter(m => ["done", "nosecond", "noshow"].includes(m.status));
+    const PAST = { done: "No second ride planned", nosecond: "No second ride this time", noshow: "Didn't show up" };
+    // One short row per person: who, one line of detail, and at most two buttons
+    const row = (m, sub, actions = "", faded = false) => `<div class="person-row${faded ? " faded" : ""}">
+      <div class="avatar">${esc(m.n[0])}</div>
+      <span class="chat-text"><b>${esc(m.n)}, ${m.a}</b><span class="small muted">${sub}</span></span>
+      ${actions ? `<span class="row-actions">${actions}</span>` : ""}</div>`;
+    const chatBtn = m => `<button class="btn ghost small-btn" data-chat="${esc(m.n)}">Chat</button>`;
+    const fold = (key, title, hint, people, body, empty) => {
+      const open = state.openMet === key, faces = people.slice(0, 5).map(m => `<span class="face">${esc(m.n[0])}</span>`).join("");
+      return `<section class="fold ${key}${open ? " open" : ""}">
+        <button class="fold-head" data-mfold="${key}" aria-expanded="${open}">
+          <span class="fold-title"><b>${title}</b><span class="count">${people.length}</span></span>
+          <span class="faces">${faces}${people.length > 5 ? `<span class="face more">+${people.length - 5}</span>` : ""}</span>
+          <span class="chev" aria-hidden="true">›</span>
+        </button>
+        ${open ? `<div class="fold-body list"><p class="small muted">${hint}</p>${people.length ? body : `<p class="note">${empty}</p>`}</div>` : ""}
+      </section>`;
+    };
+    const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
     return `${header(null)}
     <main class="fade">
       <div>
         <p class="label">Your rides so far</p>
-        <h2>${list.length} people met · ${friends} friend${friends === 1 ? "" : "s"}</h2>
+        <h2>${plural(list.length, "ride")} · ${plural(friends.length, "friend")}${toRate.length ? ` · ${toRate.length} to rate` : ""}</h2>
       </div>
-      <div class="list">${cards || `<p class="note">Nobody yet. After your first ride with someone, they show up here and you can tell us how it went.</p>`}</div>
+      ${toRate.map(m => `<div class="note nudge"><span><b>Rate your ride with ${esc(m.n)}</b><br><span class="small">${esc(m.when)}</span></span>
+        <button class="btn small-btn" data-feedback="${esc(m.n)}">How did it go?</button></div>`).join("")}
+      ${list.length ? "" : `<p class="note">Nobody yet. After your first ride with someone, they show up here and you can tell us how it went.</p>`}
+      ${fold("friends", "Friends", "You both shared contacts. Chat here or plan another ride.", friends,
+        friends.map(m => row(m, `Telegram <span class="mono">${esc(m.handle)}</span>${m.next ? ` · Next ride ${esc(m.next)}` : ""}`,
+          `${chatBtn(m)}<button class="btn ghost small-btn" data-toast="Ride request sent to ${esc(m.n)}.">Ride again</button>`)).join(""),
+        "When you and someone both share contacts after a ride, they show up here.")}
+      ${fold("again", "Riding again", "You both wanted a second ride. See you on the train.", again,
+        again.map(m => row(m, `Next ride: ${esc(m.next)}`, chatBtn(m))).join(""),
+        "When you and someone both want to ride again, they show up here.")}
+      ${fold("past", "Past rides", "Everyone else you've ridden with. Only you can see this.", past,
+        past.map(m => row(m, `${esc(m.when)} · ${PAST[m.status]}`, "", true)).join(""),
+        "Nothing here yet.")}
       <div class="note">Only you can see this list. Ratings stay private, and people who said no are never named as the ones who said no.</div>
     </main>`;
   },
@@ -2039,6 +2058,7 @@ app.addEventListener("click", e => {
     if (state.step === 13) sendMessage(n, d.qmsg);
     else { (state.chats[n] ||= []).push({ me: true, text: d.qmsg, at: sgNow() }); toast(`Sent to ${n}: "${d.qmsg}"`); }
   }
+  else if (d.mfold) { state.openMet = state.openMet === d.mfold ? null : d.mfold; render(); }
   else if (d.sec) { state.openSec = state.openSec === d.sec ? null : d.sec; render(); }
   else if (d.showall !== undefined) { state.showAll = true; render(); }
   else if (d.waveback && !sameTrip(state, state.commute)) { rememberTrip(d.waveback); state.waves[d.waveback] = "mutual"; render(); toast("You both waved. Plan a ride with " + d.waveback + "."); }

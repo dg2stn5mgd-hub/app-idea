@@ -12,6 +12,8 @@ People in Singapore spend their train and bus rides scrolling on their phones. M
 
 **Rides** opens as three folded groups, each showing how many people and their initials. Tap one to open it (and close the others): **Waved at you** (wave back, or a private "Not now"; after waving back they stay here with "Plan a ride"), **On your ride** (everyone you can wave at; people you've waved at show "Waiting" with "Take back"), and **A bit earlier or later**.
 
+**Met** starts with a slim **"Rate your ride with…"** banner when a rating is waiting, then three folded groups: **Friends** (contacts shared: Chat, Ride again), **Riding again** (next ride date, time and carriage: Chat) and **Past rides** (no second ride or didn't show; only you see this).
+
 Waves on a **one-off trip** are remembered with that trip: when you both wave, the match shows in Chats as "One-off trip: Punggol → Raffles Place · 07:45", and planning the ride uses that trip.
 
 **Chats** has three groups, each with its own rules:
