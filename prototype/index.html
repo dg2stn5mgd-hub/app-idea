@@ -284,6 +284,18 @@ img.avatar { object-fit: cover; }
 .composer input { flex: 1; min-width: 0; }
 .quick { display: flex; flex-wrap: wrap; gap: 8px; }
 .waved .card { border-color: var(--match); background: var(--match-soft); }
+.fold { border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+.fold.waved { border-color: var(--match); }
+.fold-head { font: inherit; color: var(--fg); width: 100%; display: flex; align-items: center; gap: 10px; padding: 14px; background: none; border: 0; cursor: pointer; text-align: left; border-radius: 16px; }
+.fold-head:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.fold-title { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 6px; font-size: 16px; }
+.faces { display: flex; flex: none; }
+.face { width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--on-accent); font-size: 11px; font-weight: 700; display: grid; place-items: center; border: 2px solid var(--surface); margin-left: -7px; }
+.fold.waved .face { background: var(--match); }
+.face.more { background: var(--surface-2); color: var(--muted); }
+.chev { font-size: 22px; color: var(--muted); transition: transform .15s; }
+.fold.open .chev { transform: rotate(90deg); }
+.fold-body { padding: 0 12px 12px; }
 .note { background: var(--surface-2); border-radius: 12px; padding: 12px 14px; font-size: 13.5px; color: var(--muted); }
 
 /* Match cards */
@@ -551,7 +563,7 @@ const state = {
   fb: null, friends: {}, theySayNo: false, fromMet: false, done: {}, mapWhole: false, showAll: false,
   profile: { phone: "", otp: "", name: "", birthday: "", gender: "", schoolType: "", school: "", bio: "", photo: "" },
   days: new Set(["Mon","Tue","Wed","Thu","Fri"]), agree: false,
-  chatWith: null, draft: "",
+  chatWith: null, draft: "", openSec: null, waveTrip: {},
   chats: {
     "Zhi Hao": [
       { me: false, text: "Yo, did you see the new GT-R at the Katong showroom?", at: "Yesterday 18:20" },
@@ -626,8 +638,14 @@ function findMatches(trip = state) {
   const later = outsideWindow.filter(m => m.o.diff <= 30).sort((a, b) => a.o.diff - b.o.diff || b.score - a.score);
   return { out, outsideWindow: later };
 }
+// The trip you waved at someone on, when it wasn't your daily commute
+function rememberTrip(n) {
+  if (!sameTrip(state, state.commute)) state.waveTrip[n] = { from: state.from, to: state.to, time: state.time, via: state.via };
+  else delete state.waveTrip[n];
+}
+const tripLabel = t => `${placeName(t.from)} → ${placeName(t.to)} · ${t.time}`;
 const findPerson = name => {
-  for (const trip of [state, state.commute]) {
+  for (const trip of [state, state.commute, ...(state.waveTrip[name] ? [state.waveTrip[name]] : [])]) {
     const { out, outsideWindow } = findMatches(trip), m = [...out, ...outsideWindow].find(x => x.p.n === name);
     if (m) return m;
   }
@@ -1283,7 +1301,10 @@ const screens = {
       </article>`;
     };
     const onCommute = sameTrip(state, state.commute);
-    const incoming = onCommute ? wavedAtMe() : [], incomingNames = new Set(incoming.map(m => m.p.n));
+    // People who waved at you first stay here after you wave back, until the ride is planned
+    const incoming = onCommute ? out.filter(m => state.incoming[m.p.n] && !state.declined[m.p.n] && !state.friends[m.p.n]
+      && (!state.waves[m.p.n] || state.waves[m.p.n] === "mutual") && !(state.plan && state.planFor === m.p.n)) : [];
+    const incomingNames = new Set(incoming.map(m => m.p.n));
     const rest = out.filter(m => !incomingNames.has(m.p.n));
     const shown = state.showAll ? rest : rest.slice(0, 8);
     const cards = shown.map(m => card(m)).join("")
@@ -1291,6 +1312,18 @@ const screens = {
     const others = outsideWindow.slice(0, 5);
     const empty = `<div class="note">Nobody rides with you within ${state.window} minutes yet. ${state.window < 15 ? `<button class="btn ghost small-btn" data-widen>Try 15 minutes</button>` : "Invite a friend who takes your train."}</div>`;
     const pending = metList().filter(m => metStatus(m).status === "feedback");
+    // A heading you tap to open or close: title, how many, and their initials at a glance
+    const fold = (key, title, hint, people, body, empty) => {
+      const open = state.openSec === key, faces = people.slice(0, 5).map(m => `<span class="face">${esc(m.p.n[0])}</span>`).join("");
+      return `<section class="fold ${key}${open ? " open" : ""}">
+        <button class="fold-head" data-sec="${key}" aria-expanded="${open}">
+          <span class="fold-title"><b>${title}</b><span class="count">${people.length}</span></span>
+          <span class="faces">${faces}${people.length > 5 ? `<span class="face more">+${people.length - 5}</span>` : ""}</span>
+          <span class="chev" aria-hidden="true">›</span>
+        </button>
+        ${open ? `<div class="fold-body list"><p class="small muted">${hint}</p>${people.length ? body : `<p class="note">${empty}</p>`}</div>` : ""}
+      </section>`;
+    };
     return `${header(null)}
     <main class="fade">
       ${pending.map(m => `<div class="note nudge"><span>You rode with <b>${esc(m.n)}</b> this morning. How did it go?</span>
@@ -1300,21 +1333,13 @@ const screens = {
           ? `<p class="label">Your daily commute · ${esc(placeName(state.from))} → ${esc(placeName(state.to))} · ${state.time}</p>`
           : `<div class="note nudge"><span>Showing a one-off trip: <b>${esc(placeName(state.from))} → ${esc(placeName(state.to))}</b> at ${state.time}</span><button class="btn ghost small-btn" data-commute>My commute</button></div>`}
         <h2 style="margin-top:8px">Who do you want to meet?</h2>
-        <p class="muted">${out.length} ${out.length === 1 ? "person is" : "people are"} on your ride. Tap <b>Wave</b> on anyone you'd like to meet. If they wave back, you can plan a ride together.</p>
+        <p class="muted">${out.length} ${out.length === 1 ? "person is" : "people are"} on your ride. Tap a group to see them.</p>
       </div>
-      ${incoming.length ? `<section class="list waved">
-        <div><h3>Waved at you <span class="count">${incoming.length}</span></h3><p class="small muted">They want to ride with you. "Not now" is private: they're never told.</p></div>
-        ${incoming.map(m => card(m)).join("")}
-      </section>` : ""}
-      <section class="list">
-        ${incoming.length ? `<div><h3>On your ride <span class="count">${rest.length}</span></h3></div>` : ""}
-        ${rest.length ? cards : incoming.length ? "" : empty}
-      </section>
-      ${others.length ? `<section class="list">
-        <div><h3>Same route, a bit earlier or later</h3>
-        <p class="small muted">They ride your route outside your ${state.window}-minute window. Wave if you'd leave a bit earlier or later to meet them.</p></div>
-        ${others.map(m => card(m, true)).join("")}
-      </section>` : ""}
+      ${fold("waved", "Waved at you", "They want to ride with you. \"Not now\" is private: they're never told.", incoming, incoming.map(m => card(m)).join(""),
+          onCommute ? "Nobody new. When someone on your ride waves at you, they show up here." : "Waves come in on your daily commute.")}
+      ${fold("ride", "On your ride", "Tap Wave on anyone you'd like to meet.", rest, cards, empty)}
+      ${fold("later", "A bit earlier or later", `They ride your route outside your ${state.window}-minute window. Wave if you'd leave a bit earlier or later.`, others,
+          others.map(m => card(m, true)).join(""), "Nobody else on your route this morning.")}
       <div class="note">Shown: only the part of the ride you share. Their full route stays private, and so does yours. Waves last 7 days. When you both wave, plan the ride here or in Chats.</div>
     </main>`;
   },
@@ -1887,6 +1912,12 @@ function chatGroups() {
   }
   const notYet = findMatches(state.commute).out.filter(m => state.waves[m.p.n] === "mutual" && !soon.some(x => x.n === m.p.n) && !canChat(m.p.n))
     .map(m => ({ n: m.p.n, a: m.p.a, line: `${m.o.stops} stop${m.o.stops > 1 ? "s" : ""} together from ${m.o.start}` }));
+  // Matches from one-off trips, labelled with the trip
+  for (const [n, trip] of Object.entries(state.waveTrip)) {
+    if (state.waves[n] !== "mutual" || soon.some(x => x.n === n) || notYet.some(x => x.n === n) || canChat(n)) continue;
+    const m = findPerson(n);
+    if (m) notYet.push({ n, a: m.p.a, line: `One-off trip: ${tripLabel(trip)}` });
+  }
   const before = met.filter(m => !soon.some(x => x.n === m.n)).map(m => ({ n: m.n, a: m.a, line: m.when }));
   return { soon, notYet, before };
 }
@@ -1993,7 +2024,7 @@ app.addEventListener("click", e => {
   else if (d.interest) { state.interests.has(d.interest) ? state.interests.delete(d.interest) : state.interests.add(d.interest); render(); }
   else if (d.mode) { state.mode = d.mode; render(); }
   else if (d.wave) {
-    const n = d.wave; state.waves[n] = "sent"; render();
+    const n = d.wave; state.waves[n] = "sent"; rememberTrip(n); render();
     setTimeout(() => { state.waves[n] = "mutual"; if (state.step === 4 || state.step === 9) render(); toast(n + " waved back"); }, 1400);
   }
   else if (d.obnext) {
@@ -2033,10 +2064,15 @@ app.addEventListener("click", e => {
     if (state.step === 13) sendMessage(n, d.qmsg);
     else { (state.chats[n] ||= []).push({ me: true, text: d.qmsg, at: sgNow() }); toast(`Sent to ${n}: "${d.qmsg}"`); }
   }
+  else if (d.sec) { state.openSec = state.openSec === d.sec ? null : d.sec; render(); }
   else if (d.showall !== undefined) { state.showAll = true; render(); }
+  else if (d.waveback && !sameTrip(state, state.commute)) { rememberTrip(d.waveback); state.waves[d.waveback] = "mutual"; render(); toast("You both waved. Plan a ride with " + d.waveback + "."); }
   else if (d.waveback) { state.waves[d.waveback] = "mutual"; render(); toast("You both waved. Plan a ride with " + d.waveback + "."); }
   else if (d.notnow) { state.declined[d.notnow] = true; render(); toast(d.notnow + " won't be told."); }
   else if (d.unwave) { delete state.waves[d.unwave]; render(); toast("Wave taken back."); }
+  else if (d.plan && state.waveTrip[d.plan] && !findMatches(state).out.concat(findMatches(state).outsideWindow).some(m => m.p.n === d.plan)) {
+    Object.assign(state, state.waveTrip[d.plan]); state.planFor = d.plan; state.plan = null; state.fromMet = false; go(5);
+  }
   else if (d.plan) { state.planFor = d.plan; state.plan = null; state.fromMet = false; go(5); }
   else if (d.feedback) {
     state.planFor = d.feedback; state.fromMet = true;

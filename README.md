@@ -10,7 +10,9 @@ People in Singapore spend their train and bus rides scrolling on their phones. M
 
 **Five tabs at the bottom, always one tap away:** Map (navigation), Rides (people on your commute and your waves, with a badge for new ones), Chats (messages, with a badge for unread ones), Met (people you've ridden with) and Me (your commute, interests and who you want to meet).
 
-**Rides** shows, from the top: **Waved at you** (wave back, or a private "Not now"), **On your ride** (everyone you can wave at; people you've waved at show "Waiting" with "Take back"), and **a bit earlier or later**.
+**Rides** opens as three folded groups, each showing how many people and their initials. Tap one to open it (and close the others): **Waved at you** (wave back, or a private "Not now"; after waving back they stay here with "Plan a ride"), **On your ride** (everyone you can wave at; people you've waved at show "Waiting" with "Take back"), and **A bit earlier or later**.
+
+Waves on a **one-off trip** are remembered with that trip: when you both wave, the match shows in Chats as "One-off trip: Punggol → Raffles Place · 07:45", and planning the ride uses that trip.
 
 **Chats** has three groups, each with its own rules:
 - **About to meet** (a ride is planned): **quick messages only**, like "Running late, I'll take the next one" or "I'm in the carriage now". The quick messages on the ride ticket land here too.
