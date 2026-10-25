@@ -114,7 +114,7 @@ r = await worker.fetch(new Request("https://live.example.com/walk?from=1.2995,10
 body = await r.json();
 assert.equal(r.status, 200, JSON.stringify(body));
 assert.deepEqual(body.points, [[38.5, -120.2], [40.7, -120.95], [43.252, -126.453]], "decodes the route's shape");
-assert.deepEqual(body.steps[1], { text: "Turn Left Onto Fort Road", metres: 200, lat: 1.2994, lng: 103.879 });
+assert.deepEqual({ ...body.steps[1], raw: undefined }, { text: "Turn Left Onto Fort Road", turn: "Left", road: "Fort Road", compass: "south", metres: 200, lat: 1.2994, lng: 103.879, raw: undefined });
 assert.equal(body.metres, 320); assert.equal(body.seconds, 230);
 assert.equal(calls.find(c => c.url.includes("routingsvc")).headers.Authorization, "pass-1");
 await worker.fetch(new Request("https://live.example.com/walk?from=1.2995,103.8823&to=1.2993,103.8746"), walkEnv, { waitUntil() {} });

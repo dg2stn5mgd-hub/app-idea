@@ -92,7 +92,7 @@ async function walk(url, env, ctx) {
 
   // Same walk asked before (to about 10 m)? Reuse it for a week
   const round = p => p.map(x => x.toFixed(4)).join(",");
-  const cache = typeof caches !== "undefined" ? caches.default : null, cacheKey = new Request(`https://carriage-cache/walk/${round(from)}/${round(to)}`);
+  const cache = typeof caches !== "undefined" ? caches.default : null, cacheKey = new Request(`https://carriage-cache/walk2/${round(from)}/${round(to)}`);
   if (cache) { const hit = await cache.match(cacheKey); if (hit) return reply(await hit.json(), 200, env); }
 
   const ask = async fresh => fetch(ONEMAP_ROUTE + "?" + new URLSearchParams({ start: from.join(","), end: to.join(","), routeType: "walk" }),
@@ -102,10 +102,14 @@ async function walk(url, env, ctx) {
   if (!res.ok) throw new Error(`OneMap routing answered ${res.status}.`);
   const data = await res.json();
   if (!data.route_geometry) throw new Error("OneMap found no walking route.");
+  // Each OneMap instruction is a list like ["Right", "TANJONG RHU ROAD", 263, "1.2972,103.8732", ...].
+  // Pass on the pieces (the app makes the sentence) and the whole list, in case OneMap changes its order.
   const steps = (data.route_instructions || []).map(ins => {
     const [lat, lng] = String(ins[3] || "").split(",").map(Number);
-    const words = ins.find((x, i) => i > 3 && typeof x === "string" && / /.test(x) && /[a-z]/.test(x));
-    return { text: words || `${ins[0] || "Continue"} ${titleCase(ins[1] || "")}`.trim(), metres: Number(ins[2]) || 0, lat, lng };
+    const compass = ins.find((x, i) => i > 3 && typeof x === "string" && /^(north|south|east|west)/i.test(x.trim())) || "";
+    const words = ins.find((x, i) => i > 3 && typeof x === "string" && / on | onto | at /i.test(x)) || "";
+    return { text: words || `${ins[0] || "Continue"} ${titleCase(ins[1] || "")}`.trim(), turn: String(ins[0] || ""), road: titleCase(ins[1] || ""),
+      compass: compass.toLowerCase(), metres: Number(ins[2]) || 0, lat, lng, raw: ins };
   }).filter(x => x.lat && x.lng);
   const out = { points: decodePolyline(data.route_geometry), steps,
     metres: Number(data.route_summary && data.route_summary.total_distance) || null,

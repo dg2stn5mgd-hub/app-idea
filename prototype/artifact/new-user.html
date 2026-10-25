@@ -1070,6 +1070,17 @@ function accessPlan(trip, r) {
   if (metres(here, to) > NAV_NEAR_M) out.push({ type: "walk", a: here, b: to, final: true });
   return accessCache[key] = out;
 }
+// A walking instruction in plain words, from OneMap's pieces: "Turn right onto Tanjong Rhu Road"
+function walkText(t) {
+  const turn = (t.turn || "").trim().toLowerCase(), road = /^(|nil|path|footpath|unnamed.*)$/i.test((t.road || "").trim()) ? "" : t.road.trim();
+  const dir = (t.compass || "").replace(" ", "-");
+  if (/arriv|destination/.test(turn) || /arrived/i.test(t.text || "")) return "Arrive";
+  if (!turn && !road && !dir) return t.text;
+  if (turn === "head" || turn === "depart") return `Head ${dir || "off"}${road ? " on " + road : ""}`;
+  if (/left|right|u-?turn/.test(turn)) return `${/slight|sharp|keep/.test(turn) ? turn[0].toUpperCase() + turn.slice(1) : "Turn " + turn}${road ? " onto " + road : ""}`;
+  if (road) return `Continue on ${road}`;
+  return dir ? `Continue ${dir}` : t.text;
+}
 // The walks in a trip, for fetching street directions
 const walkPairs = (trip, r) => accessPlan(trip, r).filter(x => x.type === "walk" && metres(x.a, x.b) > 60).map(x => [toLL(x.a), toLL(x.b)]);
 
@@ -1295,8 +1306,10 @@ function buildNav(trip, withName) {
     const mine = pts.slice(from);
     return mine.length ? w.steps.map(t => {
       const xy = xyOfLL(t.lat, t.lng);
-      return { text: t.text, d: mine.reduce((best, x) => metres(x.xy, xy) < metres(best.xy, xy) ? x : best).d };
-    }) : null;
+      return { text: walkText(t), d: mine.reduce((best, x) => metres(x.xy, xy) < metres(best.xy, xy) ? x : best).d };
+    }).filter(t => t.text !== "Arrive")
+      // Two instructions in a row that say the same thing are one
+      .filter((t, i, a) => i === 0 || t.text !== a[i - 1].text) : null;
   };
   add(placeXY(trip.from), { name: placeName(trip.from) });
   let how = null;                            // how to get to the platform, shown when boarding
