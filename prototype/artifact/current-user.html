@@ -285,6 +285,8 @@ img.avatar { object-fit: cover; }
 .back.link { color: var(--accent); font-weight: 600; padding: 0; text-decoration: none; }
 a.back.link.center { display: block; text-align: center; font-size: 14px; }
 .map-pin.meet { background: var(--match); }
+.exit-pin { background: #ffd000; color: #111; font: 700 11px/18px var(--font-body); text-align: center; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.35); }
+.nav-ico.exit { background: #ffd000; color: #111; }
 .me-wrap { pointer-events: none; }
 .me-dot { position: relative; width: 64px; height: 64px; }
 .me-beam { position: absolute; inset: 0; border-radius: 50%; opacity: 0; transition: transform .25s;
@@ -731,6 +733,8 @@ const gmaps = (fromQ, toQ) => "https://www.google.com/maps/dir/?api=1&travelmode
 // Station positions on the map (from LTA station data; stations opened since 2020 are approximate)
 const POS = {"Admiralty":[201.0,39.4],"Aljunied":[282.9,163.6],"Ang Mo Kio":[249.6,110.1],"Bartley":[279.7,137.2],"Bayfront":[259.1,198.1],"Beauty World":[175.8,138.8],"Bedok":[330.0,156.0],"Bedok North":[318.0,145.3],"Bedok Reservoir":[332.2,143.4],"Bencoolen":[250.4,181.1],"Bendemeer":[263.0,166.3],"Bishan":[249.2,128.7],"Boon Keng":[261.7,160.6],"Boon Lay":[106.1,141.4],"Botanic Gardens":[215.0,157.9],"Braddell":[246.8,139.5],"Bras Basah":[250.7,183.1],"Buangkok":[293.1,97.1],"Bugis":[256.9,180.4],"Bukit Batok":[149.6,131.0],"Bukit Gombak":[151.9,121.2],"Bukit Panjang":[163.0,102.1],"Buona Vista":[190.7,173.5],"Caldecott":[239.5,142.3],"Canberra":[229.7,36.9],"Cashew":[164.7,110.6],"Changi Airport":[388.3,122.7],"Chinatown":[244.4,195.3],"Chinese Garden":[132.6,137.6],"Choa Chu Kang":[144.6,95.2],"City Hall":[252.6,187.1],"Clarke Quay":[246.6,191.6],"Clementi":[165.3,165.0],"Commonwealth":[198.3,177.6],"Dakota":[288.6,171.6],"Dhoby Ghaut":[246.2,181.2],"Dover":[178.7,168.6],"Downtown":[252.8,200.6],"Esplanade":[255.5,186.7],"Eunos":[303.2,160.2],"Expo":[361.5,145.5],"Farrer Park":[254.2,167.6],"Farrer Road":[207.6,162.5],"Fort Canning":[244.3,187.5],"Geylang Bahru":[271.9,158.5],"Gul Circle":[60.6,160.5],"HarbourFront":[221.4,214.5],"Haw Par Villa":[181.8,197.5],"Hillview":[167.4,117.7],"Holland Village":[196.2,168.2],"Hougang":[292.4,108.7],"Jalan Besar":[255.5,174.6],"Joo Koon":[78.4,152.3],"Jurong East":[142.3,146.8],"Kaki Bukit":[308.4,145.0],"Kallang":[271.4,168.5],"Kembangan":[312.9,159.0],"Kent Ridge":[184.6,186.5],"Khatib":[233.0,62.6],"King Albert Park":[183.8,144.3],"Kovan":[285.1,119.8],"Kranji":[162.2,54.8],"Labrador Park":[202.9,207.7],"Lakeside":[121.0,135.7],"Lavender":[262.8,172.6],"Little India":[252.4,176.1],"Lorong Chuan":[264.1,128.4],"MacPherson":[290.3,153.7],"Marina Bay":[255.1,203.8],"Marina South Pier":[262.9,208.7],"Marsiling":[174.1,47.5],"Marymount":[239.4,131.3],"Mattar":[283.2,153.1],"Mountbatten":[282.5,173.8],"Newton":[237.8,166.4],"Nicoll Highway":[263.6,180.2],"Novena":[243.8,159.6],"Orchard":[232.2,176.0],"Outram Park":[239.6,200.2],"Pasir Panjang":[191.4,203.8],"Pasir Ris":[349.2,107.0],"Paya Lebar":[292.2,162.6],"Pioneer":[97.4,142.4],"Potong Pasir":[269.0,148.6],"Promenade":[261.0,186.8],"Punggol":[302.4,74.8],"Queenstown":[205.9,185.1],"Raffles Place":[251.5,195.9],"Redhill":[216.8,190.4],"Rochor":[249.6,173.2],"Sembawang":[220.1,30.9],"Sengkang":[295.4,88.4],"Serangoon":[272.4,129.4],"Simei":[353.3,136.8],"Sixth Avenue":[197.3,149.2],"Somerset":[239.1,179.7],"Stadium":[275.3,177.2],"Stevens":[226.0,159.9],"Tai Seng":[288.2,144.6],"Tampines":[343.0,124.9],"Tampines East":[354.6,123.8],"Tampines West":[338.4,134.5],"Tan Kah Kee":[207.3,154.1],"Tanah Merah":[346.3,152.8],"Tanjong Pagar":[245.9,203.5],"Telok Ayer":[248.3,197.7],"Telok Blangah":[209.8,209.2],"Tiong Bahru":[227.0,193.8],"Toa Payoh":[247.5,147.4],"Tuas Crescent":[49.1,159.0],"Tuas Link":[36.9,139.5],"Tuas West Road":[39.7,150.0],"Ubi":[299.2,150.0],"Upper Changi":[361.4,138.3],"Woodlands":[186.5,43.1],"Woodlands North":[185.1,31.8],"Woodlands South":[193.9,52.7],"Woodleigh":[270.8,140.8],"Yew Tee":[147.4,82.5],"Yio Chu Kang":[244.9,98.2],"Yishun":[235.0,50.6],"one-north":[187.5,180.2],"Springleaf":[218.3,82.4],"Lentor":[236.6,95.4],"Mayflower":[237.0,108.7],"Bright Hill":[233.1,116.7],"Upper Thomson":[232.5,125.4],"Napier":[219.1,172.9],"Orchard Boulevard":[224.3,177.3],"Great World":[232.0,186.6],"Havelock":[233.7,191.7],"Maxwell":[244.1,199.4],"Shenton Way":[250.0,202.6],"Gardens by the Bay":[268.7,201.1],"Tanjong Rhu":[273.7,183.3],"Katong Park":[286.0,182.0],"Tanjong Katong":[297.5,180.5],"Marine Parade":[305.6,177.1],"Marine Terrace":[315.4,173.4],"Siglap":[330.0,170.0],"Bayshore":[342.5,166.7],"Hume":[169.3,125.7],"Punggol Coast":[310.6,64.7]};
 // Singapore's main island and outlying islands (world-geojson, from OpenStreetMap)
+// MRT station exits (OpenStreetMap, via cheeaun/sgraildata): station name -> [exit, lat, lng]
+const EXITS = {"Jurong East":[["A",1.33399,103.74176],["B",1.332526,103.74264],["C",1.332749,103.742762],["D",1.333581,103.742298]],"Bukit Batok":[["A",1.349561,103.749974],["B",1.34939,103.749937],["C",1.34952,103.749767],["D",1.348405,103.749118]],"Bukit Gombak":[["A",1.35907,103.752076],["B",1.358695,103.752093],["C",1.359065,103.751727],["D",1.359298,103.751951]],"Choa Chu Kang":[["A",1.385431,103.744557],["B",1.38498,103.744595],["C",1.385736,103.744518],["D",1.385705,103.744224],["E",1.385,103.74462]],"Yew Tee":[["A",1.397655,103.747195],["B",1.398068,103.74733],["C",1.397001,103.747432],["D",1.397273,103.747111]],"Kranji":[["A",1.424739,103.762019],["B",1.424853,103.761941],["C",1.425126,103.761755],["D",1.425125,103.762497]],"Marsiling":[["A",1.432802,103.77421],["B",1.432751,103.774411],["C",1.43247,103.77382],["D",1.432751,103.773997]],"Woodlands":[["1",1.436697,103.785736],["2",1.436673,103.786508],["3",1.437243,103.787108],["4",1.43754,103.788005],["5",1.435844,103.788964],["6",1.434815,103.789089],["7",1.434496,103.787977]],"Admiralty":[["A",1.440346,103.80099],["B",1.440152,103.800533],["C",1.440596,103.800542],["D",1.440533,103.801365]],"Sembawang":[["A",1.448837,103.82011],["B",1.448768,103.81979],["C",1.449157,103.819759],["D",1.448927,103.820402]],"Canberra":[["A",1.44363,103.829528],["B",1.442935,103.829962],["C",1.442804,103.8297],["D",1.443511,103.829255],["E",1.443256,103.830116]],"Yishun":[["A",1.429397,103.834784],["B",1.429636,103.834866],["C",1.429117,103.835091],["D",1.429107,103.834863],["E",1.429666,103.835644]],"Khatib":[["A",1.417058,103.832922],["B",1.417143,103.832707],["C",1.417545,103.832887],["D",1.417869,103.833231]],"Yio Chu Kang":[["A",1.381644,103.844834],["B",1.381548,103.844947],["C",1.381954,103.844646]],"Ang Mo Kio":[["A",1.369465,103.849939],["B",1.369685,103.849596],["C",1.369441,103.849343],["D",1.369882,103.849825]],"Bishan":[["A",1.35058,103.848305],["B",1.351064,103.848312],["C",1.350585,103.848209],["D",1.351053,103.850201],["E",1.351035,103.848433]],"Braddell":[["A",1.341069,103.84643],["B",1.340744,103.846406],["C",1.340672,103.847441]],"Toa Payoh":[["A",1.332376,103.847724],["B",1.332316,103.847578],["C",1.332994,103.84732],["D",1.333279,103.846517]],"Novena":[["A",1.321095,103.844389],["B",1.319896,103.84334]],"Newton":[["A",1.312598,103.837881],["B",1.312075,103.838219],["C",1.313617,103.838242]],"Orchard":[["1",1.304892,103.832524],["2",1.304354,103.83262],["3",1.304161,103.832771],["4",1.30456,103.83204],["5",1.303945,103.832024],["6",1.303648,103.832321],["7",1.303168,103.832172],["8",1.303446,103.831786],["9",1.303666,103.831507],["10",1.304046,103.831127],["11",1.304218,103.830497],["12",1.302858,103.830663],["13",1.302299,103.832125]],"Somerset":[["A",1.300028,103.838399],["B",1.300767,103.838459],["C",1.300436,103.838766],["D",1.300241,103.839734]],"Dhoby Ghaut":[["A",1.298445,103.846788],["B",1.299056,103.84523],["C",1.299649,103.844748],["D",1.299931,103.84503],["E",1.299748,103.845372],["F",1.299635,103.845842]],"City Hall":[["A",1.293227,103.85302],["B",1.2931,103.85196],["C",1.293042,103.85298],["D",1.293455,103.851802]],"Raffles Place":[["A",1.284125,103.851438],["B",1.284607,103.85148],["C",1.283631,103.851563],["D",1.283641,103.851353],["E",1.283212,103.851523],["F",1.282539,103.850961],["G",1.285017,103.851478],["H",1.285258,103.851622],["I",1.282382,103.851433],["J",1.282626,103.851296]],"Marina Bay":[["1",1.277353,103.85447],["2",1.276159,103.855003],["3",1.275416,103.855372],["4",1.273634,103.856489],["5",1.274693,103.85432]],"Marina South Pier":[["A",1.27053,103.86233],["B",1.271438,103.86358]],"Pasir Ris":[["A",1.372842,103.949333],["B",1.372886,103.949137]],"Tampines":[["A",1.353764,103.944766],["B",1.353539,103.94509],["C",1.353398,103.944904],["D",1.354871,103.943678],["E",1.355853,103.942659],["F",1.354194,103.942654],["G",1.354596,103.942723]],"Simei":[["A",1.342662,103.953819]],"Tanah Merah":[["A",1.326858,103.945795],["B",1.327061,103.945723]],"Bedok":[["A",1.323569,103.929157],["B",1.324268,103.929673],["C",1.324075,103.929404]],"Kembangan":[["A",1.320924,103.912941],["B",1.321152,103.912899]],"Eunos":[["A",1.319517,103.902894],["B",1.319563,103.902582],["C",1.31953,103.903215]],"Paya Lebar":[["A",1.318216,103.892788],["B",1.318347,103.892217],["C",1.318149,103.891721],["D",1.316588,103.892078],["E",1.318288,103.893234],["F",1.316738,103.892609]],"Aljunied":[["A",1.316238,103.882497],["B",1.316488,103.882473]],"Kallang":[["A",1.31154,103.871731],["B",1.311782,103.871587]],"Lavender":[["A",1.307169,103.863043],["B",1.307619,103.86265]],"Bugis":[["A",1.301204,103.855924],["B",1.300782,103.856337],["C",1.300007,103.855686],["D",1.299079,103.856891],["E",1.299305,103.857408],["F",1.299638,103.857148],["G",1.298957,103.857067],["H",1.300343,103.856035]],"Tanjong Pagar":[["A",1.276409,103.844834],["B",1.276672,103.846545],["C",1.276089,103.846534],["D",1.276065,103.846909],["E",1.276259,103.847096],["F",1.277379,103.846928],["G",1.277785,103.846953],["H",1.275451,103.846445],["I",1.276448,103.845656]],"Outram Park":[["1",1.281602,103.838658],["2",1.281675,103.838935],["3",1.280993,103.839789],["4",1.280213,103.840387],["5",1.278947,103.839549],["6",1.279051,103.838537],["7",1.281022,103.83864],["8",1.282322,103.838117]],"Tiong Bahru":[["A",1.285759,103.826991],["B",1.286362,103.827496]],"Redhill":[["A",1.289371,103.816994],["B",1.289486,103.817249]],"Queenstown":[["A",1.294247,103.806183],["B",1.29433,103.806311],["C",1.295446,103.805585],["D",1.295383,103.805492]],"Commonwealth":[["A",1.302648,103.797958],["B",1.302753,103.798058],["C",1.302077,103.798779],["D",1.302013,103.79872]],"Buona Vista":[["A",1.307309,103.790449],["B",1.307197,103.790657],["C",1.306913,103.790599],["D",1.306298,103.79093]],"Dover":[["A",1.311415,103.778305],["B",1.311693,103.778465]],"Clementi":[["A",1.315374,103.764982],["B",1.315469,103.765186],["C",1.314162,103.76575],["D",1.314078,103.76557]],"Chinese Garden":[["A",1.342439,103.73222],["B",1.341982,103.732742],["C",1.341566,103.733393]],"Lakeside":[["A",1.343983,103.720449],["B",1.344081,103.721075],["C",1.344304,103.721713]],"Boon Lay":[["A",1.33828,103.705409],["B",1.338421,103.706146],["C",1.338738,103.705955],["D",1.33863,103.70565],["E",1.338514,103.705353],["F",1.338273,103.705795]],"Pioneer":[["A",1.337345,103.697155],["B",1.337832,103.697129]],"Joo Koon":[["A",1.327502,103.678521],["B",1.327956,103.678644]],"Gul Circle":[["A",1.319032,103.660444],["B",1.318837,103.659435]],"Tuas Crescent":[["A",1.320764,103.648959],["B",1.321244,103.649287]],"Tuas West Road":[["A",1.329872,103.639284],["B",1.330182,103.639791]],"Tuas Link":[["A",1.340427,103.637246],["B",1.34094,103.636841]],"Expo":[["A",1.335322,103.961943],["B",1.335253,103.962075],["C",1.335951,103.962161],["D",1.334835,103.963101],["E",1.334863,103.962123],["F",1.334712,103.962866],["G",1.335019,103.963049]],"Changi Airport":[["A",1.356341,103.989277],["B",1.35722,103.987305]],"HarbourFront":[["A",1.266013,103.820468],["B",1.265155,103.820509],["C",1.26526,103.822532],["D",1.265979,103.821399],["E",1.264972,103.82158]],"Chinatown":[["A",1.283713,103.843798],["C",1.284675,103.842813],["D",1.285406,103.843476],["E",1.285044,103.844428],["F",1.284275,103.845463],["G",1.284736,103.844459]],"Clarke Quay":[["A",1.286899,103.846065],["B",1.287806,103.845903],["C",1.289384,103.846666],["E",1.289,103.847033],["F",1.289406,103.84713],["G",1.289199,103.846594]],"Little India":[["A",1.305605,103.84936],["B",1.306564,103.848985],["C",1.306352,103.849705],["D",1.306855,103.849],["E",1.307426,103.850322],["F",1.307684,103.848304]],"Farrer Park":[["A",1.312327,103.854773],["B",1.313544,103.854764],["C",1.311911,103.853267],["D",1.312454,103.852975],["E",1.311884,103.852651],["F",1.311422,103.853199],["G",1.312259,103.855501],["H",1.311884,103.856099],["I",1.311766,103.855807]],"Boon Keng":[["A",1.320107,103.861502],["B",1.319235,103.861904],["C",1.317915,103.860707]],"Potong Pasir":[["A",1.332801,103.868966],["B",1.331148,103.869333],["C",1.331067,103.868704]],"Woodleigh":[["A",1.338511,103.870941],["B",1.338583,103.870508],["C",1.339867,103.871054]],"Serangoon":[["A",1.349482,103.873957],["B",1.349834,103.873641],["C",1.350595,103.873694],["D",1.349902,103.874322],["E",1.35082,103.872902],["F",1.350948,103.871449],["G",1.35079,103.872867],["H",1.349728,103.873546]],"Kovan":[["A",1.359708,103.884307],["B",1.360206,103.884722],["C",1.360028,103.885451]],"Hougang":[["A",1.370209,103.892446],["B",1.371946,103.892972],["C",1.372142,103.891975]],"Buangkok":[["A",1.38341,103.892884],["B",1.38265,103.893463]],"Sengkang":[["A",1.391829,103.895406],["B",1.391796,103.895637],["C",1.390882,103.895209],["D",1.392371,103.895705]],"Punggol":[["A",1.40534,103.902306],["B",1.405186,103.902598],["C",1.404301,103.902116],["D",1.404438,103.901799]],"Punggol Coast":[["1",1.414836,103.909533],["2",1.415089,103.910681]],"Bras Basah":[["A",1.296859,103.851327],["B",1.296046,103.850474],["C",1.297014,103.85025],["D",1.297551,103.850158],["E",1.297535,103.850423]],"Esplanade":[["A",1.293371,103.856306],["B",1.292927,103.856176],["C",1.292904,103.855855],["D",1.292624,103.855834],["E",1.293129,103.855568],["F",1.29382,103.855105],["G",1.293586,103.85492]],"Promenade":[["A",1.291712,103.860674],["B",1.293862,103.860137],["C",1.294103,103.860236]],"Nicoll Highway":[["A",1.30017,103.863506],["B",1.299661,103.864152]],"Stadium":[["A",1.302511,103.8744],["B",1.30337,103.876226]],"Mountbatten":[["A",1.306753,103.882598],["B",1.306046,103.883248]],"Dakota":[["A",1.308814,103.889307],["B",1.308097,103.887979]],"MacPherson":[["A",1.326679,103.889793],["B",1.325855,103.890666],["C",1.325482,103.890263],["D",1.325145,103.888455],["E",1.326193,103.888615]],"Tai Seng":[["A",1.335914,103.887627],["B",1.334621,103.888214],["C",1.335772,103.888261]],"Bartley":[["A",1.342249,103.880256],["B",1.343501,103.878909]],"Lorong Chuan":[["A",1.351439,103.864934],["B",1.351739,103.862918]],"Marymount":[["A",1.34898,103.839088],["B",1.347866,103.840059]],"Caldecott":[["1",1.337105,103.839407],["2",1.33826,103.840387],["3",1.337832,103.840465],["4",1.336751,103.839882]],"Botanic Gardens":[["A",1.322535,103.814977],["B",1.322685,103.815914]],"Farrer Road":[["A",1.317494,103.807965],["B",1.317552,103.807389]],"Holland Village":[["A",1.31122,103.796139],["B",1.311069,103.795769],["C",1.310711,103.795754]],"one-north":[["A",1.299027,103.786907],["B",1.300359,103.787928],["C",1.299715,103.787565],["D",1.300075,103.787785]],"Kent Ridge":[["A",1.294316,103.784466],["B",1.292428,103.78481],["C",1.293985,103.78449],["D",1.293219,103.784535]],"Haw Par Villa":[["A",1.283055,103.782006]],"Pasir Panjang":[["A",1.276003,103.79203]],"Labrador Park":[["A",1.272107,103.802356]],"Telok Blangah":[["A",1.270721,103.809884]],"Bukit Panjang":[["A",1.379008,103.761923],["B",1.377863,103.763179],["C",1.377928,103.762723],["D",1.378024,103.763252]],"Cashew":[["A",1.369833,103.764234]],"Hillview":[["A",1.362474,103.767688],["B",1.362084,103.767108]],"Hume":[["1",1.355063,103.768696],["2",1.354829,103.768652]],"Beauty World":[["A",1.341696,103.775984],["B",1.341582,103.775451],["C",1.339982,103.775762]],"King Albert Park":[["A",1.335537,103.78303],["B",1.335976,103.784562]],"Sixth Avenue":[["A",1.33078,103.796566],["B",1.331521,103.796848]],"Tan Kah Kee":[["A",1.325333,103.807799],["B",1.326146,103.807801]],"Stevens":[["1",1.319952,103.825728],["2",1.318829,103.826014],["3",1.31947,103.824992],["4",1.32152,103.825883],["5",1.320938,103.826323]],"Rochor":[["A",1.303404,103.852375],["B",1.304215,103.853104]],"Bayfront":[["A",1.280967,103.858732],["B",1.282705,103.859759],["C",1.282835,103.859597],["D",1.282834,103.859494],["E",1.281105,103.858441]],"Downtown":[["A",1.279773,103.852647],["B",1.279601,103.852908],["C",1.279444,103.853152],["D",1.279176,103.853014],["E",1.279528,103.852478],["F",1.279796,103.852428]],"Telok Ayer":[["A",1.281887,103.848507],["B",1.282497,103.848773],["C",1.282251,103.848842],["D",1.2826,103.8481],["E",1.2827,103.8475]],"Fort Canning":[["A",1.292406,103.84417],["B",1.29283,103.844425]],"Bencoolen":[["A",1.299195,103.850843],["B",1.298199,103.84956],["C",1.297699,103.849272]],"Jalan Besar":[["A",1.30489,103.855296],["B",1.305467,103.855245]],"Bendemeer":[["A",1.313853,103.863074],["B",1.313481,103.863219]],"Geylang Bahru":[["A",1.321562,103.871556],["B",1.321109,103.871794]],"Mattar":[["A",1.327251,103.882732],["B",1.326464,103.883748]],"Ubi":[["A",1.329951,103.899877],["B",1.329831,103.898586]],"Kaki Bukit":[["A",1.335311,103.909405],["B",1.334922,103.909146]],"Bedok North":[["A",1.335126,103.91805],["B",1.334166,103.919063],["C",1.334423,103.917811]],"Bedok Reservoir":[["A",1.336348,103.932887],["B",1.336555,103.933487]],"Tampines West":[["A",1.345631,103.938197],["B",1.344999,103.938949]],"Tampines East":[["A",1.356461,103.95454],["B",1.355588,103.95517],["C",1.355553,103.955705],["D",1.35697,103.955717]],"Upper Changi":[["A",1.341861,103.961328],["B",1.341038,103.961476],["C",1.341993,103.961617],["D",1.34084,103.961043]],"Woodlands North":[["1",1.447937,103.785429],["2",1.449047,103.785102]],"Woodlands South":[["1",1.427302,103.793027],["2",1.427605,103.793414],["3",1.427427,103.79456],["4",1.426684,103.794424],["5",1.425843,103.794365]],"Springleaf":[["1",1.398787,103.818003],["2",1.397821,103.818391],["3",1.397684,103.818082]],"Lentor":[["1",1.38541,103.83536],["2",1.385891,103.835823],["3",1.384602,103.837398],["4",1.383628,103.837339],["5",1.384162,103.83684]],"Mayflower":[["1",1.372704,103.836717],["2",1.37372,103.837032],["3",1.373532,103.837461],["4",1.371276,103.836796],["5",1.370777,103.83676],["6",1.370896,103.836309],["7",1.371377,103.836285]],"Bright Hill":[["1",1.364037,103.833635],["2",1.363283,103.833511],["3",1.362184,103.832376],["4",1.363164,103.831954]],"Upper Thomson":[["1",1.354834,103.831916],["2",1.355737,103.831833],["3",1.354145,103.833925],["4",1.353503,103.833794],["5",1.354418,103.832635]],"Napier":[["1",1.306936,103.819484],["2",1.306345,103.819507]],"Orchard Boulevard":[["1",1.303624,103.823638],["2",1.302463,103.823896]],"Great World":[["1",1.293321,103.833905],["2",1.29287,103.832627],["3",1.29382,103.832734],["4",1.29603,103.833037],["5",1.296553,103.833406],["6",1.293184,103.832841]],"Havelock":[["1",1.286677,103.83384],["2",1.286944,103.833495],["3",1.288844,103.83337],["4",1.290167,103.834003],["5",1.289561,103.833962]],"Maxwell":[["1",1.281034,103.844164],["2",1.280919,103.844895],["3",1.280192,103.842916]],"Shenton Way":[["1",1.277462,103.851836],["2",1.277003,103.850915],["3",1.27763,103.850129],["4",1.277656,103.851034],["5",1.277144,103.851808],["6",1.277929,103.849893]],"Gardens by the Bay":[["1",1.280371,103.868587],["2",1.278826,103.867969],["3",1.278303,103.867154]],"Tanjong Rhu":[["1",1.296459,103.873478],["2",1.2982,103.873603]],"Katong Park":[["1",1.297539,103.887092],["2",1.29838,103.885069]],"Tanjong Katong":[["1",1.299039,103.897045],["2",1.299016,103.897693],["3",1.300229,103.897715]],"Marine Parade":[["1",1.302093,103.90591],["2",1.302532,103.904591],["3",1.303594,103.906053],["4",1.304566,103.907627],["5",1.30558,103.909094],["6",1.304299,103.907788]],"Marine Terrace":[["1",1.306399,103.915052],["2",1.305789,103.913253],["3",1.306579,103.913087],["4",1.306895,103.91502],["5",1.307438,103.917089],["6",1.307063,103.916945]],"Siglap":[["1",1.30885,103.928793],["2",1.309777,103.928586],["3",1.310589,103.931246],["4",1.310202,103.931291]],"Bayshore":[["1",1.311899,103.941262],["2",1.312184,103.940673],["3",1.313568,103.940721],["4",1.313526,103.942676],["5",1.312897,103.942584]]};
 const SG_LAND = ["206.4,1.8 185.4,17.6 165.2,28.2 150.1,31.0 133.6,24.1 114.4,22.4 95.8,36.1 78.7,47.1 67.7,63.6 53.9,85.6 36.1,121.3 21.0,157.0 1.1,215.3 -2.7,241.7 -2.7,258.2 21.3,271.3 47.1,273.0 50.9,266.4 25.1,255.5 28.5,244.1 28.5,229.4 38.8,224.2 52.2,221.8 56.7,242.4 66.3,258.9 77.3,261.0 90.0,251.7 98.9,235.6 111.3,233.5 131.5,221.1 144.2,211.2 160.7,210.8 174.5,225.6 194.7,224.9 208.4,230.1 229.4,247.2 244.5,243.4 254.1,230.1 265.1,218.0 279.2,206.4 298.7,193.7 372.5,170.0 394.5,175.5 413.4,177.2 439.2,181.7 444.3,173.8 440.2,160.0 437.4,143.9 446.4,140.5 465.9,144.9 486.5,149.1 485.8,139.1 483.1,117.5 487.9,101.0 494.1,78.7 489.3,62.9 476.2,48.1 451.2,38.2 436.8,37.9 421.3,40.9 402.8,59.1 393.1,55.7 373.2,57.4 336.8,50.9 325.5,51.2 303.9,53.0 278.8,45.4 257.9,13.8 227.7,4.9 206.4,1.8", "120.2,263.5 111.6,268.0 106.0,274.9 104.2,278.5 114.0,280.3 133.3,279.0 136.9,276.4 132.9,271.3 127.9,265.2 120.2,263.5", "127.4,287.0 122.1,287.0 121.6,290.8 119.0,289.6 114.4,292.4 116.4,296.0 116.9,300.3 123.6,301.1 129.0,296.7 132.7,293.4 135.1,289.6 127.4,287.0", "132.7,300.8 130.0,303.0 126.6,306.6 128.6,309.5 131.5,313.6 137.2,316.7 137.5,322.2 142.0,322.2 144.9,315.2 141.8,311.2 144.2,308.8 142.4,304.7 138.7,303.0 132.7,300.8", "161.1,261.0 156.6,261.1 157.5,264.7 154.9,271.4 156.3,278.3 158.5,284.3 163.1,290.3 168.4,292.2 175.5,290.8 178.1,284.8 182.2,281.7 183.7,274.5 182.2,268.7 176.3,267.0 172.2,269.9 165.7,267.5 161.1,261.0", "165.4,237.8 159.3,238.3 155.6,241.2 152.0,239.3 148.9,238.1 140.5,239.8 134.5,241.7 136.7,245.2 138.9,249.1 142.7,251.2 145.1,255.3 147.2,258.0 151.1,258.4 157.3,256.5 165.9,257.3 174.6,257.5 180.8,257.9 180.1,254.4 177.0,247.9 172.4,242.6 165.4,237.8", "150.8,217.4 148.2,218.7 148.2,219.7 149.5,221.5 153.3,223.9 157.0,225.9 159.9,225.9 161.3,224.2 159.0,221.2 154.7,217.6 150.8,217.4", "187.3,263.5 185.4,263.7 185.2,265.2 187.3,266.9 189.1,267.3 189.8,265.7 187.3,263.5", "193.2,268.2 191.4,268.6 190.7,272.5 191.3,276.5 196.2,278.8 192.9,279.0 193.2,280.5 196.7,281.3 199.5,280.5 202.3,280.1 202.3,278.6 201.6,276.9 199.9,274.5 198.5,273.1 196.5,271.1 193.2,268.2", "232.7,262.0 230.8,262.8 231.6,266.2 233.4,268.2 235.8,268.8 237.6,267.0 236.8,264.1 232.7,262.0", "253.8,246.5 249.8,247.5 246.5,246.6 244.8,246.7 244.5,248.8 246.6,250.8 245.1,251.8 246.2,254.1 248.5,254.9 250.9,256.3 250.4,257.2 247.2,256.0 244.4,255.4 242.4,257.3 243.5,259.3 246.1,262.7 250.4,266.9 252.3,266.7 253.6,264.0 252.3,261.0 254.3,261.8 258.1,263.4 259.4,261.7 261.9,261.3 263.8,258.6 263.5,255.6 260.2,253.6 256.1,252.8 258.7,250.0 259.5,246.9 253.8,246.5", "237.1,246.5 236.0,246.6 236.0,248.0 236.8,249.6 237.7,251.3 239.6,252.2 240.5,251.7 240.1,250.0 238.5,248.7 237.1,246.5"];
 
 // Singapore bus stops and services (sgbusdata by cheeaun, from LTA data). stops: code -> [lng, lat, name, road];
@@ -1029,14 +1033,45 @@ function fetchWalk(a, b) {
     .catch(e => { if (/set up/.test(e.message)) walksOff = true; return WALKS[key] = null; })
     .finally(() => { delete WALK_JOBS[key]; });
 }
-// The walks in a trip: to the first stop, between changes, and from the last stop
-function walkPairs(trip, r) {
-  const out = [], push = (a, b) => { if (metres(a, b) > 60) out.push([toLL(a), toLL(b)]); };
-  let here = placeXY(trip.from);
-  r.legs.forEach(leg => { push(here, posOf(leg.line, leg.idx[0])); here = posOf(leg.line, leg.idx[leg.idx.length - 1]); });
-  push(here, placeXY(trip.to));
-  return out;
+// How you get on and off each train or bus: the walks, which station exit to use, and changes.
+// Trains: walk to the station exit closest to where you are, and leave by the exit closest to where you're going.
+function nearestExit(station, xy) {
+  let best = null;
+  for (const [label, lat, lng] of EXITS[station] || []) {
+    const e = xyOfLL(lat, lng), m = metres(e, xy);
+    if (!best || m < best.m) best = { label, xy: e, m };
+  }
+  return best;
 }
+const accessCache = {};
+function accessPlan(trip, r) {
+  const key = JSON.stringify([trip.from, trip.to, r.legs.map(l => [l.line, l.idx[0], l.idx[l.idx.length - 1]])]);
+  if (accessCache[key]) return accessCache[key];
+  const out = [], to = placeXY(trip.to);
+  let here = placeXY(trip.from), atStation = isStop(trip.from) || isLoc(trip.from) ? null : trip.from;
+  r.legs.forEach((leg, k) => {
+    const bus = isBus(leg.line), s = posOf(leg.line, leg.idx[0]), sName = nameOf(leg.line, leg.idx[0]);
+    if (!bus && atStation === sName) { if (k) out.push({ type: "change", a: here, b: s, leg }); }
+    else if (!bus) {
+      const ex = nearestExit(sName, here);
+      if (ex && metres(here, ex.xy) > NAV_NEAR_M) out.push({ type: "walk", a: here, b: ex.xy, leg, ex, station: sName });
+      if (ex) out.push({ type: "enter", a: ex.xy, b: s, leg, ex });
+      else if (metres(here, s) > NAV_NEAR_M) out.push({ type: "walk", a: here, b: s, leg, station: sName });
+    } else if (k || metres(here, s) > NAV_NEAR_M) out.push({ type: "walk", a: here, b: s, leg });
+    out.push({ type: "ride", leg });
+    const e = posOf(leg.line, leg.idx[leg.idx.length - 1]), eName = nameOf(leg.line, leg.idx[leg.idx.length - 1]), next = r.legs[k + 1];
+    here = e; atStation = bus ? null : eName;
+    const stayIn = next && !isBus(next.line) && nameOf(next.line, next.idx[0]) === eName;
+    if (!bus && !stayIn && !(!next && trip.to === eName)) {
+      const toward = next ? posOf(next.line, next.idx[0]) : to, ex = nearestExit(eName, toward);
+      if (ex) { out.push({ type: "leave", a: e, b: ex.xy, leg, ex, toward: next ? nameOf(next.line, next.idx[0]) : placeName(trip.to) }); here = ex.xy; atStation = null; }
+    }
+  });
+  if (metres(here, to) > NAV_NEAR_M) out.push({ type: "walk", a: here, b: to, final: true });
+  return accessCache[key] = out;
+}
+// The walks in a trip, for fetching street directions
+const walkPairs = (trip, r) => accessPlan(trip, r).filter(x => x.type === "walk" && metres(x.a, x.b) > 60).map(x => [toLL(x.a), toLL(x.b)]);
 
 // ---------- Detailed map: OneMap streets and buildings, zoom and pan (website only) ----------
 // The claude.ai preview can't load map pictures from other sites, so it keeps the drawn map below.
@@ -1097,7 +1132,6 @@ function drawRouteOn(m, r, trip, following) {
   r.legs.forEach((leg, k) => {
     const color = lineInfo(leg.line).color, pts = leg.idx.map(i => toLL(posOf(leg.line, i)));
     all.push(...pts);
-    if (k > 0) { const prev = r.legs[k - 1]; walkTo(toLL(posOf(prev.line, prev.idx[prev.idx.length - 1])), pts[0]); }
     L.polyline(pts, { color: "#fff", weight: 10, opacity: .9 }).addTo(m);                 // white edge so the line stands out
     L.polyline(pts, { color, weight: 6, opacity: 1 }).addTo(m);
     leg.idx.forEach((i, j) => {
@@ -1108,11 +1142,17 @@ function drawRouteOn(m, r, trip, following) {
     });
   });
   // Where you start and where you're going, with the walks to and from the first and last stop
-  const first = all[0], last = all[all.length - 1];
   const place = (id, ll, cls) => L.marker(ll, { icon: L.divIcon({ className: "map-pin " + cls, iconSize: [18, 18] }) })
     .bindTooltip(esc(placeName(id)), { permanent: true, direction: "top", offset: [0, -10], className: "map-label-tip" }).addTo(m);
   const fromLL = toLL(placeXY(trip.from)), toLLp = toLL(placeXY(trip.to));
-  walkTo(fromLL, first); walkTo(last, toLLp);
+  for (const x of accessPlan(trip, r)) {
+    if (x.type === "walk") walkTo(toLL(x.a), toLL(x.b));
+    if (x.type === "enter" || x.type === "leave") {
+      L.polyline([toLL(x.a), toLL(x.b)], { ...dash, opacity: .4 }).addTo(m);       // inside the station
+      L.marker(toLL(x.ex.xy), { icon: L.divIcon({ className: "exit-pin", html: esc(x.ex.label), iconSize: [22, 18] }) })
+        .bindTooltip(`${x.type === "enter" ? "Enter" : "Leave"} at Exit ${esc(x.ex.label)}`, { direction: "top", offset: [0, -8] }).addTo(m);
+    }
+  }
   if (!following) place(trip.from, fromLL, "start");
   place(trip.to, toLLp, "end");
   all.push(fromLL, toLLp);
@@ -1259,23 +1299,38 @@ function buildNav(trip, withName) {
     }) : null;
   };
   add(placeXY(trip.from), { name: placeName(trip.from) });
-  r.legs.forEach((leg, k) => {
-    const info = lineInfo(leg.line), here = pts[pts.length - 1], first = posOf(leg.line, leg.idx[0]);
-    const gap = metres(here.xy, first), stop = nameOf(leg.line, leg.idx[0]), ride = info.bus ? "bus " + info.short : "the " + info.short;
-    const d0 = here.d, turns = gap > 60 ? streets(here.xy, first) : null, d1 = add(first, { name: stop, line: leg.line });
-    if (k > 0 || gap > NAV_NEAR_M) steps.push({ kind: "walk", d0, d1, xy: first, turns, min: k ? Math.max(3, walkMin(gap)) : walkMin(gap),
-      text: k ? (gap < 60 ? `Change to ${ride} at ${stop}` : `Walk to ${stop} for ${ride}`) : `Walk to ${stop}${info.bus ? " bus stop" : ""}`,
-      sub: info.bus ? `Bus stop ${codeOf(leg.line, leg.idx[0])}` : `${codeOf(leg.line, leg.idx[0])} · ${info.name}` });
-    leg.idx.slice(1).forEach(i => add(posOf(leg.line, i), { name: nameOf(leg.line, i), line: leg.line }));
-    const end = nameOf(leg.line, leg.idx[leg.idx.length - 1]);
-    steps.push({ kind: "ride", line: leg.line, d0: d1, d1: pts[pts.length - 1].d, xy: pts[pts.length - 1].xy, stops: leg.idx.length - 1,
-      min: leg.times[leg.times.length - 1] - leg.times[0], end,
-      board: `${info.bus ? "Catch bus " + info.short : "Take the " + info.short} towards ${towards(leg)}`, text: `Get off at ${end}` });
-  });
-  const last = pts[pts.length - 1], dest = placeXY(trip.to), gap = metres(last.xy, dest);
-  if (gap > NAV_NEAR_M) {
-    const d0 = last.d, turns = gap > 60 ? streets(last.xy, dest) : null, d1 = add(dest, { name: placeName(trip.to) });
-    steps.push({ kind: "walk", d0, d1, xy: dest, turns, min: walkMin(gap), text: `Walk to ${placeName(trip.to)}`, sub: isLoc(trip.to) ? locOf(trip.to).address || "" : "" });
+  let how = null;                            // how to get to the platform, shown when boarding
+  for (const x of accessPlan(trip, r)) {
+    const leg = x.leg, info = leg && lineInfo(leg.line), d0 = pts[pts.length - 1].d;
+    const sName = leg && nameOf(leg.line, leg.idx[0]), code = leg && codeOf(leg.line, leg.idx[0]);
+    if (x.type === "walk") {
+      const gap = metres(x.a, x.b), turns = gap > 60 ? streets(x.a, x.b) : null, d1 = add(x.b, x.ex || x.final ? {} : { name: sName, line: leg.line });
+      const step = { kind: "walk", d0, d1, xy: x.b, turns, min: walkMin(gap) };
+      if (x.final) Object.assign(step, { text: `Walk to ${placeName(trip.to)}`, sub: isLoc(trip.to) ? locOf(trip.to).address || "" : "" });
+      else if (info.bus) Object.assign(step, { text: `Walk to bus stop ${sName}`, sub: `Stop ${code} · ${STOP[code][3]}` });
+      else Object.assign(step, { text: x.ex ? `Walk to ${sName}, Exit ${x.ex.label}` : `Walk to ${sName}`, sub: `${code} · ${info.name}` });
+      steps.push(step);
+    } else if (x.type === "enter") {
+      const d1 = add(x.b, { name: sName, line: leg.line });
+      how = `Go down to the ${info.short} platform for trains towards ${towards(leg)}`;
+      steps.push({ kind: "enter", d0, d1, xy: x.b, min: 2, leg, label: x.ex.label, text: `Enter at Exit ${x.ex.label}`, sub: how });
+    } else if (x.type === "change") {
+      const d1 = add(x.b, { name: sName, line: leg.line });
+      how = `Follow the signs to the ${info.name} platform`;
+      steps.push({ kind: "enter", d0, d1, xy: x.b, min: 3, leg, text: `Change to the ${info.short} at ${sName}`, sub: `${how}, towards ${towards(leg)}` });
+    } else if (x.type === "ride") {
+      const last = pts[pts.length - 1];
+      const d1 = last.line === leg.line && last.name === sName ? last.d : add(posOf(leg.line, leg.idx[0]), { name: sName, line: leg.line });
+      leg.idx.slice(1).forEach(i => add(posOf(leg.line, i), { name: nameOf(leg.line, i), line: leg.line }));
+      const end = nameOf(leg.line, leg.idx[leg.idx.length - 1]);
+      steps.push({ kind: "ride", line: leg.line, leg, d0: d1, d1: pts[pts.length - 1].d, xy: pts[pts.length - 1].xy, stops: leg.idx.length - 1,
+        min: leg.times[leg.times.length - 1] - leg.times[0], end, how: info.bus ? `Wave at bus ${info.short} so it stops` : how,
+        board: `${info.bus ? "Catch bus " + info.short : "Take the " + info.short} towards ${towards(leg)}`, text: `Get off at ${end}` });
+      how = null;
+    } else if (x.type === "leave") {
+      const d1 = add(x.b, { name: `Exit ${x.ex.label}` });
+      steps.push({ kind: "leave", d0, d1, xy: x.b, min: 2, label: x.ex.label, text: `Leave by Exit ${x.ex.label}`, sub: `The closest exit to ${x.toward}` });
+    }
   }
   const nv = { trip, r, pts, steps, total: pts[pts.length - 1].d, prog: 0, pos: pts[0].xy, heading: null, sim: true,
     simStep: 0, simT: 0, phase: "go", follow: true, withName, started: Date.now(), timers: [] };
@@ -1310,7 +1365,7 @@ function snapToRoute(nv, xy) {
   }
   return best;
 }
-const stepAt = nv => { if (nv.sim) return nv.simStep; const i = nv.steps.findIndex(x => nv.prog < x.d1 - (x.kind === "walk" ? 25 : 1)); return i < 0 ? nv.steps.length : i; };
+const stepAt = nv => { if (nv.sim) return nv.simStep; const i = nv.steps.findIndex(x => nv.prog < x.d1 - (x.kind === "ride" ? 1 : 25)); return i < 0 ? nv.steps.length : i; };
 const navLater = (nv, ms, f) => nv.timers.push(setTimeout(() => { if (state.navi === nv) f(); }, ms));
 // The other person's side, in this demo
 function theySay(nv, text) { (state.chats[nv.withName] ||= []).push({ me: false, text, at: sgNow() }); updateNavUI(); }
@@ -1381,7 +1436,7 @@ function navTick(nv) {
     // Demo speed: a walk takes a few seconds, each stop about 2 seconds
     const st = nv.steps[nv.simStep];
     if (st) {
-      const len = st.d1 - st.d0, secs = st.kind === "ride" ? 1.8 * st.stops + 1 : Math.max(2, Math.min(12, len / 35));
+      const len = st.d1 - st.d0, secs = st.kind === "ride" ? 1.8 * st.stops + 1 : st.kind === "walk" ? Math.max(2, Math.min(12, len / 35)) : 3;
       nv.simT += 0.2;
       nv.prog = st.d0 + len * Math.min(1, nv.simT / secs);
       if (nv.simT >= secs) { nv.simStep++; nv.simT = 0; }
@@ -1417,12 +1472,21 @@ function navTop(nv) {
     return `<div class="nav-ico meet">${esc(nv.p.n[0])}</div><div><b class="nav-big">Meet ${esc(nv.p.n)} here</b><span>${esc(nv.o.start)} · ${esc(meetWhere(nv))}</span></div>`;
   const i = stepAt(nv), st = nv.steps[Math.min(i, nv.steps.length - 1)], next = nv.steps[i + 1];
   const then = next ? `<span class="nav-then">Then: ${esc(next.kind === "ride" ? next.board : next.text)}</span>` : "";
+  // Where to stand for the meet-up, when this is the train or bus you meet on
+  const meetHere = s => nv.withName && nv.phase === "go" && s.leg && s.leg.line === nv.o.line && nameOf(s.leg.line, s.leg.idx[0]) === nv.o.start;
+  const standAt = isBus(nv.o ? nv.o.line : "") ? `Meet ${nv.withName} on the ${state.seat.toLowerCase()}`
+    : nv.o ? `Meet ${nv.withName} in ${meetWhere(nv)}: carriage 1 is at the front, the end the train is heading to` : "";
   if (st.kind === "ride") {
     const left = nv.pts.filter(x => x.d > Math.max(nv.prog, st.d0) + 1 && x.d <= st.d1 + 0.01).length;
-    const boarding = nv.prog - st.d0 < 30 && left === st.stops;
+    const boarding = nv.prog - st.d0 < 30 && left === st.stops, bus = isBus(st.line);
+    const status = boarding ? `${st.stops} stop${st.stops > 1 ? "s" : ""} to ${esc(st.end)}`
+      : left > 1 ? `${left} stops left` : left === 1 ? (bus ? "<b>Press the bell now:</b> you get off at the next stop" : "Next stop: get off") : "Get off here";
     return `<div class="nav-ico">${pill(st.line)}</div><div><b class="nav-big">${esc(boarding ? st.board : st.text)}</b>
-      <span>${boarding ? `${st.stops} stop${st.stops > 1 ? "s" : ""} to ${esc(st.end)}` : left > 1 ? `${left} stops left` : left === 1 ? "Next stop: get off" : "Get off here"}</span>${then}</div>`;
+      <span>${status}</span>${boarding && st.how ? `<span class="nav-then">${esc(st.how)}</span>` : ""}${boarding && meetHere(st) ? `<span class="nav-then">${esc(standAt)}</span>` : ""}${then}</div>`;
   }
+  if (st.kind === "enter" || st.kind === "leave")
+    return `<div class="nav-ico ${st.label ? "exit" : ""}">${st.label ? esc(st.label) : pill(st.leg.line)}</div><div><b class="nav-big">${esc(st.text)}</b>
+      <span>${esc(st.sub)}</span>${meetHere(st) ? `<span class="nav-then">${esc(standAt)}</span>` : ""}${then}</div>`;
   // Walking: an arrow pointing at where to go, turned to the way you're facing when the compass knows it.
   // With street directions, it points along the street and counts down to the next turn.
   const turns = st.turns || [], nextTurn = turns.find(t => t.d > nv.prog + 8), nowTurn = [...turns].reverse().find(t => t.d <= nv.prog + 8);
