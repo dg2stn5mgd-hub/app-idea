@@ -251,6 +251,46 @@ img.avatar { object-fit: cover; }
 .map-pin.start { background: #2f6fdb; }
 .map-pin.end { background: var(--accent); }
 .map-label-tip { font-family: var(--font-body); font-weight: 700; font-size: 12px; padding: 3px 7px; }
+/* Navigation: full screen, like a maps app */
+.navi { position: fixed; inset: 0; margin-inline: auto; width: min(420px, 100%); z-index: 700; background: var(--map); overflow: hidden; }
+.navmap { position: absolute; inset: 0; }
+.navmap.svg { display: grid; align-items: center; padding: 150px 0 230px; }
+.navmap.svg .map-wrap, .navmap.svg svg { width: 100%; }
+.nav-dot { fill: #2f6fdb; stroke: #fff; }
+.nav-top { position: absolute; top: max(12px, env(safe-area-inset-top, 0px)); left: 10px; right: 10px; z-index: 800; display: flex; gap: 14px; align-items: center;
+  background: #17321f; color: #fff; border-radius: 18px; padding: 14px 16px; box-shadow: 0 6px 20px rgba(0,0,0,.25); }
+.nav-top > div:last-child { display: grid; gap: 2px; min-width: 0; }
+.nav-big { font-family: var(--font-display); font-size: 24px; line-height: 1.15; }
+.nav-what { font-size: 16px; font-weight: 600; }
+.nav-then { font-size: 13px; opacity: .8; }
+.nav-ico { flex: none; width: 52px; height: 52px; display: grid; place-items: center; border-radius: 14px; background: rgba(255,255,255,.12); font-size: 22px; font-weight: 700; transition: transform .3s; }
+.nav-ico.arrow span { display: grid; transition: transform .3s; }
+.nav-ico.arrow svg { width: 38px; height: 38px; fill: #fff; }
+.nav-ico.meet { background: var(--match); border-radius: 50%; }
+.nav-ico.done { background: var(--match); }
+.nav-ico .pill { font-size: 14px; }
+.nav-panel { position: absolute; left: 0; right: 0; bottom: 0; z-index: 800; display: grid; gap: 12px; max-height: 58vh; overflow-y: auto;
+  background: var(--surface); border-radius: 20px 20px 0 0; padding: 16px 16px calc(14px + env(safe-area-inset-bottom, 0px)); box-shadow: 0 -6px 20px rgba(0,0,0,.18); }
+.nav-eta { display: grid; grid-template-columns: repeat(3, 1fr) auto; gap: 8px; align-items: center; }
+.nav-eta > div { display: grid; }
+.nav-eta b { font-family: var(--font-display); font-size: 22px; line-height: 1.1; }
+.nav-eta span { font-size: 12px; color: var(--muted); }
+.nav-meet { display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; }
+.nav-meet p { margin: 0; }
+.nav-meet.together .label { color: var(--match); }
+.nav-thread { display: grid; gap: 4px; background: var(--surface-2); border-radius: 12px; padding: 8px 12px; font-size: 13.5px; }
+.nav-thread p.me { color: var(--muted); }
+.nav-chips .chip { font-size: 13px; }
+.nav-mode { margin: 0; }
+.back.link { color: var(--accent); font-weight: 600; padding: 0; text-decoration: none; }
+a.back.link.center { display: block; text-align: center; font-size: 14px; }
+.map-pin.meet { background: var(--match); }
+.me-wrap { pointer-events: none; }
+.me-dot { position: relative; width: 64px; height: 64px; }
+.me-beam { position: absolute; inset: 0; border-radius: 50%; opacity: 0; transition: transform .25s;
+  background: conic-gradient(from -28deg, rgba(47,111,219,.5), rgba(47,111,219,.05) 56deg, transparent 56deg);
+  -webkit-mask: radial-gradient(circle, #000 0 68%, transparent 70%); mask: radial-gradient(circle, #000 0 68%, transparent 70%); }
+.me-core { position: absolute; left: 50%; top: 50%; width: 20px; height: 20px; margin: -10px; border-radius: 50%; background: #2f6fdb; border: 3px solid #fff; box-shadow: 0 1px 5px rgba(0,0,0,.4); }
 .map-locate { width: 34px; height: 34px; border-radius: 4px; border: 2px solid rgba(0,0,0,.2); background: #fff; color: #2f6fdb; display: grid; place-items: center; cursor: pointer; }
 .map-locate svg { width: 16px; height: 16px; fill: currentColor; }
 .chat-group { display: flex; flex-direction: column; gap: 4px; }
@@ -981,6 +1021,36 @@ const toLL = xy => [1.48 - xy[1] / 1000, xy[0] / 1000 + 103.60];
 function drawDetailedMap({ r, trip }) {
   if (leafMap) { leafMap.remove(); leafMap = null; }
   const m = L.map("lmap", { minZoom: 11, maxZoom: 19, maxBounds: [[1.13, 103.55], [1.50, 104.15]], zoomSnap: 0.5 });
+  const all = drawRouteOn(m, r, trip);
+  m.fitBounds(L.latLngBounds(all), { padding: [28, 28] });
+
+  // "Where am I?" button: a blue dot that follows you, with a beam showing which way you're facing
+  const Locate = L.Control.extend({ options: { position: "topleft" }, onAdd() {
+    const b = L.DomUtil.create("button", "map-locate");
+    b.type = "button"; b.title = "Show where I am"; b.setAttribute("aria-label", "Show where I am");
+    b.innerHTML = LOCATE_ICON;
+    L.DomEvent.disableClickPropagation(b);
+    b.onclick = () => {
+      if (!navigator.geolocation) { toast("This browser can't share your location."); return; }
+      startCompass();
+      let first = true;
+      if (locWatch !== null) navigator.geolocation.clearWatch(locWatch);
+      locWatch = navigator.geolocation.watchPosition(pos => {
+        const ll = [pos.coords.latitude, pos.coords.longitude];
+        if (!m._me) m._me = [L.circle(ll, { radius: pos.coords.accuracy, color: "#2f6fdb", weight: 1, fillOpacity: .12, interactive: false }).addTo(m), meMarker(ll).addTo(m)];
+        m._me[0].setLatLng(ll).setRadius(pos.coords.accuracy); m._me[1].setLatLng(ll);
+        gpsHeading = Number.isFinite(pos.coords.heading) && pos.coords.speed > 0.5 ? pos.coords.heading : gpsHeading;
+        setMeHeading(m._me[1], compass ?? gpsHeading);
+        if (first) { m.setView(ll, Math.max(m.getZoom(), 17)); first = false; }
+      }, err => toast(err.code === 1 ? "Location is off for this app. Turn it on in Settings, then try again." : "Couldn't find your location."),
+      { enableHighAccuracy: true, timeout: 15000 });
+    };
+    return b;
+  } });
+  new Locate().addTo(m);
+  leafMap = m;
+}
+function addTiles(m) {
   let failed = 0;
   L.tileLayer("https://www.onemap.gov.sg/maps/tiles/Default/{z}/{x}/{y}.png", {
     minZoom: 11, maxZoom: 19, detectRetina: true,
@@ -989,7 +1059,10 @@ function drawDetailedMap({ r, trip }) {
     // No map pictures (no signal, or OneMap busy): draw the MRT lines so the route still has context
     if (++failed === 3) Object.values(LINES).forEach(l => L.polyline(l.st.map(x => toLL(POS[x[1]])), { color: l.color, weight: 2.5, opacity: .35, interactive: false }).addTo(m).bringToBack());
   }).addTo(m);
-
+}
+// Your route on a detailed map: the lines, every stop, and dotted walks. Returns all the points, to zoom to.
+function drawRouteOn(m, r, trip, following) {
+  addTiles(m);
   const all = [], dash = { color: "#1c1f23", weight: 3, opacity: .75, dashArray: "1 8", lineCap: "round" };
   const walkTo = (a, b) => { if (a[0] !== b[0] || a[1] !== b[1]) L.polyline([a, b], dash).addTo(m); };
   r.legs.forEach((leg, k) => {
@@ -1011,31 +1084,10 @@ function drawDetailedMap({ r, trip }) {
     .bindTooltip(esc(placeName(id)), { permanent: true, direction: "top", offset: [0, -10], className: "map-label-tip" }).addTo(m);
   const fromLL = toLL(placeXY(trip.from)), toLLp = toLL(placeXY(trip.to));
   walkTo(fromLL, first); walkTo(last, toLLp);
-  place(trip.from, fromLL, "start"); place(trip.to, toLLp, "end");
+  if (!following) place(trip.from, fromLL, "start");
+  place(trip.to, toLLp, "end");
   all.push(fromLL, toLLp);
-  m.fitBounds(L.latLngBounds(all), { padding: [28, 28] });
-
-  // "Where am I?" button: a blue dot with how accurate the GPS is
-  const Locate = L.Control.extend({ options: { position: "topleft" }, onAdd() {
-    const b = L.DomUtil.create("button", "map-locate");
-    b.type = "button"; b.title = "Show where I am"; b.setAttribute("aria-label", "Show where I am");
-    b.innerHTML = LOCATE_ICON;
-    L.DomEvent.disableClickPropagation(b);
-    b.onclick = () => {
-      if (!navigator.geolocation) { toast("This browser can't share your location."); return; }
-      navigator.geolocation.getCurrentPosition(pos => {
-        const ll = [pos.coords.latitude, pos.coords.longitude];
-        if (m._me) m._me.forEach(x => x.remove());
-        m._me = [L.circle(ll, { radius: pos.coords.accuracy, color: "#2f6fdb", weight: 1, fillOpacity: .12 }).addTo(m),
-                 L.circleMarker(ll, { radius: 7, color: "#fff", weight: 3, fillColor: "#2f6fdb", fillOpacity: 1 }).addTo(m)];
-        m.setView(ll, Math.max(m.getZoom(), 17));
-      }, err => toast(err.code === 1 ? "Location is off for this app. Turn it on in Settings, then try again." : "Couldn't find your location."),
-      { enableHighAccuracy: true, timeout: 10000 });
-    };
-    return b;
-  } });
-  new Locate().addTo(m);
-  leafMap = m;
+  return all;
 }
 
 // Map of Singapore with every MRT line drawn faintly and your route on top.
@@ -1114,6 +1166,297 @@ function routeMap(r, trip = state.nav) {
     </svg>
     <button class="map-toggle" data-mapwhole>${state.mapWhole ? "Zoom to my route" : "Whole map"}</button>
   </div>`;
+}
+
+// ---------- Navigation: full screen, follows you, then the meet-up on top ----------
+// Your position comes from the phone's GPS, and which way you face from its compass.
+// Away from the route (or in a preview), a demo moves you along it instead, so anyone can try it.
+const NAV_NEAR_M = 35;                       // this close counts as "there"
+let locWatch = null, compass = null, gpsHeading = null, compassOn = false;
+let navTimer = null, navWatch = null, navMap = null, navMe = null, navPanelKey = "";
+const bearing = (a, b) => (Math.atan2(b[0] - a[0], a[1] - b[1]) * 180 / Math.PI + 360) % 360;   // map units: x east, y south
+const COMPASS = d => ["north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west"][Math.round(d / 45) % 8];
+const xyOfLL = (lat, lng) => [(lng - 103.60) * 1000, (1.48 - lat) * 1000];
+const distText = m => m >= 950 ? (m / 1000).toFixed(1) + " km" : Math.max(10, Math.round(m / 10) * 10) + " m";
+const ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 19.5 21 12 16.8 4.5 21Z"/></svg>';
+
+function startCompass() {
+  if (compassOn || typeof DeviceOrientationEvent === "undefined") return;
+  const listen = () => {
+    compassOn = true;
+    const on = e => {
+      const h = e.webkitCompassHeading ?? (e.absolute && e.alpha != null ? (360 - e.alpha) % 360 : null);
+      if (h == null) return;
+      compass = h;
+      if (leafMap && leafMap._me) setMeHeading(leafMap._me[1], h);
+    };
+    addEventListener("deviceorientationabsolute", on);
+    addEventListener("deviceorientation", on);
+  };
+  // iPhones ask first, and only straight after a tap
+  if (typeof DeviceOrientationEvent.requestPermission === "function")
+    DeviceOrientationEvent.requestPermission().then(s => { if (s === "granted") listen(); }).catch(() => {});
+  else listen();
+}
+const meMarker = ll => L.marker(ll, { interactive: false, zIndexOffset: 1000, icon: L.divIcon({ className: "me-wrap", iconSize: [64, 64],
+  html: '<div class="me-dot"><div class="me-beam"></div><div class="me-core"></div></div>' }) });
+function setMeHeading(marker, h) {
+  const beam = marker.getElement() && marker.getElement().querySelector(".me-beam");
+  if (!beam) return;
+  beam.style.opacity = h == null ? 0 : 1;
+  if (h != null) beam.style.transform = `rotate(${h}deg)`;
+}
+
+// Which of your trips a match came from (your commute, a one-off trip, or the trip on screen)
+const tripOf = name => [state, state.commute, state.waveTrip[name]].filter(Boolean)
+  .find(t => { const { out, outsideWindow } = findMatches(t); return [...out, ...outsideWindow].some(m => m.p.n === name); });
+
+// The route as one line of points, cut into steps: walk, ride, change, walk
+function buildNav(trip, withName) {
+  const r = myRoute(trip);
+  if (!r) return null;
+  const pts = [], steps = [];
+  const add = (xy, info = {}) => { const last = pts[pts.length - 1]; pts.push({ xy, d: last ? last.d + metres(last.xy, xy) : 0, ...info }); return pts[pts.length - 1].d; };
+  add(placeXY(trip.from), { name: placeName(trip.from) });
+  r.legs.forEach((leg, k) => {
+    const info = lineInfo(leg.line), here = pts[pts.length - 1], first = posOf(leg.line, leg.idx[0]);
+    const gap = metres(here.xy, first), stop = nameOf(leg.line, leg.idx[0]), ride = info.bus ? "bus " + info.short : "the " + info.short;
+    const d0 = here.d, d1 = add(first, { name: stop, line: leg.line });
+    if (k > 0 || gap > NAV_NEAR_M) steps.push({ kind: "walk", d0, d1, xy: first, min: k ? Math.max(3, walkMin(gap)) : walkMin(gap),
+      text: k ? (gap < 60 ? `Change to ${ride} at ${stop}` : `Walk to ${stop} for ${ride}`) : `Walk to ${stop}${info.bus ? " bus stop" : ""}`,
+      sub: info.bus ? `Bus stop ${codeOf(leg.line, leg.idx[0])}` : `${codeOf(leg.line, leg.idx[0])} · ${info.name}` });
+    leg.idx.slice(1).forEach(i => add(posOf(leg.line, i), { name: nameOf(leg.line, i), line: leg.line }));
+    const end = nameOf(leg.line, leg.idx[leg.idx.length - 1]);
+    steps.push({ kind: "ride", line: leg.line, d0: d1, d1: pts[pts.length - 1].d, xy: pts[pts.length - 1].xy, stops: leg.idx.length - 1,
+      min: leg.times[leg.times.length - 1] - leg.times[0], end,
+      board: `${info.bus ? "Catch bus " + info.short : "Take the " + info.short} towards ${towards(leg)}`, text: `Get off at ${end}` });
+  });
+  const last = pts[pts.length - 1], dest = placeXY(trip.to), gap = metres(last.xy, dest);
+  if (gap > NAV_NEAR_M) {
+    const d0 = last.d, d1 = add(dest, { name: placeName(trip.to) });
+    steps.push({ kind: "walk", d0, d1, xy: dest, min: walkMin(gap), text: `Walk to ${placeName(trip.to)}`, sub: isLoc(trip.to) ? locOf(trip.to).address || "" : "" });
+  }
+  const nv = { trip, r, pts, steps, total: pts[pts.length - 1].d, prog: 0, pos: pts[0].xy, heading: null, sim: true,
+    simStep: 0, simT: 0, phase: "go", follow: true, withName, started: Date.now(), timers: [] };
+  if (withName) {
+    const m = findPerson(withName), o = m.o, lastSeg = o.segs[o.segs.length - 1];
+    const meet = pts.findIndex(x => x.line === o.line && x.name === o.start);
+    const part = pts.findIndex((x, i) => i > meet && x.line === lastSeg.line && x.name === o.end);
+    Object.assign(nv, { p: m.p, o, meetD: pts[Math.max(0, meet)].d, partD: part > 0 ? pts[part].d : nv.total, meetXY: pts[Math.max(0, meet)].xy });
+  }
+  return nv;
+}
+function pointAt(nv, d) {
+  const pts = nv.pts;
+  for (let k = 0; k < pts.length - 1; k++) {
+    const a = pts[k], b = pts[k + 1];
+    if (d <= b.d || k === pts.length - 2) {
+      const t = b.d > a.d ? Math.max(0, Math.min(1, (d - a.d) / (b.d - a.d))) : 1;
+      return { xy: [a.xy[0] + (b.xy[0] - a.xy[0]) * t, a.xy[1] + (b.xy[1] - a.xy[1]) * t], heading: b.d > a.d ? bearing(a.xy, b.xy) : null };
+    }
+  }
+  return { xy: pts[0].xy, heading: null };
+}
+// Where along the route a GPS fix is: the closest point ahead of you (never jumping far back)
+function snapToRoute(nv, xy) {
+  let best = null;
+  for (let k = 0; k < nv.pts.length - 1; k++) {
+    const a = nv.pts[k], b = nv.pts[k + 1], dx = b.xy[0] - a.xy[0], dy = b.xy[1] - a.xy[1], len = dx * dx + dy * dy;
+    const t = len ? Math.max(0, Math.min(1, ((xy[0] - a.xy[0]) * dx + (xy[1] - a.xy[1]) * dy) / len)) : 0;
+    const d = a.d + (b.d - a.d) * t, off = metres([a.xy[0] + dx * t, a.xy[1] + dy * t], xy);
+    if (d < nv.prog - 150) continue;
+    if (!best || off < best.off) best = { d, off };
+  }
+  return best;
+}
+const stepAt = nv => { if (nv.sim) return nv.simStep; const i = nv.steps.findIndex(x => nv.prog < x.d1 - (x.kind === "walk" ? 25 : 1)); return i < 0 ? nv.steps.length : i; };
+const navLater = (nv, ms, f) => nv.timers.push(setTimeout(() => { if (state.navi === nv) f(); }, ms));
+// The other person's side, in this demo
+function theySay(nv, text) { (state.chats[nv.withName] ||= []).push({ me: false, text, at: sgNow() }); updateNavUI(); }
+const NAV_REPLY = { "I'm here": "Great, coming over!", "I'm on my way": "Same, see you soon", "Running late, 5 min": "No worries, I'll wait",
+  "Which carriage are you in?": "", "I see you!": "Haha hi! Coming over", "Can't make it today": "Ah ok, another day then!" };
+const meetWhere = nv => isBus(nv.o.line) ? state.seat.toLowerCase() : `carriage ${Math.min(state.car, lineInfo(nv.o.line).cars)}`;
+
+// Show a phone notification when the app is installed and allowed to; always show it in the app too
+function notify(title, body) {
+  toast(body);
+  try {
+    if (window.Notification && Notification.permission === "granted" && navigator.serviceWorker)
+      navigator.serviceWorker.ready.then(reg => reg.showNotification(title, { body, icon: "icons/icon-192.png", tag: "carriage-ride" }));
+  } catch (e) {}
+}
+
+function startNav(trip, withName) {
+  const nv = buildNav(trip, withName);
+  if (!nv) { toast("Pick a start and a destination first."); return; }
+  stopNav();
+  state.navi = nv;
+  startCompass();
+  try { if (withName && window.Notification && Notification.permission === "default") Notification.requestPermission(); } catch (e) {}
+  // Real location on the website; if you're nowhere near the route, a demo walk instead
+  if (navigator.geolocation && onWebsite) {
+    let checked = false;
+    nv.sim = false; nv.finding = true;
+    navWatch = navigator.geolocation.watchPosition(pos => {
+      const xy = xyOfLL(pos.coords.latitude, pos.coords.longitude), hit = snapToRoute(nv, xy);
+      if (!checked) { checked = true; nv.finding = false;
+        if (!hit || hit.off > 1500) { nv.sim = true; nv.away = true; toast("You're not on this route right now, so here's a demo of it."); return; }
+      }
+      nv.lastFix = { xy, acc: pos.coords.accuracy };
+      gpsHeading = Number.isFinite(pos.coords.heading) && pos.coords.speed > 0.5 ? pos.coords.heading : gpsHeading;
+      if (!nv.sim) { nv.pos = xy; if (hit) nv.prog = Math.max(nv.prog, hit.d); }
+    }, () => { if (!checked) { checked = true; nv.finding = false; nv.sim = true; nv.away = true; } }, { enableHighAccuracy: true, timeout: 20000 });
+  } else nv.away = true;
+  if (withName) navLater(nv, 3500, () => { if (nv.phase === "go") theySay(nv, `On my way! See you at ${nv.o.start}`); });
+  navTimer = setInterval(() => navTick(nv), 200);
+  go(30);
+}
+function stopNav() {
+  clearInterval(navTimer); navTimer = null;
+  if (navWatch !== null && navigator.geolocation) navigator.geolocation.clearWatch(navWatch);
+  navWatch = null;
+  if (state.navi) state.navi.timers.forEach(clearTimeout);
+  if (navMap) { navMap.remove(); navMap = null; navMe = null; }
+  state.navi = null; navPanelKey = "";
+}
+
+function navTick(nv) {
+  if (state.navi !== nv || state.step !== 30) return;
+  const waiting = nv.phase === "meeting" || nv.phase === "confirming";
+  if (nv.sim && !waiting && nv.phase !== "arrived") {
+    // Demo speed: a walk takes a few seconds, each stop about 2 seconds
+    const st = nv.steps[nv.simStep];
+    if (st) {
+      const len = st.d1 - st.d0, secs = st.kind === "ride" ? 1.8 * st.stops + 1 : Math.max(2, Math.min(12, len / 35));
+      nv.simT += 0.2;
+      nv.prog = st.d0 + len * Math.min(1, nv.simT / secs);
+      if (nv.simT >= secs) { nv.simStep++; nv.simT = 0; }
+    } else nv.prog = nv.total;
+    const at = pointAt(nv, nv.prog);
+    nv.pos = at.xy;
+    if (at.heading != null) nv.heading = at.heading;
+  } else if (!nv.sim && !nv.finding) nv.heading = compass ?? gpsHeading;
+  if (nv.finding) { updateNavUI(); return; }
+  // The meet-up: arriving where you meet, confirming, riding together, going separate ways
+  if (nv.withName) {
+    if (nv.phase === "go" && nv.prog >= nv.meetD - (nv.sim ? 0.5 : NAV_NEAR_M)) {
+      nv.phase = "meeting"; nv.prog = Math.max(nv.prog, nv.meetD);
+      notify("You're at " + nv.o.start, `${nv.p.n} is meeting you here, in ${meetWhere(nv)}.`);
+      navLater(nv, 2500, () => theySay(nv, `I'm here, ${meetWhere(nv)}. ${extra(nv.p).spot}`));
+    }
+    if (nv.phase === "together" && nv.prog >= nv.partD - 1) {
+      nv.phase = "parted";
+      navLater(nv, 1200, () => theySay(nv, "That was fun, see you around!"));
+      notify("How was your ride?", `Your ride with ${nv.p.n} is over. Tap to tell us how it went.`);
+    }
+  }
+  if (nv.prog >= nv.total - (nv.sim ? 1 : NAV_NEAR_M) && (nv.sim ? nv.simStep >= nv.steps.length : true) && nv.phase !== "arrived" && !waiting) {
+    if (nv.withName && nv.phase === "together") { nv.phase = "parted"; notify("How was your ride?", `Your ride with ${nv.p.n} is over. Tap to tell us how it went.`); }
+    nv.arrivedFrom = nv.phase; nv.phase = "arrived";
+  }
+  updateNavUI();
+}
+
+function navTop(nv) {
+  if (nv.phase === "arrived") return `<div class="nav-ico done">✓</div><div><b class="nav-big">You've arrived</b><span>${esc(placeName(nv.trip.to))}</span></div>`;
+  if (nv.phase === "meeting" || nv.phase === "confirming")
+    return `<div class="nav-ico meet">${esc(nv.p.n[0])}</div><div><b class="nav-big">Meet ${esc(nv.p.n)} here</b><span>${esc(nv.o.start)} · ${esc(meetWhere(nv))}</span></div>`;
+  const i = stepAt(nv), st = nv.steps[Math.min(i, nv.steps.length - 1)], next = nv.steps[i + 1];
+  const then = next ? `<span class="nav-then">Then: ${esc(next.kind === "ride" ? next.board : next.text)}</span>` : "";
+  if (st.kind === "ride") {
+    const left = nv.pts.filter(x => x.d > Math.max(nv.prog, st.d0) + 1 && x.d <= st.d1 + 0.01).length;
+    const boarding = nv.prog - st.d0 < 30 && left === st.stops;
+    return `<div class="nav-ico">${pill(st.line)}</div><div><b class="nav-big">${esc(boarding ? st.board : st.text)}</b>
+      <span>${boarding ? `${st.stops} stop${st.stops > 1 ? "s" : ""} to ${esc(st.end)}` : left > 1 ? `${left} stops left` : left === 1 ? "Next stop: get off" : "Get off here"}</span>${then}</div>`;
+  }
+  // Walking: an arrow pointing at where to go, turned to the way you're facing when the compass knows it
+  const want = bearing(nv.pos, st.xy), left = nv.sim ? st.d1 - nv.prog : metres(nv.pos, st.xy), face = nv.heading;
+  const turn = face == null ? want : want - face;
+  return `<div class="nav-ico arrow"><span style="transform:rotate(${Math.round(turn)}deg)">${ARROW}</span></div>
+    <div><b class="nav-big">${distText(left)}</b><span class="nav-what">${esc(st.text)}</span>
+    <span class="nav-then">${face == null ? `Head ${COMPASS(want)}` : Math.abs(((turn % 360) + 540) % 360 - 180) < 25 ? "Straight ahead" : `Turn ${(((turn % 360) + 360) % 360) < 180 ? "right" : "left"}`}${st.sub ? " · " + esc(st.sub) : ""}</span>${next ? `<span class="nav-then">Then: ${esc(next.kind === "ride" ? next.board : next.text)}</span>` : ""}</div>`;
+}
+function navPanel(nv) {
+  const n = nv.withName, msgs = n ? (state.chats[n] || []).slice(-3) : [];
+  const thread = msgs.length ? `<div class="nav-thread">${msgs.map(x => `<p class="${x.me ? "me" : ""}"><b>${x.me ? "You" : esc(n)}</b> ${esc(x.text)}</p>`).join("")}</div>` : "";
+  const chips = list => `<div class="chips nav-chips">${list.map(t => `<button class="chip" data-navmsg="${esc(t)}">${esc(t)}</button>`).join("")}</div>`;
+  const mode = `<p class="small muted nav-mode">${nv.finding ? "Finding your location…" : nv.sim ? (nv.away ? "Demo: you're not on this route, so it moves you along it" : "Demo: moving you along the route") : "Following your phone's location"}${!nv.follow ? ` · <button class="back link" data-navcenter>Re-centre</button>` : ""}</p>`;
+  const eta = nv.phase === "arrived" ? "" : `<div class="nav-eta"><div><b id="nav-rem">–</b><span>min</span></div><div><b id="nav-arr">–</b><span>arrival</span></div><div><b id="nav-left">–</b><span>to go</span></div>
+    <button class="btn ghost small-btn" data-navend>End</button></div>`;
+  let meet = "";
+  if (n) {
+    const p = nv.p;
+    if (nv.phase === "go") meet = `<div class="nav-meet"><span class="label">Meeting ${esc(p.n)}</span>
+      <p>${esc(nv.o.start)} around <b>${fmt(nv.o.at)}</b>, ${esc(meetWhere(nv))}. They'll look for: ${esc(state.spot)}</p>${thread}
+      ${chips(["I'm on my way", "Running late, 5 min", "Can't make it today"])}</div>`;
+    else if (nv.phase === "meeting") meet = `<div class="nav-meet"><span class="label">Look for ${esc(p.n)}</span>
+      <p><b>How to spot them:</b> ${esc(extra(p).spot)}</p>${thread}
+      ${chips(["I'm here", "Which carriage are you in?", "I see you!"])}
+      <button class="btn" data-navmet>We've met</button>
+      <p class="small muted">You both tap this when you find each other. It starts the ride together.</p></div>`;
+    else if (nv.phase === "confirming") meet = `<div class="nav-meet"><span class="label">Almost there</span><p>Waiting for ${esc(p.n)} to tap "We've met" too…</p></div>`;
+    else if (nv.phase === "together") {
+      const left = nv.pts.filter(x => x.d > nv.prog + 1 && x.d <= nv.partD + 0.01).length;
+      const tip = shared(p).length ? `You both like ${shared(p)[0]}. Ask how they got into it.` : `Ask about "${p.bio.split(" · ").pop()}".`;
+      meet = `<div class="nav-meet together"><span class="label">Riding with ${esc(p.n)}</span>
+        <p><b>${left} stop${left === 1 ? "" : "s"}</b> together left, to ${esc(nv.o.end)}. ${esc(tip)}</p>
+        <p class="small muted">Carriage ends the ride by itself when one of you gets off.</p>
+        <button class="back link" data-navsplit>We've gone separate ways</button></div>`;
+    } else if (nv.phase === "parted" || nv.phase === "arrived" && nv.arrivedFrom !== "go") meet = `<div class="nav-meet together"><span class="label">Ride over</span>
+      <p>How was your ride with ${esc(p.n)}? It's private: they never see your answer.</p>${thread}
+      <button class="btn" data-navrate>Tell us how it went</button></div>`;
+  }
+  const done = nv.phase === "arrived" ? `<button class="btn ${n ? "ghost" : ""}" data-navdone>Done</button>` : "";
+  return `${eta}${meet}${done}${mode}`;
+}
+const shared = p => p.i.filter(x => state.interests.has(x));
+function remainingMin(nv) {
+  return nv.steps.reduce((a, st) => a + (nv.prog >= st.d1 ? 0 : nv.prog <= st.d0 ? st.min : st.min * (st.d1 - nv.prog) / ((st.d1 - st.d0) || 1)), 0);
+}
+function updateNavUI() {
+  const nv = state.navi;
+  if (!nv || state.step !== 30) return;
+  const top = document.getElementById("nav-top"), panel = document.getElementById("nav-panel");
+  if (!top || !panel) return;
+  top.innerHTML = navTop(nv);
+  // The panel has buttons: only rebuild it when what it shows changes, so taps aren't lost
+  const html = navPanel(nv);
+  if (html !== navPanelKey) { panel.innerHTML = html; navPanelKey = html; }
+  const rem = Math.max(0, Math.round(remainingMin(nv))), set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set("nav-rem", rem); set("nav-arr", fmt((toMin(sgNow()) + rem) % 1440)); set("nav-left", distText(Math.max(0, nv.total - nv.prog)));
+  const ll = toLL(nv.pos), h = nv.heading;
+  if (navMap && navMe) {
+    navMe.setLatLng(ll); setMeHeading(navMe, h);
+    if (nv.follow) {
+      const st = nv.steps[stepAt(nv)], z = st && st.kind === "ride" ? 15 : 17.5;
+      if (Math.abs(navMap.getZoom() - z) > 0.4) navMap.setView(ll, z); else navMap.panTo(ll, { animate: false });
+    }
+  } else {
+    // The drawn map (previews): a dot on it
+    const svg = document.querySelector(".navmap svg");
+    if (svg) {
+      let dot = svg.querySelector("#navdot");
+      const u = svg.viewBox.baseVal.width / 360;
+      if (!dot) { dot = document.createElementNS("http://www.w3.org/2000/svg", "circle"); dot.id = "navdot"; dot.setAttribute("class", "nav-dot"); svg.appendChild(dot); }
+      dot.setAttribute("cx", nv.pos[0]); dot.setAttribute("cy", nv.pos[1]); dot.setAttribute("r", 6 * u); dot.setAttribute("stroke-width", 3 * u);
+    }
+  }
+}
+function mountNav() {
+  const nv = state.navi;
+  navPanelKey = "";
+  if (navMap) { navMap.remove(); navMap = null; navMe = null; }
+  if (detailedMap() && document.getElementById("navmap")) {
+    const m = L.map("navmap", { zoomControl: false, minZoom: 11, maxZoom: 19, maxBounds: [[1.13, 103.55], [1.50, 104.15]], zoomSnap: 0.5, attributionControl: false });
+    drawRouteOn(m, nv.r, nv.trip, true);
+    if (nv.withName) L.marker(toLL(nv.meetXY), { icon: L.divIcon({ className: "map-pin meet", iconSize: [18, 18] }) })
+      .bindTooltip("Meet " + esc(nv.p.n), { permanent: true, direction: "right", offset: [10, 0], className: "map-label-tip" }).addTo(m);
+    navMe = meMarker(toLL(nv.pos)).addTo(m);
+    m.setView(toLL(nv.pos), 17.5);
+    m.on("dragstart", () => { nv.follow = false; updateNavUI(); });
+    navMap = m;
+  }
+  updateNavUI();
 }
 
 const PIN_ICON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 15s5-5.2 5-9A5 5 0 0 0 3 6c0 3.8 5 9 5 9Zm0-7a2 2 0 1 1 0-4 2 2 0 0 1 0 4Z"/></svg>';
@@ -1293,7 +1636,8 @@ const screens = {
       <div class="choice">
         <button class="btn" data-meet>Meet someone on this ride</button>
         <p class="small muted center">${riders ? `${riders} ${riders === 1 ? "person" : "people"} on this ride ${riders === 1 ? "is" : "are"} on Carriage right now.` : "Nobody on this ride yet. Try another time."}</p>
-        <a class="btn ghost" href="${gmaps(placeQuery(state.nav.from), placeQuery(state.nav.to))}" target="_blank" rel="noopener">Just navigate, in Google Maps</a>
+        <button class="btn ghost" data-startnav>Just navigate</button>
+        <a class="back link center" href="${gmaps(placeQuery(state.nav.from), placeQuery(state.nav.to))}" target="_blank" rel="noopener">Open in Google Maps instead</a>
       </div>
       <details class="stops"><summary>See every stop</summary>${routeDiagram(r)}</details>`}
     </main>`;
@@ -1468,8 +1812,8 @@ const screens = {
           <button class="back" data-chat="${esc(p.n)}" style="color:var(--accent);font-weight:600;text-align:left">See your messages with ${esc(p.n)} ›</button>
           <span class="small muted">No chat before you meet. Save the talking for the ride.</span>
         </div>
-        <a class="btn ghost" href="${gmaps("", o.startQ)}" target="_blank" rel="noopener">Directions to ${esc(o.start)}</a>
-        <button class="btn" data-rideday>Ride day: check live ${isBus(o.line) ? "bus times" : "train status"}</button>
+        <button class="btn" data-startride>Start the ride: navigate and meet ${esc(p.n)}</button>
+        <button class="btn ghost" data-rideday>Ride day: check live ${isBus(o.line) ? "bus times" : "train status"}</button>
         <button class="btn ghost" data-go="6">Ride's over? Tell us how it went</button>
         <div class="row">
           <button class="btn ghost" data-toast="Plan cancelled. ${esc(p.n)} has been told.">Cancel plan</button>
@@ -2121,9 +2465,12 @@ function tabBar() {
 }
 function render() {
   mapJob = null;
+  if (leafMap && locWatch !== null) { navigator.geolocation.clearWatch(locWatch); locWatch = null; }
   app.innerHTML = `<div class="screen">${screens[state.step]()}</div>${state.step >= 20 ? "" : tabBar()}${state.pick ? pickerOverlay() : ""}`;
   if (mapJob && document.getElementById("lmap")) drawDetailedMap(mapJob);
   else if (leafMap) { leafMap.remove(); leafMap = null; }
+  if (!leafMap && locWatch !== null) { navigator.geolocation.clearWatch(locWatch); locWatch = null; }
+  if (state.step === 30) mountNav(); else if (state.navi) stopNav();
   if (state.pick) document.getElementById("pickq").focus();
 }
 
@@ -2137,6 +2484,27 @@ app.addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
   const d = b.dataset;
   if (d.go !== undefined) { if (Number(d.go) === 4) state.plan = null; go(Number(d.go)); }
+  else if (d.startnav !== undefined) startNav({ ...state.nav });
+  else if (d.startride !== undefined) startNav({ ...(tripOf(state.planFor) || state) }, state.planFor);
+  else if (d.navend !== undefined || d.navdone !== undefined) { const n = state.navi && state.navi.withName; stopNav(); go(n ? 5 : 0); }
+  else if (d.navcenter !== undefined) { state.navi.follow = true; updateNavUI(); }
+  else if (d.navmsg) {
+    const nv = state.navi, reply = NAV_REPLY[d.navmsg];
+    (state.chats[nv.withName] ||= []).push({ me: true, text: d.navmsg, at: sgNow() });
+    updateNavUI();
+    navLater(nv, 1500, () => theySay(nv, reply === "" ? `Carriage ${Math.min(state.car, lineInfo(nv.o.line).cars)}, by the door` : reply || "Ok!"));
+  }
+  else if (d.navmet !== undefined) {
+    const nv = state.navi;
+    nv.phase = "confirming"; updateNavUI();
+    navLater(nv, 1800, () => { nv.phase = "together"; updateNavUI(); toast(`You both confirmed. Enjoy the ride with ${nv.p.n}!`); });
+  }
+  else if (d.navsplit !== undefined) { const nv = state.navi; nv.phase = "parted"; nv.partD = nv.prog; updateNavUI(); notify("How was your ride?", `Your ride with ${nv.p.n} is over. Tap to tell us how it went.`); }
+  else if (d.navrate !== undefined) {
+    state.planFor = state.navi.withName; state.fromMet = false;
+    state.fb = { rate: null, again: null, share: null, ctype: "Telegram", handle: "" };
+    stopNav(); go(6);
+  }
   else if (d.interest) { state.interests.has(d.interest) ? state.interests.delete(d.interest) : state.interests.add(d.interest); render(); }
   else if (d.mode) { state.mode = d.mode; render(); }
   else if (d.wave) {
@@ -2284,6 +2652,15 @@ app.addEventListener("change", e => {
 
 const TAB_LINKS = { rides: 4, waves: 4, chats: 12, met: 8, me: 10 };
 screens[9] = screens[4];   // the old Waves page now lives at the top of Rides
+screens[30] = function () {
+  const nv = state.navi;
+  if (!nv) return screens[0]();
+  return `<div class="navi">
+    ${detailedMap() ? `<div id="navmap" class="navmap" aria-label="Map following you"></div>` : `<div class="navmap svg">${routeMap(nv.r, nv.trip)}</div>`}
+    <div class="nav-top" id="nav-top" aria-live="polite"></div>
+    <div class="nav-panel" id="nav-panel"></div>
+  </div>`;
+};
 if (!state.isNew && TAB_LINKS[location.hash.slice(1)] !== undefined) state.step = TAB_LINKS[location.hash.slice(1)];
 if (state.isNew) {
   Object.assign(state, { step: 20, interests: new Set(), waves: {}, incoming: {}, sentWhen: {}, friends: {}, chats: {}, unread: {} });

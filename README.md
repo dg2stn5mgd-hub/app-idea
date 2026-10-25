@@ -24,8 +24,18 @@ Waves on a **one-off trip** are remembered with that trip: when you both wave, t
 Rides and Waves use your saved **daily commute**, so you never have to search a destination to check them. A one-off trip searched on the Map can be shown on Rides too, with a button to switch back to your commute.
 
 **The Map tab works like a maps app.** You pick where you're going (or tap **Home → School**, which says **Home → Work** if you picked Working when signing up), start from **your current location** (GPS) or anywhere else, tap **Now** to leave now, and see your route. For a place that isn't a station or stop, the route includes the walk to and from whichever nearby station or bus stop makes the whole trip fastest (stations up to 1 km away, bus stops up to 500 m). Then you choose:
-- **Just navigate**: opens Google Maps with the route filled in. Google does the turn-by-turn directions.
+- **Just navigate**: Carriage's own full-screen navigation (below). "Open in Google Maps instead" hands the trip to Google Maps.
 - **Meet someone on this ride**: Carriage's own feature, described below.
+
+**Navigation mode** fills the screen so you only see the next step: "280 m, walk to Tanjong Rhu", "Take the TEL towards Woodlands North", "2 stops left", "Get off at Katong Park". A blue dot shows where you are, with a beam showing which way you're facing (from the phone's compass), and the arrow at the top turns with you. You can see the minutes left, your arrival time and the distance to go. If you're not on the route (for example when showing the app to someone at home), a demo moves you along it instead. Walks are drawn as straight lines, since the app doesn't know the streets yet: real walking directions would come from OneMap's routing service.
+
+**Starting a planned ride** ("Start the ride" on the ride ticket) adds the meet-up on top:
+1. **On the way**: where and when you're meeting, and quick messages ("I'm on my way", "Running late, 5 min", "Can't make it today"). Still no free chat before you meet.
+2. **At the meeting stop**: a notification, "Meet Yu Ting here, carriage 3", how to spot them, and quick messages like "I'm here", "Which carriage are you in?" and "I see you!".
+3. **"We've met"**: you both tap it when you find each other, which starts the ride together. Then it counts down the stops you have together and suggests a conversation starter.
+4. **After the ride**: when one of you gets off, the app ends the ride by itself and sends a notification asking how it went, which opens the private feedback. (In the real app, it would also notice when your two phones are apart for a minute. In the prototype, it's when you reach the stop where your shared part ends, or you tap "We've gone separate ways".)
+
+Notifications work when the app is on the home screen and allowed to send them; otherwise the message shows inside the app.
 
 You can't add features inside Google Maps itself (Google doesn't allow it), so Carriage has its own maps-style front screen and hands off to Google Maps for directions. It doesn't try to compete with Google on navigation. The people are the point.
 

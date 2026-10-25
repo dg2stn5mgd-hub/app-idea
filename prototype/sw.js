@@ -1,7 +1,7 @@
 // Keeps a copy of Carriage on the phone so it opens fast, even with weak signal on the MRT.
 // Pages: try the network for 3 seconds, then fall back to the saved copy.
 // Live bus times (another website) are never saved: they always come fresh.
-const CACHE = "carriage-v2";
+const CACHE = "carriage-v3";
 const SHELL = ["/", "/new-user", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/apple-touch-icon.png",
   "/vendor/leaflet/leaflet.js", "/vendor/leaflet/leaflet.css"];
 
@@ -26,4 +26,10 @@ self.addEventListener("fetch", e => {
     const slow = new Promise(r => setTimeout(() => r(saved), 3000));
     return Promise.race([fresh.catch(() => saved), slow]);
   })());
+});
+
+// Tapping a ride notification ("How was your ride?") opens the app
+self.addEventListener("notificationclick", e => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: "window" }).then(list => list.length ? list[0].focus() : self.clients.openWindow("/")));
 });
