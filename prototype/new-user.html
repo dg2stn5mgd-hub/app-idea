@@ -1101,8 +1101,10 @@ function walkText(t) {
   const dir = (t.compass || "").replace(" ", "-");
   if (/arriv|destination/.test(turn) || /arrived/i.test(t.text || "")) return "Arrive";
   if (!turn && !road && !dir) return t.text;
-  if (turn === "head" || turn === "depart") return `Head ${dir || "off"}${road ? " on " + road : ""}`;
-  if (/left|right|u-?turn/.test(turn)) return `${/slight|sharp|keep/.test(turn) ? turn[0].toUpperCase() + turn.slice(1) : "Turn " + turn}${road ? " onto " + road : ""}`;
+  // OneMap's own words are last in its list ("Head North", "Turn Right"); the first instruction says "Head"
+  const said = String((t.raw || []).filter(x => typeof x === "string").pop() || t.text || "").toLowerCase();
+  if (turn === "head" || turn === "depart" || /^head/.test(said)) return `Head ${dir || "off"}${road ? " on " + road : ""}`;
+  if (/left|right|u-?turn/.test(turn)) return `${/slight|sharp|keep/.test(turn) ? turn[0].toUpperCase() + turn.slice(1) : "Turn " + turn}${road ? " onto " + road : dir ? ", heading " + dir : ""}`;
   if (road) return `Continue on ${road}`;
   return dir ? `Continue ${dir}` : t.text;
 }
