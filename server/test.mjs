@@ -125,5 +125,8 @@ r = await worker.fetch(new Request("https://live.example.com/walk?from=abc&to=1.
 assert.equal(r.status, 400);
 r = await worker.fetch(new Request("https://live.example.com/walk?from=1.2995,103.8823&to=1.2993,103.8746"), {}, {});
 assert.equal(r.status, 501); assert.match((await r.json()).error, /ONEMAP_EMAIL/);
+globalThis.fetch = async () => new Response(JSON.stringify({ error: "Invalid email or password" }), { status: 400 });
+r = await worker.fetch(new Request("https://live.example.com/check"), { LTA_ACCOUNT_KEY: "k", ONEMAP_EMAIL: "a@b.c", ONEMAP_PASSWORD: "x" }, {});
+assert.match((await r.json()).walkingDirections, /answered 400: Invalid email or password/, "shows OneMap's reason");
 
 console.log("All server checks passed.");

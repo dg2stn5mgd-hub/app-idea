@@ -71,9 +71,12 @@ let onemapPass = null;                       // { token, expires } kept while th
 async function onemapToken(env, fresh) {
   if (!fresh && onemapPass && onemapPass.expires - Date.now() > 3600000) return onemapPass.token;
   const res = await fetch(ONEMAP_LOGIN, { method: "POST", headers: { "content-type": "application/json" },
-    body: JSON.stringify({ email: String(env.ONEMAP_EMAIL).trim(), password: String(env.ONEMAP_PASSWORD) }) });
+    body: JSON.stringify({ email: String(env.ONEMAP_EMAIL).trim(), password: String(env.ONEMAP_PASSWORD).trim() }) });
   const body = await res.json().catch(() => ({}));
-  if (!res.ok || !body.access_token) throw new Error(`OneMap didn't accept the login (answered ${res.status}). Check ONEMAP_EMAIL and ONEMAP_PASSWORD.`);
+  if (!res.ok || !body.access_token) {
+    const why = body.error || body.message || body.status_message || "";   // OneMap's own reason, e.g. a wrong password
+    throw new Error(`OneMap didn't accept the login (answered ${res.status}${why ? ": " + why : ""}). Check ONEMAP_EMAIL and ONEMAP_PASSWORD.`);
+  }
   const exp = Number(body.expiry_timestamp);
   onemapPass = { token: body.access_token, expires: exp > 1e12 ? exp : exp > 0 ? exp * 1000 : Date.now() + 2 * 86400000 };
   return onemapPass.token;
