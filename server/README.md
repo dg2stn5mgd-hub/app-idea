@@ -53,6 +53,18 @@ Put your worker address between the quotes, then run `python3 prototype/make_new
 
 **Note:** the claude.ai prototype links are locked down and can't fetch data from other websites, so they always show sample times. Live times work when the app runs from its own website or from the file on your computer.
 
+## Optional: walking directions along the streets (OneMap)
+
+Without this, walks in navigation are straight lines. With it, they follow the streets, with turns like "Turn right onto Fort Road". Only you need an account: the server uses it for everyone.
+
+1. Go to the OneMap API page, https://www.onemap.gov.sg/apidocs/, and click **Register**. Enter your email, open the email OneMap sends you, and choose a password. It's free.
+2. In Cloudflare, open the `carriage-live` worker, then **Settings**, then **Variables and Secrets**. Add two, both of type **Secret**:
+   - `ONEMAP_EMAIL`: the email you registered with
+   - `ONEMAP_PASSWORD`: your OneMap password
+3. Click **Deploy**, then open `/check`. It should say `"walkingDirections": "working: OneMap accepted the login"`.
+
+The server logs in to OneMap by itself and logs in again whenever the pass runs out (every 3 days). Walks it has worked out are reused for a week.
+
 ## Optional: only let your app use the server
 
 Once the app has its own website, add another variable called `ALLOWED_ORIGIN` with that site's address (for example `https://carriage.example.com`). Then only your app can use the server.
@@ -65,6 +77,7 @@ Once the app has its own website, add another variable called `ALLOWED_ORIGIN` w
 | `/arrivals?stop=92071` | The next buses of every service at that stop |
 | `/train-alerts` | Whether MRT lines are running normally, and any delay messages |
 | `/search?q=dunman%20high%20school` | Places matching a school, building, address or postal code, with where they are (from OneMap, Singapore's official map; no key needed) |
+| `/walk?from=1.2995,103.8823&to=1.2993,103.8746` | Walking directions between two points: the route's shape and each turn (needs the OneMap secrets) |
 | `/check` | Whether your saved key looks right and LTA accepts it (never shows the key) |
 
 Each bus has: the arrival time, minutes away, whether it's **tracked by GPS** or just from the timetable, how full it is (seats available, standing available, limited standing), and whether it's single-deck, double-deck or bendy.

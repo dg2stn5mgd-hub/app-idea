@@ -1013,6 +1013,31 @@ function searchPlaces(q) {
   return [...new Set([...mine, ...stations, ...byName.slice(0, 20), ...byRoad.slice(0, 10)])];
 }
 
+// ---------- Walking directions along the streets (OneMap, through the live-data server) ----------
+// Until they arrive (or in previews), walks are straight dotted lines.
+const WALKS = {}, WALK_JOBS = {};          // "lat,lng>lat,lng" -> { pts: [[lat, lng]], steps: [{ text, lat, lng }] }, or null
+let walksOff = false;
+const walkKey = (a, b) => [a, b].map(ll => ll.map(x => x.toFixed(5)).join(",")).join(">");
+function fetchWalk(a, b) {
+  const key = walkKey(a, b);
+  if (key in WALKS) return Promise.resolve(WALKS[key]);
+  if (WALK_JOBS[key]) return WALK_JOBS[key];
+  if (walksOff || !onlineSearchable()) return Promise.resolve(null);
+  const at = ll => ll.map(x => x.toFixed(6)).join(",");
+  return WALK_JOBS[key] = getLive(`/walk?from=${at(a)}&to=${at(b)}`)
+    .then(w => WALKS[key] = w.points && w.points.length > 1 ? { pts: [a, ...w.points, b], steps: w.steps || [] } : null)
+    .catch(e => { if (/set up/.test(e.message)) walksOff = true; return WALKS[key] = null; })
+    .finally(() => { delete WALK_JOBS[key]; });
+}
+// The walks in a trip: to the first stop, between changes, and from the last stop
+function walkPairs(trip, r) {
+  const out = [], push = (a, b) => { if (metres(a, b) > 60) out.push([toLL(a), toLL(b)]); };
+  let here = placeXY(trip.from);
+  r.legs.forEach(leg => { push(here, posOf(leg.line, leg.idx[0])); here = posOf(leg.line, leg.idx[leg.idx.length - 1]); });
+  push(here, placeXY(trip.to));
+  return out;
+}
+
 // ---------- Detailed map: OneMap streets and buildings, zoom and pan (website only) ----------
 // The claude.ai preview can't load map pictures from other sites, so it keeps the drawn map below.
 const detailedMap = () => !!window.L && window.top === window;
@@ -1064,7 +1089,11 @@ function addTiles(m) {
 function drawRouteOn(m, r, trip, following) {
   addTiles(m);
   const all = [], dash = { color: "#1c1f23", weight: 3, opacity: .75, dashArray: "1 8", lineCap: "round" };
-  const walkTo = (a, b) => { if (a[0] !== b[0] || a[1] !== b[1]) L.polyline([a, b], dash).addTo(m); };
+  const walkTo = (a, b) => {
+    if (a[0] === b[0] && a[1] === b[1]) return;
+    const key = walkKey(a, b), line = L.polyline(WALKS[key] ? WALKS[key].pts : [a, b], dash).addTo(m);
+    if (!(key in WALKS) && metres(xyOfLL(...a), xyOfLL(...b)) > 60) fetchWalk(a, b).then(w => { if (w) line.setLatLngs(w.pts); });
+  };
   r.legs.forEach((leg, k) => {
     const color = lineInfo(leg.line).color, pts = leg.idx.map(i => toLL(posOf(leg.line, i)));
     all.push(...pts);
@@ -1217,12 +1246,24 @@ function buildNav(trip, withName) {
   if (!r) return null;
   const pts = [], steps = [];
   const add = (xy, info = {}) => { const last = pts[pts.length - 1]; pts.push({ xy, d: last ? last.d + metres(last.xy, xy) : 0, ...info }); return pts[pts.length - 1].d; };
+  // The street route of a walk, if we have it: its points go into the line, and its turns become instructions
+  const streets = (a, b) => {
+    const w = WALKS[walkKey(toLL(a), toLL(b))];
+    if (!w) return null;
+    const from = pts.length;
+    w.pts.slice(1, -1).forEach(ll => add(xyOfLL(ll[0], ll[1])));
+    const mine = pts.slice(from);
+    return mine.length ? w.steps.map(t => {
+      const xy = xyOfLL(t.lat, t.lng);
+      return { text: t.text, d: mine.reduce((best, x) => metres(x.xy, xy) < metres(best.xy, xy) ? x : best).d };
+    }) : null;
+  };
   add(placeXY(trip.from), { name: placeName(trip.from) });
   r.legs.forEach((leg, k) => {
     const info = lineInfo(leg.line), here = pts[pts.length - 1], first = posOf(leg.line, leg.idx[0]);
     const gap = metres(here.xy, first), stop = nameOf(leg.line, leg.idx[0]), ride = info.bus ? "bus " + info.short : "the " + info.short;
-    const d0 = here.d, d1 = add(first, { name: stop, line: leg.line });
-    if (k > 0 || gap > NAV_NEAR_M) steps.push({ kind: "walk", d0, d1, xy: first, min: k ? Math.max(3, walkMin(gap)) : walkMin(gap),
+    const d0 = here.d, turns = gap > 60 ? streets(here.xy, first) : null, d1 = add(first, { name: stop, line: leg.line });
+    if (k > 0 || gap > NAV_NEAR_M) steps.push({ kind: "walk", d0, d1, xy: first, turns, min: k ? Math.max(3, walkMin(gap)) : walkMin(gap),
       text: k ? (gap < 60 ? `Change to ${ride} at ${stop}` : `Walk to ${stop} for ${ride}`) : `Walk to ${stop}${info.bus ? " bus stop" : ""}`,
       sub: info.bus ? `Bus stop ${codeOf(leg.line, leg.idx[0])}` : `${codeOf(leg.line, leg.idx[0])} · ${info.name}` });
     leg.idx.slice(1).forEach(i => add(posOf(leg.line, i), { name: nameOf(leg.line, i), line: leg.line }));
@@ -1233,8 +1274,8 @@ function buildNav(trip, withName) {
   });
   const last = pts[pts.length - 1], dest = placeXY(trip.to), gap = metres(last.xy, dest);
   if (gap > NAV_NEAR_M) {
-    const d0 = last.d, d1 = add(dest, { name: placeName(trip.to) });
-    steps.push({ kind: "walk", d0, d1, xy: dest, min: walkMin(gap), text: `Walk to ${placeName(trip.to)}`, sub: isLoc(trip.to) ? locOf(trip.to).address || "" : "" });
+    const d0 = last.d, turns = gap > 60 ? streets(last.xy, dest) : null, d1 = add(dest, { name: placeName(trip.to) });
+    steps.push({ kind: "walk", d0, d1, xy: dest, turns, min: walkMin(gap), text: `Walk to ${placeName(trip.to)}`, sub: isLoc(trip.to) ? locOf(trip.to).address || "" : "" });
   }
   const nv = { trip, r, pts, steps, total: pts[pts.length - 1].d, prog: 0, pos: pts[0].xy, heading: null, sim: true,
     simStep: 0, simT: 0, phase: "go", follow: true, withName, started: Date.now(), timers: [] };
@@ -1286,13 +1327,26 @@ function notify(title, body) {
   } catch (e) {}
 }
 
+let navStarting = false;
 function startNav(trip, withName) {
-  const nv = buildNav(trip, withName);
-  if (!nv) { toast("Pick a start and a destination first."); return; }
-  stopNav();
-  state.navi = nv;
+  const r = myRoute(trip);
+  if (!r) { toast("Pick a start and a destination first."); return; }
+  // Asked straight after the tap, as phones require
   startCompass();
   try { if (withName && window.Notification && Notification.permission === "default") Notification.requestPermission(); } catch (e) {}
+  if (navStarting) return;
+  const jobs = walkPairs(trip, r).map(([a, b]) => fetchWalk(a, b));
+  if (!jobs.length || walksOff || !onlineSearchable()) return beginNav(trip, withName);
+  navStarting = true;
+  toast("Getting walking directions…");
+  Promise.race([Promise.all(jobs), new Promise(res => setTimeout(res, 4000))])
+    .then(() => { navStarting = false; beginNav(trip, withName); });
+}
+function beginNav(trip, withName) {
+  const nv = buildNav(trip, withName);
+  if (!nv) return;
+  stopNav();
+  state.navi = nv;
   // Real location on the website; if you're nowhere near the route, a demo walk instead
   if (navigator.geolocation && onWebsite) {
     let checked = false;
@@ -1369,9 +1423,16 @@ function navTop(nv) {
     return `<div class="nav-ico">${pill(st.line)}</div><div><b class="nav-big">${esc(boarding ? st.board : st.text)}</b>
       <span>${boarding ? `${st.stops} stop${st.stops > 1 ? "s" : ""} to ${esc(st.end)}` : left > 1 ? `${left} stops left` : left === 1 ? "Next stop: get off" : "Get off here"}</span>${then}</div>`;
   }
-  // Walking: an arrow pointing at where to go, turned to the way you're facing when the compass knows it
-  const want = bearing(nv.pos, st.xy), left = nv.sim ? st.d1 - nv.prog : metres(nv.pos, st.xy), face = nv.heading;
-  const turn = face == null ? want : want - face;
+  // Walking: an arrow pointing at where to go, turned to the way you're facing when the compass knows it.
+  // With street directions, it points along the street and counts down to the next turn.
+  const turns = st.turns || [], nextTurn = turns.find(t => t.d > nv.prog + 8), nowTurn = [...turns].reverse().find(t => t.d <= nv.prog + 8);
+  const aim = turns.length ? pointAt(nv, Math.min(st.d1, nv.prog + 20)).xy : st.xy;
+  const want = bearing(nv.pos, aim), face = nv.heading, turn = face == null ? want : want - face;
+  const left = nextTurn ? nextTurn.d - nv.prog : nv.sim || turns.length ? st.d1 - nv.prog : metres(nv.pos, st.xy);
+  if (turns.length) return `<div class="nav-ico arrow"><span style="transform:rotate(${Math.round(turn)}deg)">${ARROW}</span></div>
+    <div><b class="nav-big">${distText(left)}</b><span class="nav-what">${esc(nextTurn ? nextTurn.text : "Arrive: " + st.text.replace(/^Walk to /, ""))}</span>
+    <span class="nav-then">${nowTurn ? "Now: " + esc(nowTurn.text) : face == null ? `Head ${COMPASS(want)}` : ""}</span>
+    <span class="nav-then">${nextTurn ? esc(st.text) : next ? "Then: " + esc(next.kind === "ride" ? next.board : next.text) : ""}</span></div>`;
   return `<div class="nav-ico arrow"><span style="transform:rotate(${Math.round(turn)}deg)">${ARROW}</span></div>
     <div><b class="nav-big">${distText(left)}</b><span class="nav-what">${esc(st.text)}</span>
     <span class="nav-then">${face == null ? `Head ${COMPASS(want)}` : Math.abs(((turn % 360) + 540) % 360 - 180) < 25 ? "Straight ahead" : `Turn ${(((turn % 360) + 360) % 360) < 180 ? "right" : "left"}`}${st.sub ? " · " + esc(st.sub) : ""}</span>${next ? `<span class="nav-then">Then: ${esc(next.kind === "ride" ? next.board : next.text)}</span>` : ""}</div>`;

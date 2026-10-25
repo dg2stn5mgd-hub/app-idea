@@ -97,4 +97,33 @@ globalThis.fetch = async () => new Response("no", { status: 500 });
 r = await worker.fetch(new Request("https://live.example.com/search?q=dunman"), {}, {});
 assert.equal(r.status, 502); assert.match((await r.json()).error, /OneMap/);
 
+// Walking directions: logs in to OneMap once, reuses the pass, and turns OneMap's answer into simple steps
+let logins = 0; calls = [];
+globalThis.fetch = async (url, opts = {}) => {
+  url = String(url); calls.push({ url, headers: opts.headers });
+  if (url.includes("getToken")) { logins++; assert.deepEqual(JSON.parse(opts.body), { email: "me@example.com", password: "pw" });
+    return new Response(JSON.stringify({ access_token: "pass-" + logins, expiry_timestamp: String(Math.floor(Date.now() / 1000) + 3 * 86400) }), { status: 200 }); }
+  if (url.includes("routingsvc")) return new Response(JSON.stringify({ status: 0, route_geometry: "_p~iF~ps|U_ulLnnqC_mqNvxq`@",
+    route_instructions: [["Head", "TANJONG RHU ROAD", 120, "1.2995,103.8823", 86, "120m", "West", "west", "walking", "Head West On Tanjong Rhu Road"],
+                         ["Left", "FORT ROAD", 200, "1.2994,103.8790", 144, "200m", "South", "south", "walking", "Turn Left Onto Fort Road"]],
+    route_summary: { total_distance: 320, total_time: 230 } }), { status: 200 });
+  return new Response("{}", { status: 404 });
+};
+const walkEnv = { ONEMAP_EMAIL: " me@example.com ", ONEMAP_PASSWORD: "pw" };
+r = await worker.fetch(new Request("https://live.example.com/walk?from=1.2995,103.8823&to=1.2993,103.8746"), walkEnv, { waitUntil() {} });
+body = await r.json();
+assert.equal(r.status, 200, JSON.stringify(body));
+assert.deepEqual(body.points, [[38.5, -120.2], [40.7, -120.95], [43.252, -126.453]], "decodes the route's shape");
+assert.deepEqual(body.steps[1], { text: "Turn Left Onto Fort Road", metres: 200, lat: 1.2994, lng: 103.879 });
+assert.equal(body.metres, 320); assert.equal(body.seconds, 230);
+assert.equal(calls.find(c => c.url.includes("routingsvc")).headers.Authorization, "pass-1");
+await worker.fetch(new Request("https://live.example.com/walk?from=1.2995,103.8823&to=1.2993,103.8746"), walkEnv, { waitUntil() {} });
+assert.equal(logins, 1, "reuses the OneMap pass");
+r = await worker.fetch(new Request("https://live.example.com/walk?from=1.2995,103.8823&to=1.4400,103.8000"), walkEnv, {});
+assert.equal(r.status, 400, "too far to walk");
+r = await worker.fetch(new Request("https://live.example.com/walk?from=abc&to=1.2993,103.8746"), walkEnv, {});
+assert.equal(r.status, 400);
+r = await worker.fetch(new Request("https://live.example.com/walk?from=1.2995,103.8823&to=1.2993,103.8746"), {}, {});
+assert.equal(r.status, 501); assert.match((await r.json()).error, /ONEMAP_EMAIL/);
+
 console.log("All server checks passed.");

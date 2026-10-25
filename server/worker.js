@@ -8,10 +8,13 @@
 //   GET /arrivals?stop=92071               every service at that stop
 //   GET /train-alerts                      MRT service status (normal or disrupted)
 //   GET /search?q=dunman%20high%20school   find a place: name, address and where it is
+//   GET /walk?from=1.2995,103.8823&to=1.2993,103.8746   walking directions along the streets (OneMap)
 //   GET /check                             is the saved key OK? (never shows the key itself)
 
 const DATAMALL = "https://datamall2.mytransport.sg/ltaodataservice";
 const ONEMAP_SEARCH = "https://www.onemap.gov.sg/api/common/elastic/search";
+const ONEMAP_LOGIN = "https://www.onemap.gov.sg/api/auth/post/getToken";
+const ONEMAP_ROUTE = "https://www.onemap.gov.sg/api/public/routingsvc/route";
 const CACHE_SECONDS = 20;   // LTA updates arrivals about every 20 s; caching saves your quota
 
 // What LTA's short codes mean
@@ -27,6 +30,10 @@ export default {
     if (url.pathname === "/search") {
       try { return await search(url, env, ctx); }
       catch (e) { return reply({ error: "Couldn't reach OneMap. Try again in a moment.", detail: String(e && e.message || e) }, 502, env); }
+    }
+    if (url.pathname === "/walk") {
+      try { return await walk(url, env, ctx); }
+      catch (e) { return reply({ error: String(e && e.message || e) }, 502, env); }
     }
     if (!cleanKey(env)) return reply({ error: "The server has no LTA_ACCOUNT_KEY yet. Add it in Settings → Variables and Secrets." }, 500, env);
 
@@ -58,6 +65,67 @@ async function search(url, env, ctx) {
   })).filter(r => r.lat && r.lng && !seen.has(r.name + r.postal) && seen.add(r.name + r.postal)).slice(0, 8);
   return reply({ query: q, results }, 200, env);
 }
+// Walking directions from OneMap. Routing needs a OneMap account: the server logs in with the secrets
+// ONEMAP_EMAIL and ONEMAP_PASSWORD, and logs in again by itself when the pass runs out (every 3 days).
+let onemapPass = null;                       // { token, expires } kept while this copy of the server runs
+async function onemapToken(env, fresh) {
+  if (!fresh && onemapPass && onemapPass.expires - Date.now() > 3600000) return onemapPass.token;
+  const res = await fetch(ONEMAP_LOGIN, { method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email: String(env.ONEMAP_EMAIL).trim(), password: String(env.ONEMAP_PASSWORD) }) });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok || !body.access_token) throw new Error(`OneMap didn't accept the login (answered ${res.status}). Check ONEMAP_EMAIL and ONEMAP_PASSWORD.`);
+  const exp = Number(body.expiry_timestamp);
+  onemapPass = { token: body.access_token, expires: exp > 1e12 ? exp : exp > 0 ? exp * 1000 : Date.now() + 2 * 86400000 };
+  return onemapPass.token;
+}
+const LATLNG = /^(1\.\d{1,7}),(10[34]\.\d{1,7})$/;
+async function walk(url, env, ctx) {
+  const a = (url.searchParams.get("from") || "").match(LATLNG), b = (url.searchParams.get("to") || "").match(LATLNG);
+  if (!a || !b) return reply({ error: "from and to must be lat,lng in Singapore, like 1.2995,103.8823." }, 400, env);
+  const from = [Number(a[1]), Number(a[2])], to = [Number(b[1]), Number(b[2])];
+  const km = Math.hypot(from[0] - to[0], from[1] - to[1]) * 111.3;
+  if (km > 3) return reply({ error: "That's more than 3 km apart: too far to walk." }, 400, env);
+  if (!env.ONEMAP_EMAIL || !env.ONEMAP_PASSWORD) return reply({ error: "Walking directions aren't set up: add ONEMAP_EMAIL and ONEMAP_PASSWORD as secrets." }, 501, env);
+
+  // Same walk asked before (to about 10 m)? Reuse it for a week
+  const round = p => p.map(x => x.toFixed(4)).join(",");
+  const cache = typeof caches !== "undefined" ? caches.default : null, cacheKey = new Request(`https://carriage-cache/walk/${round(from)}/${round(to)}`);
+  if (cache) { const hit = await cache.match(cacheKey); if (hit) return reply(await hit.json(), 200, env); }
+
+  const ask = async fresh => fetch(ONEMAP_ROUTE + "?" + new URLSearchParams({ start: from.join(","), end: to.join(","), routeType: "walk" }),
+    { headers: { Authorization: await onemapToken(env, fresh), accept: "application/json" } });
+  let res = await ask(false);
+  if (res.status === 401 || res.status === 403) res = await ask(true);     // pass ran out early: log in again once
+  if (!res.ok) throw new Error(`OneMap routing answered ${res.status}.`);
+  const data = await res.json();
+  if (!data.route_geometry) throw new Error("OneMap found no walking route.");
+  const steps = (data.route_instructions || []).map(ins => {
+    const [lat, lng] = String(ins[3] || "").split(",").map(Number);
+    const words = ins.find((x, i) => i > 3 && typeof x === "string" && / /.test(x) && /[a-z]/.test(x));
+    return { text: words || `${ins[0] || "Continue"} ${titleCase(ins[1] || "")}`.trim(), metres: Number(ins[2]) || 0, lat, lng };
+  }).filter(x => x.lat && x.lng);
+  const out = { points: decodePolyline(data.route_geometry), steps,
+    metres: Number(data.route_summary && data.route_summary.total_distance) || null,
+    seconds: Number(data.route_summary && data.route_summary.total_time) || null };
+  if (cache && ctx) ctx.waitUntil(cache.put(cacheKey, new Response(JSON.stringify(out), { headers: { "cache-control": "max-age=604800", "content-type": "application/json" } })));
+  return reply(out, 200, env);
+}
+// OneMap sends the route's shape as a Google-style "encoded polyline": turn it into [lat, lng] points
+function decodePolyline(str) {
+  const pts = [];
+  let i = 0, lat = 0, lng = 0;
+  while (i < str.length) {
+    for (const k of [0, 1]) {
+      let shift = 0, result = 0, byte;
+      do { byte = str.charCodeAt(i++) - 63; result |= (byte & 0x1f) << shift; shift += 5; } while (byte >= 0x20 && i < str.length);
+      const d = result & 1 ? ~(result >> 1) : result >> 1;
+      if (k === 0) lat += d; else lng += d;
+    }
+    pts.push([+(lat / 1e5).toFixed(6), +(lng / 1e5).toFixed(6)]);
+  }
+  return pts;
+}
+
 // OneMap answers in capitals: "DUNMAN HIGH SCHOOL" -> "Dunman High School"
 const titleCase = t => String(t).toLowerCase().replace(/\b([a-z])/g, c => c.toUpperCase()).replace(/\bSingapore (\d{6})\b/, "Singapore $1");
 
@@ -73,6 +141,11 @@ async function check(env) {
   let places;
   try { places = (await fetch(ONEMAP_SEARCH + "?searchVal=dunman%20high%20school&returnGeom=Y&getAddrDetails=Y&pageNum=1")).status; }
   catch (e) { places = "no answer"; }
+  let walking = "not set up: add ONEMAP_EMAIL and ONEMAP_PASSWORD as secrets";
+  if (env.ONEMAP_EMAIL && env.ONEMAP_PASSWORD) {
+    try { await onemapToken(env, true); walking = "working: OneMap accepted the login"; }
+    catch (e) { walking = String(e.message || e); }
+  }
   const notes = [];
   if (raw !== raw.trim()) notes.push("The saved key has spaces or line breaks at the start or end. This check removes them before asking LTA.");
   if (/["'“”‘’]/.test(raw)) notes.push("The saved key has quote marks around it. This check removes them before asking LTA.");
@@ -87,6 +160,7 @@ async function check(env) {
     ltaAcceptsKey: ok,
     ltaAnswers: { busArrival: bus, trainAlerts: train },
     placeSearch: places === 200 ? "working" : `OneMap answered ${places}`,
+    walkingDirections: walking,
     notes,
     advice: ok ? "All good: LTA accepts the key. Try /arrivals?stop=92071."
       : bus === 401 || bus === 403 ? "LTA doesn't accept this key. Compare the length and first/last characters with the key in LTA's email. If they match, the key may not be switched on yet: wait an hour, or check LTA's email for an activation step."
