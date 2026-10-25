@@ -513,7 +513,7 @@ const MET = [
     when:"Tue 14 Oct · 1 stop", status:"nosecond" },
 ].map(m => ({ ...m, met: true, from:"Marine Terrace", to:"Katong Park", t:"07:45" }));
 PEOPLE.push(...MET);
-const metList = () => state.isNew ? [] : MET;
+const metList = () => state.isNew ? (state.metDemo || []) : MET;
 
 // ~285 more made-up riders spread over every line, so any route has people on it.
 // Generated the same way every time (fixed seed), morning rush 07:15–08:30.
@@ -611,7 +611,7 @@ const sameTrip = (a, b) => a.from === b.from && a.to === b.to && a.time === b.ti
 // Where does this person's ride overlap yours? Checks each of your legs against each of theirs:
 // same line, same direction, sharing at least one stop.
 function overlap(p, trip = state) {
-  const mine = myRoute(trip), theirs = p.bus ? busRoute(p) : route(p.from, p.to, p.t);
+  const mine = myRoute(trip), theirs = p.leg ? legRoute(p) : route(p.from, p.to, p.t);
   if (!mine || !theirs) return null;
   const segs = [];
   let offset = 0;
@@ -855,39 +855,107 @@ function tripRoute(trip) {
   const legs = plan.legs.map(l => ({ ...l, times: l.at.map(a => Math.round(t0 + a)) }));
   const r = { legs, minutes: Math.round(plan.minutes), walkEnd: plan.walkEnd,
     stops: legs.reduce((a, l) => a + l.idx.length - 1, 0) };
-  for (const l of legs) if (isBus(l.line)) seedBusRiders(l);
+  for (const l of legs) seedRiders(l);
   return r;
 }
 
 // Made-up riders on each bus service you take, created the first time your route uses it
 const seeded = new Set();
-function seedBusRiders(leg) {
-  if (seeded.has(leg.line)) return;
-  seeded.add(leg.line);
-  let seed = [...leg.line].reduce((h, ch) => Math.imul(h ^ ch.charCodeAt(0), 16777619), 2166136261);
+// Made-up riders on every train and bus of whatever route you look at, around your time,
+// in the ages you want to meet, often sharing an interest with you. Same answer every time.
+function seedRiders(leg) {
+  const key = `${leg.line}|${leg.idx[0]}|${Math.round(leg.times[0] / 30)}|${state.minAge}-${state.maxAge}`;
+  if (seeded.has(key)) return;
+  seeded.add(key);
+  let seed = [...key].reduce((h, ch) => Math.imul(h ^ ch.charCodeAt(0), 16777619), 2166136261);
   const rnd = () => { seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
     t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
   const pick = a => a[Math.floor(rnd() * a.length)];
-  const codes = PAT[leg.line], a = leg.idx[0], b = leg.idx[leg.idx.length - 1];
-  for (let k = 0; k < 10; k++) {
-    let i = rnd() < 0.5 ? Math.max(0, a - Math.floor(rnd() * 6)) : a + Math.floor(rnd() * (b - a));
-    let j = rnd() < 0.5 ? Math.min(codes.length - 1, b + Math.floor(rnd() * 8)) : i + 1 + Math.floor(rnd() * (b - i));
-    if (j <= i) j = i + 1;
-    let ride = 0; for (let x = i; x < a; x++) ride += rideMin(codes[x], codes[x + 1]);
-    const at = Math.round(leg.times[0] - ride + (rnd() * 2 - 1) * 12);
+  const bus = isBus(leg.line), len = bus ? PAT[leg.line].length : LINES[leg.line].st.length;
+  const a = leg.idx[0], b = leg.idx[leg.idx.length - 1], dir = Math.sign(b - a) || 1, span = Math.abs(b - a);
+  const clamp = x => Math.max(0, Math.min(len - 1, x));
+  const hop = (x, y) => bus ? rideMin(PAT[leg.line][x], PAT[leg.line][y]) : MIN_PER_STOP;
+  const mine = [...state.interests];
+  for (let k = 0; k < 9; k++) {
+    // where they get on (before you, or partway along) and off (partway, or after you)
+    const s0 = rnd() < 0.55 ? clamp(a - dir * Math.floor(rnd() * 5)) : a + dir * Math.floor(rnd() * Math.max(1, span));
+    let e0 = rnd() < 0.55 ? clamp(b + dir * Math.floor(rnd() * 7)) : s0 + dir * (1 + Math.floor(rnd() * Math.max(1, Math.abs(b - s0))));
+    if ((e0 - s0) * dir < 1) e0 = clamp(s0 + dir);
+    if ((e0 - s0) * dir < 1) continue;
+    let ride = 0; for (let x = s0; x !== a && (a - x) * dir > 0; x += dir) ride += hop(x, x + dir);
+    const offset = k < 7 ? (rnd() * 2 - 1) * 7 : (rnd() < 0.5 ? -1 : 1) * (12 + rnd() * 14);   // most on your train, a few earlier or later
+    const at = Math.round(leg.times[0] - ride + offset);
     let n; do n = pick(GEN.FIRST) + " " + String.fromCharCode(65 + Math.floor(rnd() * 26)) + "."; while (GEN.used.has(n));
     GEN.used.add(n);
-    const teen = rnd() < 0.65, age = teen ? 15 + Math.floor(rnd() * 3) : 18 + Math.floor(rnd() * 17);
-    const ints = []; while (ints.length < 3) { const x = pick(INTERESTS); if (!ints.includes(x)) ints.push(x); }
-    PEOPLE.push({ n, a: age, from: "B:" + codes[i], to: "B:" + codes[j], t: fmt(at), i: ints,
-      bio: (teen ? pick(GEN.TEEN) : pick(GEN.ADULT)) + " · takes bus " + svcOf(leg.line) + " · " + GEN.ABOUT[ints[0]], gen: true, bus: { pid: leg.line, i, j } });
+    const age = state.minAge + Math.floor(rnd() * (state.maxAge - state.minAge + 1));
+    const ints = [];
+    if (mine.length && rnd() < 0.8) ints.push(pick(mine));
+    if (mine.length > 1 && rnd() < 0.35) { const x = pick(mine); if (!ints.includes(x)) ints.push(x); }
+    while (ints.length < 3) { const x = pick(INTERESTS); if (!ints.includes(x)) ints.push(x); }
+    for (let x = ints.length - 1; x > 0; x--) { const y = Math.floor(rnd() * (x + 1)); [ints[x], ints[y]] = [ints[y], ints[x]]; }
+    const role = age < 18 ? pick(GEN.TEEN) : age < 23 && rnd() < 0.5 ? pick(["Uni Y1", "Uni Y2", "Uni Y3", "Poly Y3", "NS man"]) : rnd() < 0.4 ? "Works near " + placeName(state.to) : pick(GEN.ADULT);
+    const place = i => bus ? "B:" + PAT[leg.line][i] : nameOf(leg.line, i);
+    PEOPLE.push({ n, a: age, from: place(s0), to: place(e0), t: fmt(at), i: ints,
+      bio: `${role}${bus ? " · takes bus " + svcOf(leg.line) : ""} · ${GEN.ABOUT[ints[0]]}`, gen: true, leg: { line: leg.line, s: s0, e: e0 } });
   }
 }
-function busRoute(p) {
-  const { pid, i, j } = p.bus, codes = PAT[pid], idx = [], times = [];
+// The route of a rider who takes one train line or one bus
+function legRoute(p) {
+  const { line, s: s0, e: e0 } = p.leg, dir = Math.sign(e0 - s0), idx = [], times = [];
   let t = toMin(p.t);
-  for (let x = i; x <= j; x++) { idx.push(x); times.push(Math.round(t)); if (x < j) t += rideMin(codes[x], codes[x + 1]); }
-  return { legs: [{ line: pid, idx, times }], stops: j - i, minutes: Math.round(t - toMin(p.t)) };
+  for (let x = s0; ; x += dir) {
+    idx.push(x); times.push(Math.round(t));
+    if (x === e0) break;
+    t += isBus(line) ? rideMin(PAT[line][x], PAT[line][x + dir]) : MIN_PER_STOP;
+  }
+  return { legs: [{ line, idx, times }], stops: idx.length - 1, minutes: Math.round(t - toMin(p.t)) };
+}
+
+// After sign-up: a realistic history built around the new person's own commute, so every tab has something to show
+function seedDemoHistory() {
+  const { out } = findMatches(state.commute);
+  const names = out.map(m => m.p.n);
+  const ago = ["this morning", "yesterday", "2 days ago"];
+  names.slice(0, 3).forEach((n, k) => { state.incoming[n] = ago[k]; });
+  names.slice(3, 5).forEach((n, k) => { state.waves[n] = "sent"; state.sentWhen[n] = ago[k + 1]; });
+  if (names[5]) state.waves[names[5]] = "mutual";
+  // People they've already ridden with
+  let seed = 7;
+  const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  const pick = a => a[Math.floor(rnd() * a.length)];
+  const firsts = new Set();   // no two people in the history share a first name
+  const fresh = () => { let f, n; do { f = pick(GEN.FIRST); n = f + " " + String.fromCharCode(65 + Math.floor(rnd() * 26)) + "."; } while (GEN.used.has(n) || firsts.has(f)); firsts.add(f); GEN.used.add(n); return n; };
+  const age = () => state.minAge + Math.floor(rnd() * (state.maxAge - state.minAge + 1));
+  const trip = `${placeName(state.commute.from)} → ${placeName(state.commute.to)}`;
+  const mine = [...state.interests], first = mine[0] || "Music";
+  const r = myRoute(state.commute), line = r && r.legs[0] ? r.legs[0].line : "TE";
+  const where = isBus(line) ? "upper deck, front" : "carriage 2";
+  const plan = [
+    { status: "feedback", when: `Today · ${state.commute.time} · ${trip}` },
+    { status: "friends", when: "Mon 19 Oct · 4 stops" },
+    { status: "again", when: "Thu 22 Oct · 3 stops", next: `Wed 28 Oct · ${state.commute.time} · ${where}` },
+    { status: "nosecond", when: "Tue 13 Oct · 2 stops" },
+    { status: "noshow", when: "Fri 9 Oct" },
+  ];
+  state.metDemo = plan.map(x => {
+    const n = fresh(), ints = [first, ...INTERESTS.filter(i => i !== first).sort(() => rnd() - 0.5).slice(0, 2)];
+    const m = { ...x, n, a: age(), i: ints, bio: GEN.ABOUT[ints[0]], met: true,
+      from: state.commute.from, to: state.commute.to, t: state.commute.time,
+      handle: "@" + n.split(" ")[0].toLowerCase().replace(/\s+/g, "") + Math.floor(10 + rnd() * 89) };
+    PEOPLE.push(m);
+    return m;
+  });
+  const [, friend, again] = state.metDemo;
+  state.chats[friend.n] = [
+    { me: false, text: `That ${first.toLowerCase()} thing you mentioned on the train, any tips?`, at: "Yesterday 19:05" },
+    { me: true, text: "Haha yes, will send you some tonight", at: "Yesterday 19:12" },
+    { me: false, text: "Same train tomorrow?", at: "08:02" },
+  ];
+  state.chats[again.n] = [
+    { me: true, text: "That was fun! See you on Wednesday", at: "Thu 09:10" },
+    { me: false, text: `Yes! I'll be in ${where}`, at: "Thu 09:14" },
+  ];
+  state.unread = { [friend.n]: 1 };
 }
 
 // Search for a station or bus stop by name, road or stop number
@@ -2086,7 +2154,7 @@ app.addEventListener("click", e => {
     go(step === 27 ? 28 : step + 1);
   }
   else if (d.weekday) { state.days.has(d.weekday) ? state.days.delete(d.weekday) : state.days.add(d.weekday); render(); }
-  else if (d.finish !== undefined) { Object.assign(state, state.commute, { nav: { ...state.commute } }); go(4); toast("Welcome to Carriage!"); }
+  else if (d.finish !== undefined) { Object.assign(state, state.commute, { nav: { ...state.commute } }); seedDemoHistory(); go(4); toast("Welcome to Carriage!"); }
   else if (d.existing !== undefined) { toast("Demo: open the current-user link to see an existing account."); }
   else if (d.pick) { state.pick = { target: d.pick, q: "" }; render(); }
   else if (d.pickclose !== undefined) { state.pick = null; render(); }

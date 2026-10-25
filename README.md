@@ -85,12 +85,12 @@ You're already on your way to school or work. If the other person runs late, get
 There are two versions, built from one source file, `prototype/src/carriage.html`:
 
 - **an existing user** already using the app (bottom tabs, waves, people met): `prototype/index.html` on the website
-- **a new user** signing up (mobile number and code, name, birthday, school or work, optional photo, daily commute and days, interests, who to meet, safety rules), ending in the app with an empty history: `prototype/new-user.html` on the website
+- **a new user** signing up (mobile number and code, name, birthday, school or work, optional photo, daily commute and days, interests, who to meet, safety rules), ending in the app with a made-up history built around their own commute (people who waved, a match to plan, a friend to chat with, a ride to rate), so every tab can be demoed: `prototype/new-user.html` on the website
 
 After changing `src/carriage.html`, run `python3 prototype/build.py`. It writes the two website pages (full pages with the home-screen icon and app settings) and the two claude.ai preview copies in `prototype/artifact/`.
 
 **On the home screen:** open the site in Safari, tap Share, then **Add to Home Screen**. Carriage then opens full-screen with its own icon. The app tells people how on the Map tab, and on Android it shows an **Install** button. A small offline helper (`sw.js`) keeps a copy on the phone, so it opens even with weak signal on the MRT; live bus times always come fresh. Links like `/#waves` or `/#rides` open straight to that tab.
 
-Places are picked with a search (station, bus stop name, road or 5-digit stop number). Made-up riders appear on each bus service the first time a route uses it.
+Places are picked with a search (station, bus stop name, road or 5-digit stop number).
 
-It has about 300 made-up riders on every MRT line (a handful written by hand on the TEL, the rest generated with Singapore names, schools and jobs, and morning times from 07:15 to 08:30), so any route you demo has people on it.
+It has about 300 made-up riders on every MRT line (a handful written by hand on the TEL, the rest generated with Singapore names, schools and jobs). On top of that, whatever route and time someone enters, the app adds made-up riders on every train and bus of it: mostly on the same train, a few a bit earlier or later, in the ages that person wants to meet, and often sharing one of their interests. So any route you demo, at any time of day, has people on it.
