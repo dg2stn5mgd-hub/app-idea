@@ -703,6 +703,9 @@ function header(backTo, dotsOn) {
   return `<div class="top">${back}${dots}</div>`;
 }
 
+// What your daily destination is called, from "School or work" in your profile
+const destWord = () => ({ Working: "Work", Other: "Usual place" })[state.profile.schoolType] || "School";
+
 // Current time in Singapore, as "HH:MM"
 const sgNow = () => new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Singapore" });
 
@@ -1100,7 +1103,7 @@ const locateRow = () => `<button class="pick-row" data-locate>${`<span class="pl
 const pickLabeled = (label, id) => `<button class="pick-row" data-place="${esc(id)}">${placeIcon(id)}<span class="place-text"><b>${label}</b><span class="small muted">${esc(placeName(id))}</span></span></button>`;
 function pickResults(q) {
   if (!q.trim()) return `${locateRow()}
-    <p class="label">Your places</p>${pickLabeled("Home", state.commute.from)}${pickLabeled("School", state.commute.to)}
+    <p class="label">Your places</p>${pickLabeled("Home", state.commute.from)}${pickLabeled(destWord(), state.commute.to)}
     <p class="label">Popular</p>${["Raffles Place", "Orchard", "Changi Airport"].map(pickRow).join("")}`;
   const res = searchPlaces(q);
   const online = `<div id="online-results">${onlineSearchable() ? `<p class="small muted">Searching places…</p>` : ""}</div>`;
@@ -1229,7 +1232,7 @@ const screens = {
         <button class="swap" data-swap aria-label="Swap start and destination">⇅</button>
       </div>
       <div class="chips">
-        <button class="chip" data-home aria-pressed="${trip(state.commute.from, state.commute.to)}">Home → School</button>
+        <button class="chip" data-home aria-pressed="${trip(state.commute.from, state.commute.to)}">Home → ${destWord()}</button>
       </div>
       <div class="row">
         <div class="field"><label class="label" for="navTime">Leaving at</label>

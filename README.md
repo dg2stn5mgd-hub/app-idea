@@ -23,7 +23,7 @@ Waves on a **one-off trip** are remembered with that trip: when you both wave, t
 
 Rides and Waves use your saved **daily commute**, so you never have to search a destination to check them. A one-off trip searched on the Map can be shown on Rides too, with a button to switch back to your commute.
 
-**The Map tab works like a maps app.** You pick where you're going (or tap **Home → School**), start from **your current location** (GPS) or anywhere else, tap **Now** to leave now, and see your route. For a place that isn't a station or stop, the route includes the walk to and from whichever nearby station or bus stop makes the whole trip fastest (stations up to 1 km away, bus stops up to 500 m). Then you choose:
+**The Map tab works like a maps app.** You pick where you're going (or tap **Home → School**, which says **Home → Work** if you picked Working when signing up), start from **your current location** (GPS) or anywhere else, tap **Now** to leave now, and see your route. For a place that isn't a station or stop, the route includes the walk to and from whichever nearby station or bus stop makes the whole trip fastest (stations up to 1 km away, bus stops up to 500 m). Then you choose:
 - **Just navigate**: opens Google Maps with the route filled in. Google does the turn-by-turn directions.
 - **Meet someone on this ride**: Carriage's own feature, described below.
 
