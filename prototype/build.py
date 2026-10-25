@@ -12,7 +12,12 @@ import re
 from pathlib import Path
 
 here = Path(__file__).parent
+from datetime import datetime, timedelta, timezone
 src = (here / "src" / "carriage.html").read_text()
+# Stamp the version with the time it was built (Singapore time), shown at the bottom of the Me tab
+stamp = datetime.now(timezone(timedelta(hours=8))).strftime("%-d %b, %H:%M")
+assert src.count('const BUILD = "dev";') == 1
+src = src.replace('const BUILD = "dev";', f'const BUILD = "{stamp}";')
 
 NEW_USER = [
     ('<title>Carriage Prototype</title>', '<title>Carriage Sign-up</title>'),

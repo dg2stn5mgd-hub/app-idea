@@ -1,7 +1,7 @@
 // Keeps a copy of Carriage on the phone so it opens fast, even with weak signal on the MRT.
 // Pages: try the network for 3 seconds, then fall back to the saved copy.
 // Live bus times (another website) are never saved: they always come fresh.
-const CACHE = "carriage-v3";
+const CACHE = "carriage-v4";
 const SHELL = ["/", "/new-user", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/apple-touch-icon.png",
   "/vendor/leaflet/leaflet.js", "/vendor/leaflet/leaflet.css"];
 
@@ -20,11 +20,21 @@ self.addEventListener("fetch", e => {
   if (req.method !== "GET" || url.origin !== location.origin) return;
   e.respondWith((async () => {
     const cache = await caches.open(CACHE);
-    const fresh = fetch(req).then(res => { if (res.ok) cache.put(req, res.clone()); return res; });
     const saved = await cache.match(req, { ignoreSearch: true });
+    let usedSaved = false;
+    const fresh = fetch(req).then(res => {
+      if (res.ok) {
+        cache.put(req, res.clone());
+        // The saved copy was shown because the network was slow, and this one is different: tell the page
+        const changed = saved && (res.headers.get("etag") || res.headers.get("last-modified")) !== (saved.headers.get("etag") || saved.headers.get("last-modified"));
+        if (usedSaved && changed && req.mode === "navigate")
+          self.clients.get(e.resultingClientId || e.clientId).then(c => c && c.postMessage({ type: "updated" }));
+      }
+      return res;
+    });
     if (!saved) return fresh;
-    const slow = new Promise(r => setTimeout(() => r(saved), 3000));
-    return Promise.race([fresh.catch(() => saved), slow]);
+    const slow = new Promise(r => setTimeout(() => { usedSaved = true; r(saved); }, 3000));
+    return Promise.race([fresh.catch(() => { usedSaved = true; return saved; }), slow]);
   })());
 });
 
