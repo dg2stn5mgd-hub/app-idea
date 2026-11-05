@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vector Lab</title>
+  <meta name="description" content="Interactive 3D vectors for H2 Math: lines, planes, intersections, distances and angles.">
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./lib/three/three.module.js",
+        "three/addons/": "./lib/three/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div class="app">
+    <aside class="panel">
+      <header class="brand">
+        <h1>Vector Lab</h1>
+        <p>See H2 Math vectors in 3D. Type in points, lines and planes, then compare any two.</p>
+      </header>
+
+      <section>
+        <h2>Objects</h2>
+        <div id="objects"></div>
+        <div class="add-row">
+          <span>Add</span>
+          <button data-add="point">+ Point</button>
+          <button data-add="vector">+ Vector</button>
+          <button data-add="line">+ Line</button>
+          <button data-add="plane">+ Plane</button>
+        </div>
+        <p class="hint">Type vectors as <code>(1, 2, 3)</code>, <code>1 2 3</code> or <code>i + 2j − 3k</code>. Fractions such as <code>1/2</code> work too.</p>
+      </section>
+
+      <section>
+        <h2>Compare</h2>
+        <div class="pick">
+          <select id="selA" aria-label="First object"></select>
+          <span>with</span>
+          <select id="selB" aria-label="Second object"></select>
+        </div>
+        <div id="results"></div>
+      </section>
+    </aside>
+
+    <main id="viewport">
+      <div class="view-ui">
+        <button id="resetView">Reset view</button>
+        <span class="help">Drag to rotate · scroll or pinch to zoom · right-drag to pan</span>
+      </div>
+    </main>
+  </div>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
