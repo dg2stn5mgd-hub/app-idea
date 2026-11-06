@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cross Product · Vector Lab</title>
+  <meta name="description" content="The vector (cross) product for H2 Math: formula, right-hand rule, area, normals to planes, with a 3D demo.">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="../learn.css">
+  <script type="importmap">
+    { "imports": { "three": "../lib/three/three.module.js", "three/addons/": "../lib/three/" } }
+  </script>
+</head>
+<body>
+  <nav class="topnav">
+    <a class="brand" href="../">Vector Lab</a>
+    <a href="../">3D Lab</a>
+    <a href="./">Learn</a>
+    <a href="dot-product.html">Dot product</a>
+    <a href="cross-product.html" aria-current="page">Cross product</a>
+    <a href="projections.html">Projections</a>
+  </nav>
+
+  <main class="page">
+    <h1>The cross product (vector product)</h1>
+    <p class="lede">The cross product takes two vectors and gives you a new <b>vector</b> that is perpendicular to both of them. Its length equals the area of the parallelogram they make.</p>
+
+    <h2>The formula</h2>
+    <div class="formula">
+      <span><b>a</b> × <b>b</b> = </span>
+      <span class="cv"><span>a₁</span><span>a₂</span><span>a₃</span></span><span>×</span>
+      <span class="cv"><span>b₁</span><span>b₂</span><span>b₃</span></span><span>=</span>
+      <span class="cv"><span>a₂b₃ − a₃b₂</span><span>a₃b₁ − a₁b₃</span><span>a₁b₂ − a₂b₁</span></span>
+    </div>
+    <p><b>How to remember it:</b> to get a row of the answer, cover that row in <b>a</b> and <b>b</b> and cross-multiply the two rows that are left. The top row gives a₂b₃ − a₃b₂, and the bottom row gives a₁b₂ − a₂b₁. The <b>middle row</b> is where most mistakes happen. It's a₃b₁ − a₁b₃, which is the opposite way round from the pattern, so many students write the cross-multiplication and then flip its sign.</p>
+
+    <h3>What it means</h3>
+    <ul>
+      <li><b>Direction:</b> perpendicular to both <b>a</b> and <b>b</b>, following the <b>right-hand rule</b>. Point your fingers along <b>a</b> and curl them towards <b>b</b>; your thumb points along <b>a</b> × <b>b</b>.</li>
+      <li><b>Length:</b> |<b>a</b> × <b>b</b>| = |<b>a</b>||<b>b</b>| sin θ, which is the <b>area of the parallelogram</b> with sides <b>a</b> and <b>b</b>.</li>
+    </ul>
+
+    <h2>Try it</h2>
+    <p>The green arrow is <b>a</b> × <b>b</b>. Rotate the view to check that it really is perpendicular to the shaded parallelogram. Tick "Show <b>b</b> × <b>a</b>" to see that swapping the order flips the arrow.</p>
+    <div class="demo">
+      <div id="cross-view"></div>
+      <div class="controls">
+        <div class="demo-title">Cross product explorer</div>
+        <div id="cross-controls"></div>
+        <label class="toggle"><input type="checkbox" id="cross-swap"> Show <b>b</b> × <b>a</b> instead</label>
+        <div class="readout" id="cross-read"></div>
+      </div>
+    </div>
+
+    <h2>Key facts to remember</h2>
+    <ul class="facts">
+      <li><b>a</b> × <b>b</b> is a <b>vector</b>, unlike the dot product.</li>
+      <li><b>Order matters:</b> <b>b</b> × <b>a</b> = −(<b>a</b> × <b>b</b>).</li>
+      <li><b>Parallel test:</b> for non-zero vectors, <b>a</b> × <b>b</b> = <b>0</b> ⇔ <b>a</b> ∥ <b>b</b>. In particular, <b>a</b> × <b>a</b> = <b>0</b>.</li>
+      <li>(<b>a</b> × <b>b</b>) · <b>a</b> = 0 and (<b>a</b> × <b>b</b>) · <b>b</b> = 0. Use this to check your answer.</li>
+      <li>Brackets expand normally: <b>a</b> × (<b>b</b> + <b>c</b>) = <b>a</b> × <b>b</b> + <b>a</b> × <b>c</b>. Just keep the order.</li>
+    </ul>
+
+    <h2>Where it shows up in H2</h2>
+    <ul>
+      <li><b>Normal to a plane:</b> if a plane contains directions <b>b</b> and <b>c</b>, then <b>n</b> = <b>b</b> × <b>c</b>. This is how you convert r = <b>a</b> + λ<b>b</b> + μ<b>c</b> into r · <b>n</b> = D.</li>
+      <li><b>Area of a triangle</b> ABC = ½ |<span class="arr">AB</span> × <span class="arr">AC</span>|. The area of a parallelogram is |<b>a</b> × <b>b</b>|.</li>
+      <li><b>Line where two planes meet:</b> its direction is <b>n₁</b> × <b>n₂</b>.</li>
+      <li><b>Perpendicular distance from a point to a line:</b> |<span class="arr">AP</span> × <b>d̂</b>|. See <a href="projections.html">Projections</a>.</li>
+      <li><b>Shortest distance between skew lines:</b> project onto <b>d₁</b> × <b>d₂</b>, the direction perpendicular to both lines.</li>
+    </ul>
+
+    <h2>Worked example</h2>
+    <div class="example">
+      <p class="q">A(1, 0, 2), B(3, 1, 1) and C(2, −1, 4). Find a Cartesian equation of the plane ABC and the area of triangle ABC.</p>
+      <details>
+        <summary>Show solution</summary>
+        <ol>
+          <li><span class="arr">AB</span> = (2, 1, −1) and <span class="arr">AC</span> = (1, −1, 2)</li>
+          <li><b>n</b> = <span class="arr">AB</span> × <span class="arr">AC</span> = ((1)(2) − (−1)(−1), (−1)(1) − (2)(2), (2)(−1) − (1)(1)) = (1, −5, −3)</li>
+          <li>Check: <b>n</b> · <span class="arr">AB</span> = 2 − 5 + 3 = 0 ✓, and <b>n</b> · <span class="arr">AC</span> = 1 + 5 − 6 = 0 ✓</li>
+          <li>D = <b>n</b> · <span class="arr">OA</span> = 1 + 0 − 6 = −5, so the plane is <b>x − 5y − 3z = −5</b></li>
+          <li>Area = ½ |<b>n</b>| = ½ √(1 + 25 + 9) = <b>½√35 ≈ 2.96</b> units²</li>
+        </ol>
+      </details>
+    </div>
+
+    <div class="callout warn">
+      <b>Common mistakes</b>
+      <ul>
+        <li>Getting the sign of the middle component wrong. Always check (<b>a</b> × <b>b</b>) · <b>a</b> = 0.</li>
+        <li>Swapping the order and not noticing. That's fine for a normal vector, because any multiple works, but not when the direction matters.</li>
+        <li>Forgetting the ½ for the area of a triangle.</li>
+        <li>Mixing up the tests: <b>a</b> · <b>b</b> = 0 means perpendicular, and <b>a</b> × <b>b</b> = <b>0</b> means parallel.</li>
+      </ul>
+    </div>
+
+    <div class="next">
+      <a href="dot-product.html">← Dot product</a>
+      <a href="projections.html">Next: Projections and distances →</a>
+    </div>
+  </main>
+
+  <script type="module">
+    import { createViewer } from '../js/viewer.js';
+    import { vectorControl, COLORS } from '../js/learn.js';
+    import { cross, dot, len, scale } from '../js/math.js';
+    import { fmtNum, fmtExact, fmtVec } from '../js/format.js';
+
+    const view = createViewer(document.getElementById('cross-view'));
+    const controls = document.getElementById('cross-controls');
+    const read = document.getElementById('cross-read');
+    const swap = document.getElementById('cross-swap');
+    const state = { a: [2, 0, 1], b: [0, 3, 1] };
+
+    vectorControl(controls, { name: 'a', color: COLORS.a, value: state.a, min: -4, max: 4, onChange: (v) => { state.a = v; draw(); } });
+    vectorControl(controls, { name: 'b', color: COLORS.b, value: state.b, min: -4, max: 4, onChange: (v) => { state.b = v; draw(); } });
+    swap.addEventListener('change', draw);
+
+    const MAX_DRAWN = 6; // keep long results inside the axes
+
+    function draw() {
+      const [a, b] = swap.checked ? [state.b, state.a] : [state.a, state.b];
+      const [na, nb] = swap.checked ? ['b', 'a'] : ['a', 'b'];
+      const c = cross(a, b);
+      view.clear();
+      view.arrow([0, 0, 0], state.a, COLORS.a, 'a');
+      view.arrow([0, 0, 0], state.b, COLORS.b, 'b');
+      view.parallelogram(state.a, state.b, COLORS.highlight);
+      const L = len(c);
+      let note = '';
+      if (L > 1e-9) {
+        const shown = L > MAX_DRAWN ? scale(c, MAX_DRAWN / L) : c;
+        view.arrow([0, 0, 0], shown, COLORS.result, `${na}×${nb}`, { r: 0.06 });
+        if (L > MAX_DRAWN) note = `<div class="muted small">The green arrow is drawn shorter than its true length so it fits.</div>`;
+      }
+      const t = (x, y) => `(${fmtNum(x)})(${fmtNum(y)})`;
+      const comp = [
+        `${t(a[1], b[2])} − ${t(a[2], b[1])}`,
+        `${t(a[2], b[0])} − ${t(a[0], b[2])}`,
+        `${t(a[0], b[1])} − ${t(a[1], b[0])}`,
+      ];
+      const parallel = L < 1e-9 && len(a) > 0 && len(b) > 0;
+      read.innerHTML = `
+        <div class="line"><b>${na}</b> × <b>${nb}</b> = <span class="cv">${comp.map((s) => `<span>${s}</span>`).join('')}</span> = ${fmtVec(c)}</div>
+        ${parallel ? '<div><span class="chip zero">zero vector → a and b are parallel</span></div>' : ''}
+        <div class="line">Area of parallelogram = |<b>a</b> × <b>b</b>| = <b>${fmtExact(L)}</b></div>
+        <div class="line">Check: (<b>${na}</b> × <b>${nb}</b>) · <b>a</b> = ${fmtNum(dot(c, state.a))}, &nbsp;(<b>${na}</b> × <b>${nb}</b>) · <b>b</b> = ${fmtNum(dot(c, state.b))} ${L > 1e-9 ? '<span class="chip good">perpendicular to both ✓</span>' : ''}</div>
+        ${note}`;
+    }
+    draw();
+  </script>
+</body>
+</html>

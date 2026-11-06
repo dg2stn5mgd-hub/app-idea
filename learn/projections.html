@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Projections and Distances · Vector Lab</title>
+  <meta name="description" content="Length of projection, foot of perpendicular and perpendicular distance for H2 Math, as one right-angled triangle, with a 3D demo.">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="../learn.css">
+  <script type="importmap">
+    { "imports": { "three": "../lib/three/three.module.js", "three/addons/": "../lib/three/" } }
+  </script>
+</head>
+<body>
+  <nav class="topnav">
+    <a class="brand" href="../">Vector Lab</a>
+    <a href="../">3D Lab</a>
+    <a href="./">Learn</a>
+    <a href="dot-product.html">Dot product</a>
+    <a href="cross-product.html">Cross product</a>
+    <a href="projections.html" aria-current="page">Projections</a>
+  </nav>
+
+  <main class="page">
+    <h1>Projections and distances</h1>
+    <p class="lede">Most H2 distance questions come down to one right-angled triangle. The <b>dot product</b> gives you one side and the <b>cross product</b> gives you the other.</p>
+
+    <h2>The picture</h2>
+    <p>Take a line through A with direction <b>d</b>, and a point P that isn't on it. Drop a perpendicular from P to the line, and call where it lands F, the <b>foot of the perpendicular</b>. Triangle AFP has a right angle at F.</p>
+    <ul class="facts">
+      <li><b>AF</b>, the side along the line, is the <b>length of projection</b> of <span class="arr">AP</span> onto the line:&nbsp; AF = |<span class="arr">AP</span> · <b>d̂</b>|</li>
+      <li><b>PF</b>, the side across, is the <b>perpendicular distance</b> from P to the line:&nbsp; PF = |<span class="arr">AP</span> × <b>d̂</b>|</li>
+      <li>Pythagoras links them:&nbsp; AF² + PF² = |<span class="arr">AP</span>|²</li>
+    </ul>
+    <p>Here <b>d̂</b> = <b>d</b> / |<b>d</b>| is the unit vector. If you forget to divide by |<b>d</b>|, your answer will be |<b>d</b>| times too big.</p>
+
+    <h2>Try it</h2>
+    <p>The line passes through A(1, 2, 3). Move P and change the direction <b>d</b>. The orange side uses the dot product, and the green side uses the cross product.</p>
+    <div class="demo">
+      <div id="proj-view"></div>
+      <div class="controls">
+        <div class="demo-title">Point and line</div>
+        <div id="proj-controls"></div>
+        <div class="readout" id="proj-read"></div>
+      </div>
+    </div>
+
+    <h2>Finding the foot of the perpendicular</h2>
+    <p>This is the standard H2 method. It's worth knowing even though the formulas above give the distance directly.</p>
+    <ol>
+      <li>F lies on the line, so <span class="arr">OF</span> = <b>a</b> + λ<b>d</b> for some λ.</li>
+      <li>Write <span class="arr">PF</span> = <span class="arr">OF</span> − <span class="arr">OP</span> in terms of λ.</li>
+      <li><span class="arr">PF</span> is perpendicular to the line, so <span class="arr">PF</span> · <b>d</b> = 0. Solve this for λ.</li>
+      <li>Substitute λ back in to get F. The distance is then |<span class="arr">PF</span>|.</li>
+    </ol>
+    <p>To <b>reflect</b> P in the line, use the fact that F is the midpoint of P and its image P′, so <span class="arr">OP′</span> = 2<span class="arr">OF</span> − <span class="arr">OP</span>.</p>
+
+    <h2>The same idea, everywhere</h2>
+    <div class="readout" style="overflow-x:auto">
+      <table class="summary">
+        <thead><tr><th>You want</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td>Length of projection of <b>a</b> onto <b>b</b></td><td>|<b>a</b> · <b>b̂</b>|</td></tr>
+          <tr><td>Projection vector of <b>a</b> onto <b>b</b></td><td>(<b>a</b> · <b>b̂</b>) <b>b̂</b></td></tr>
+          <tr><td>Distance from P to a line (through A, direction <b>d</b>)</td><td>|<span class="arr">AP</span> × <b>d̂</b>|</td></tr>
+          <tr><td>Distance from P to a plane <b>r</b> · <b>n</b> = D</td><td>|<span class="arr">AP</span> · <b>n̂</b>| for any A on the plane, which is the same as |<span class="arr">OP</span> · <b>n</b> − D| / |<b>n</b>|</td></tr>
+          <tr><td>Shortest distance between skew lines</td><td>|(<b>a₂</b> − <b>a₁</b>) · <b>n̂</b>|, where <b>n</b> = <b>d₁</b> × <b>d₂</b></td></tr>
+          <tr><td>Distance between parallel planes</td><td>Take a point on one plane, then find its distance to the other</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Notice the pattern. To measure <b>along</b> a direction, you dot with a unit vector. A plane's normal points straight <b>across</b> to the plane, so distance to a plane uses the dot product with <b>n̂</b>. Distance to a line has no single "across" direction, which is why it uses the cross product.</p>
+
+    <h2>Worked example</h2>
+    <div class="example">
+      <p class="q">The line l has equation <b>r</b> = (1, 2, 3) + λ(2, −1, 1), and P is the point (4, 3, 5). Find the length of projection of <span class="arr">AP</span> onto l, the perpendicular distance from P to l, and the foot of the perpendicular.</p>
+      <details>
+        <summary>Show solution</summary>
+        <ol>
+          <li>A = (1, 2, 3), so <span class="arr">AP</span> = (3, 1, 2). Also |<b>d</b>| = √(4 + 1 + 1) = √6.</li>
+          <li><span class="arr">AP</span> · <b>d</b> = 6 − 1 + 2 = 7, so the length of projection = 7/√6 = <b>7√6/6 ≈ 2.86</b></li>
+          <li><span class="arr">AP</span> × <b>d</b> = ((1)(1) − (2)(−1), (2)(2) − (3)(1), (3)(−1) − (1)(2)) = (3, 1, −5), and |(3, 1, −5)| = √35</li>
+          <li>Perpendicular distance = √35 / √6 = <b>√210/6 ≈ 2.42</b></li>
+          <li>Foot: AF = 7/√6 along <b>d̂</b>, so <span class="arr">OF</span> = <b>a</b> + (7/6)<b>d</b> = <b>(10/3, 5/6, 25/6)</b></li>
+          <li>Check with Pythagoras: 49/6 + 35/6 = 84/6 = 14 = |<span class="arr">AP</span>|² ✓</li>
+        </ol>
+        <p>These are the starting values in the demo above.</p>
+      </details>
+    </div>
+
+    <div class="callout warn">
+      <b>Common mistakes</b>
+      <ul>
+        <li>Using <b>d</b> instead of <b>d̂</b>. Divide by |<b>d</b>|.</li>
+        <li>Using the position vector <span class="arr">OP</span> instead of <span class="arr">AP</span>. The vector must go from a point <i>on the line</i> to P.</li>
+        <li>Dotting when you should cross, or the other way round. Distance to a <b>plane</b> uses the dot product with the normal. Distance to a <b>line</b> uses the cross product with the direction.</li>
+      </ul>
+    </div>
+
+    <div class="next">
+      <a href="cross-product.html">← Cross product</a>
+      <a href="../">Try it in the 3D Lab →</a>
+    </div>
+  </main>
+
+  <script type="module">
+    import { createViewer } from '../js/viewer.js';
+    import { vectorControl, COLORS } from '../js/learn.js';
+    import { add, sub, scale, dot, cross, len } from '../js/math.js';
+    import { fmtNum, fmtExact, fmtVec } from '../js/format.js';
+
+    const A = [1, 2, 3];
+    const view = createViewer(document.getElementById('proj-view'), { cameraAt: [9, 6, 4], target: [1, 1, 2] });
+    const controls = document.getElementById('proj-controls');
+    const read = document.getElementById('proj-read');
+    const state = { P: [4, 3, 5], d: [2, -1, 1] };
+
+    vectorControl(controls, { name: 'P', color: COLORS.a, value: state.P, onChange: (v) => { state.P = v; draw(); } });
+    vectorControl(controls, { name: 'd', color: COLORS.b, value: state.d, min: -4, max: 4, onChange: (v) => { state.d = v; draw(); } });
+
+    function draw() {
+      const { P, d } = state;
+      view.clear();
+      view.point(A, '#0f172a', 'A');
+      view.point(P, COLORS.a, `P(${P.map(fmtNum).join(', ')})`);
+      const ld = len(d);
+      if (ld === 0) {
+        read.innerHTML = '<div class="muted">The direction can’t be the zero vector. Move a d slider.</div>';
+        return;
+      }
+      view.line(A, d, COLORS.b);
+      view.arrow(A, add(A, d), COLORS.b, 'd', { r: 0.05 });
+      const AP = sub(P, A);
+      const t = dot(AP, d) / (ld * ld);
+      const F = add(A, scale(d, t));
+      const proj = Math.abs(dot(AP, d)) / ld;
+      const dist = len(cross(AP, d)) / ld;
+      view.seg(A, P, COLORS.a, { r: 0.022 });
+      view.seg(A, F, COLORS.highlight, { r: 0.05 });
+      view.seg(F, P, COLORS.result, { r: 0.05 });
+      if (dist > 1e-9) {
+        view.point(F, COLORS.highlight, 'F');
+        if (proj > 1e-9) view.rightAngle(F, sub(A, F), sub(P, F), '#0f172a');
+      }
+      read.innerHTML = `
+        <div class="line"><span class="arr">AP</span> = ${fmtVec(AP)}, &nbsp; |<b>d</b>| = ${fmtExact(ld)}</div>
+        <div class="line" style="color:${COLORS.highlight}"><b>Projection</b> AF = |<span class="arr">AP</span> · <b>d</b>| / |<b>d</b>| = <b>${fmtExact(proj)}</b></div>
+        <div class="line" style="color:${COLORS.result}"><b>Distance</b> PF = |<span class="arr">AP</span> × <b>d</b>| / |<b>d</b>| = <b>${fmtExact(dist)}</b></div>
+        <div class="line">Foot F = ${fmtVec(F)} <span class="muted">(λ = ${fmtNum(t)})</span></div>
+        ${dist < 1e-9 ? '<div><span class="chip zero">P lies on the line</span></div>' : ''}
+        <div class="line muted">Check: AF² + PF² = ${fmtNum(proj * proj)} + ${fmtNum(dist * dist)} = ${fmtNum(dot(AP, AP))} = |<span class="arr">AP</span>|² ✓</div>`;
+    }
+    draw();
+  </script>
+</body>
+</html>
