@@ -15,7 +15,7 @@ Pick any two of them under **Compare** to get the standard exam answers, each wi
 | line & plane | intersection point, or parallel with distance; angle |
 | plane & plane | line of intersection, or parallel with distance; angle |
 
-There are also **Learn** pages (`learn/`). Each one explains a concept and has a 3D demo with sliders, a worked example and common mistakes:
+There's also a **Learn** page (`learn/`) with one section per concept. Each section has a 3D demo with sliders, a worked example and common mistakes:
 
 - **Dot product**: angles, the perpendicular test, projections
 - **Cross product**: normals, the right-hand rule, areas
@@ -44,7 +44,7 @@ style.css         all styling (phones stack the 3D view above the panel)
 js/app.js         3D scene (three.js), object cards, wiring everything together
 js/viewer.js      small reusable 3D viewer used by the Learn pages
 js/learn.js       slider controls and colours for the Learn pages
-learn/            the Learn pages (one HTML file per topic)
+learn/index.html  the Learn page (all lessons; the old per-topic files redirect to their section)
 learn.css         styling for the Learn pages
 js/analysis.js    the maths for each "Compare" pair: start here to add a new comparison
 js/math.js        vector operations and input parsing ("(1,2,3)", "i + 2j - k", "1/2")

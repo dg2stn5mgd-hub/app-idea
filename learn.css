@@ -20,11 +20,18 @@ body { background: var(--bg); line-height: 1.6; }
 }
 .page h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 8px; text-wrap: balance; }
 .page .lede { font-size: 1.1rem; color: var(--muted); margin: 0 0 28px; max-width: 65ch; }
-.page h2 {
-  font-size: 1.3rem; text-transform: none; letter-spacing: 0; color: var(--ink);
-  margin: 44px 0 10px; text-wrap: balance;
-}
-.page h3 { font-size: 1.05rem; margin: 24px 0 6px; }
+/* Headings: h1 page title, h2 lesson title, h3 part of a lesson, h4 sub-part */
+.page h2, .page h3 { text-transform: none; letter-spacing: 0; color: var(--ink); text-wrap: balance; }
+.page h2.section-title { font-size: 1.7rem; line-height: 1.25; margin: 0 0 8px; }
+.page h3 { font-size: 1.3rem; margin: 40px 0 10px; }
+.page h4 { font-size: 1.05rem; margin: 24px 0 6px; }
+
+/* One lesson per section, divided by a rule */
+.lesson { margin-top: 56px; padding-top: 40px; border-top: 2px solid var(--line); scroll-margin-top: 64px; }
+.top-link { margin-top: 24px; font-size: 0.9rem; }
+.top-link a { text-decoration: none; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 .page p, .page li { max-width: 68ch; }
 .page a { color: var(--accent); }
 
@@ -123,6 +130,8 @@ body { background: var(--bg); line-height: 1.6; }
   .demo .viewer { height: 340px; }
   .demo .controls { border-left: none; border-top: 1px solid var(--line); }
   .page h1 { font-size: 1.6rem; }
+  .page h2.section-title { font-size: 1.45rem; }
+  .lesson { scroll-margin-top: 96px; }
 }
 
 /* Summary table */
