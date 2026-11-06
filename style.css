@@ -32,6 +32,10 @@ button, input, select { font: inherit; color: inherit; }
 }
 .brand h1 { margin: 0; font-size: 1.4rem; letter-spacing: -0.01em; }
 .brand p { margin: 4px 0 0; color: var(--muted); font-size: 0.9rem; line-height: 1.4; }
+.brand-links { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; font-size: 0.88rem; }
+.brand-links a { color: var(--accent); text-decoration: none; }
+.brand-links a:first-child { font-weight: 600; }
+.brand-links a:hover { text-decoration: underline; }
 section { margin-top: 22px; }
 h2 {
   font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em;
