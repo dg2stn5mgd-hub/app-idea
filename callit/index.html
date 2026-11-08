@@ -351,6 +351,33 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text-a
 .pill.yes{background:var(--navy);color:#fff}
 .pill.no{background:#fff;color:var(--navy);box-shadow:inset 0 0 0 1.5px var(--navy)}
 .resolved-tag{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:var(--accent-deep);background:var(--accent-tint);padding:3px 8px;border-radius:6px}
+.pf{margin:16px 20px 0;padding:16px 16px 6px;border:1px solid var(--line);border-radius:18px}
+.pf-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.pf-v{font-family:var(--serif);font-size:30px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums;line-height:1.1;margin-top:4px;display:flex;align-items:baseline;gap:6px}
+.pf-v small{font-family:var(--sans);font-size:14px;font-weight:600;color:var(--muted)}
+.pf-v small span{font-weight:500}
+.pf-sub span{white-space:nowrap}
+.pf-sub{display:flex;gap:8px;align-items:center;margin-top:4px;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.pf-ch{font-weight:600}
+.pf-ch.up{color:var(--green)}.pf-ch.down{color:var(--red)}
+.mseg{display:flex;padding:2px;border-radius:9px;background:var(--soft);border:1px solid var(--line);flex:none}
+.mseg button{padding:5px 11px;border-radius:7px;font-size:12px;font-weight:600;color:var(--muted)}
+.mseg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.pf svg{width:100%;height:auto;display:block;margin-top:10px;touch-action:none;cursor:crosshair;overflow:visible}
+.pf .pfl{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.1s var(--ease) .1s forwards}
+.pf-break{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line2)}
+.pf-break div{display:flex;flex-direction:column;gap:2px}
+.pf-break small{font-size:11px;color:var(--muted)}
+.pf-break b{font-size:15px;font-variant-numeric:tabular-nums}
+.pf-ev{margin-top:4px}
+.pf-ev>*{display:flex;align-items:center;gap:10px;width:100%;padding:9px 0;border-top:1px solid var(--line2);font-size:13px}
+.pf-ev i{width:9px;height:9px;border-radius:50%;flex:none}
+.pf-ev i.win{background:var(--green)}.pf-ev i.loss{background:var(--faint)}
+.pf-ev span{flex:1}
+.pf-ev em{font-style:normal;color:var(--muted);font-size:12px}
+.pf-ev b{font-variant-numeric:tabular-nums}
+.pf-ev b.win{color:var(--green)}.pf-ev b.loss{color:var(--muted)}
+.pf-foot{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:10px 0 8px;border-top:1px solid var(--line2);margin-top:2px}
 .lowpts{margin:16px 20px 0;padding:16px;border-radius:16px;border:1.5px dashed var(--navy-mid);background:var(--navy-tint)}
 .lowpts b{font-family:var(--serif);font-size:17px;display:block}
 .lowpts p{font-size:13.5px;color:var(--ink2);margin:6px 0 12px;line-height:1.5}
@@ -546,7 +573,7 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;bac
    ===================================================================== */
 const DATA = {
   user: {
-    name: "Kai", fullName: "Kai Tan", handle: "@kaitan", school: "NTU", joined: "Aug 2026",
+    name: "Kai", fullName: "Kai Tan", handle: "@kaitan", school: "NTU", joined: "Jan 2026",
     points: 340,          // current balance
     streak: 12,           // days in a row with at least one quiz
     longestStreak: 21,
@@ -865,6 +892,19 @@ const DATA = {
     ]
   },
 
+  // Portfolio = points available + points staked in open calls.
+  // The last value of each series is replaced by your live total.
+  portfolio: {
+    month: [180, 195, 205, 220, 220, 240, 250, 265, 225, 240, 250, 265, 280, 290, 290,
+            300, 310, 260, 270, 280, 285, 295, 300, 310, 368, 368, 375, 380, 385, 390],   // last 30 days, oldest first
+    year:  [60, 110, 150, 135, 190, 230, 210, 255, 185, 300, 390],                       // end of each month, Jan to now
+    events: [ // shown on the month view
+      { daysAgo: 21, type: "loss", text: "September inflation call missed", delta: -40 },
+      { daysAgo: 12, type: "loss", text: "MRT fare review call missed", delta: -50 },
+      { daysAgo: 5,  type: "win",  text: "October BTO call won", delta: 58, results: "bto" }
+    ]
+  },
+
   badges: [
     { name: "Called it ×5", desc: "5 correct forecasts", icon: "target", earned: true },
     { name: "30-day reader", desc: "21 of 30 days", icon: "book", progress: 21 / 30 },
@@ -1175,11 +1215,89 @@ SCREENS.predict = () => {
   return { html: `
     <div class="topbar"><div class="page-title">Predict</div>${chips()}</div>
     <div class="pad"><p class="page-sub">Forecast Singapore's big questions with the points you've earned from reading.</p></div>
-    ${low ? lowPoints() : `<div class="balance"><div><small>Available to call with</small><div class="bv">${SPARK}<span data-points>${fmt(S.points)}</span> pts</div></div><button data-tab="read">Earn more by reading →</button></div>`}
+    ${low ? lowPoints() : ""}
+    ${portfolioCard()}
     <div class="seg"><button class="${live ? "on" : ""}" data-act="ptab" data-v="live">Live (${DATA.markets.length})</button><button class="${!live ? "on" : ""}" data-act="ptab" data-v="results">Results (${DATA.resolved.length})</button></div>
     <div class="mlist stagger">${list}</div>
-    <p class="m-foot">Points have no cash value and can't be bought. Call It is a forecasting game, not gambling.</p>` };
+    <p class="m-foot">Points have no cash value and can't be bought. Call It is a forecasting game, not gambling.</p>`,
+    after(el) { wirePortfolio(el); } };
 };
+
+/* ---------- Portfolio: points available + points in open calls, over time ---------- */
+const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+function openCalls() { return Object.entries(S.calls).filter(([id]) => M(id)).map(([, c]) => c); }
+function pfNow() { return S.points + openCalls().reduce((t, c) => t + c.stake, 0); }
+function pfSeries() {
+  const range = S.pfRange || "month", src = DATA.portfolio[range];
+  const vals = src.slice(); vals[vals.length - 1] = pfNow();
+  const n = vals.length, today = new Date();
+  const labels = vals.map((_, i) => {
+    if (range === "year") return MON[i] + " " + today.getFullYear();
+    const d = new Date(today); d.setDate(d.getDate() - (n - 1 - i));
+    return i === n - 1 ? "Today" : d.getDate() + " " + MON[d.getMonth()];
+  });
+  const ticks = range === "year" ? vals.map((_, i) => MON[i][0]) : null;
+  const events = range === "month" ? DATA.portfolio.events.map(e => ({ ...e, i: n - 1 - e.daysAgo })).filter(e => e.i >= 0) : [];
+  return { range, vals, labels, ticks, events };
+}
+const PF = { W: 326, H: 132, pl: 2, pr: 36, pt: 10, pb: 22 };
+function pfScale(vals) {
+  const { W, H, pl, pr, pt, pb } = PF;
+  const lo = Math.max(0, Math.floor(Math.min(...vals) * 0.85 / 50) * 50), hi = Math.ceil(Math.max(...vals) * 1.05 / 50) * 50;
+  return { lo, hi, x: i => pl + i * (W - pl - pr) / (vals.length - 1), y: v => pt + (hi - v) / (hi - lo) * (H - pt - pb) };
+}
+function portfolioCard() {
+  const P = pfSeries(), v = P.vals, n = v.length, { W, H, pl, pr, pb } = PF;
+  const { lo, hi, x, y } = pfScale(v);
+  const ch = v[n - 1] - v[0], pct = v[0] ? Math.round(ch / v[0] * 100) : 0;
+  const line = v.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)} ${y(p).toFixed(1)}`).join(" ");
+  const area = `${line} L${x(n - 1).toFixed(1)} ${H - pb} L${x(0)} ${H - pb} Z`;
+  const grid = [lo, (lo + hi) / 2, hi].map(g => `<line x1="${pl}" x2="${W - pr + 4}" y1="${y(g)}" y2="${y(g)}" stroke="#eceae5"/><text x="${W - pr + 8}" y="${y(g) + 4}" font-size="10.5" fill="#9a9ea6">${Math.round(g)}</text>`).join("");
+  const xt = P.ticks
+    ? P.ticks.map((t, i) => `<text x="${x(i)}" y="${H - 5}" font-size="10" fill="#9a9ea6" text-anchor="middle">${t}</text>`).join("")
+    : [0, 10, 20, n - 1].map(i => `<text x="${x(i)}" y="${H - 5}" font-size="10" fill="#9a9ea6" text-anchor="${i === 0 ? "start" : i === n - 1 ? "end" : "middle"}">${P.labels[i]}</text>`).join("");
+  const marks = P.events.map(e => `<circle cx="${x(e.i)}" cy="${y(v[e.i])}" r="4.5" fill="${e.type === "win" ? "#1d8048" : "#9a9ea6"}" stroke="#fff" stroke-width="2"/>`).join("");
+  const open = openCalls(), staked = open.reduce((t, c) => t + c.stake, 0), ret = open.reduce((t, c) => t + payout(c.stake, c.pct), 0);
+  const evs = P.events.slice().reverse().map(e => {
+    const tag = e.results ? `button data-go="results" data-id="${e.results}"` : "div";
+    return `<${tag}><i class="${e.type}"></i><span>${e.text}<br><em>${P.labels[e.i]}</em></span><b class="${e.type}">${e.delta > 0 ? "+" : "\u2212"}${Math.abs(e.delta)}</b></${tag.split(" ")[0]}>`;
+  }).join("");
+  return `<div class="pf" data-pf>
+    <div class="pf-top"><div><span class="label">Your portfolio</span>
+      <div class="pf-v"><span data-pf-v>${fmt(v[n - 1])}</span><small>pts \u00b7 <span data-pf-l>${P.labels[n - 1]}</span></small></div>
+      <div class="pf-sub"><span class="pf-ch ${ch >= 0 ? "up" : "down"}">${ch >= 0 ? "+" : "\u2212"}${fmt(Math.abs(ch))} (${ch >= 0 ? "+" : "\u2212"}${Math.abs(pct)}%) this ${P.range}</span></div></div>
+      <div class="mseg"><button class="${P.range === "month" ? "on" : ""}" data-act="pf" data-v="month">Month</button><button class="${P.range === "year" ? "on" : ""}" data-act="pf" data-v="year">Year</button></div></div>
+    <svg viewBox="0 0 ${W} ${H}" data-pf-svg aria-label="Portfolio value over the past ${P.range}">
+      <defs><linearGradient id="pfg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#13294b" stop-opacity=".16"/><stop offset="1" stop-color="#13294b" stop-opacity="0"/></linearGradient></defs>
+      ${grid}<path d="${area}" fill="url(#pfg)"/>
+      <path class="pfl" d="${line}" pathLength="1" fill="none" stroke="#13294b" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+      ${marks}${xt}
+      <line data-pf-guide x1="0" x2="0" y1="${PF.pt}" y2="${H - pb}" stroke="#13294b" stroke-opacity=".35" stroke-dasharray="3 3" visibility="hidden"/>
+      <circle data-pf-dot cx="${x(n - 1)}" cy="${y(v[n - 1])}" r="5" fill="#13294b" stroke="#fff" stroke-width="2"/>
+    </svg>
+    <div class="pf-break">
+      <div><small>Available</small><b><span data-points>${fmt(S.points)}</span></b></div>
+      <div><small>In ${open.length} open call${open.length === 1 ? "" : "s"}</small><b>${fmt(staked)}</b></div>
+      <div><small>Back if all right</small><b>${fmt(ret)}</b></div>
+    </div>
+    ${evs ? `<div class="pf-ev">${evs}</div>` : `<div class="pf-foot"><span>${U.callsRight} calls won \u00b7 ${U.callsMade - U.callsRight} missed</span><span>Since ${U.joined}</span></div>`}
+  </div>`;
+}
+function wirePortfolio(el) {
+  const svg = $("[data-pf-svg]", el); if (!svg) return;
+  const P = pfSeries(), v = P.vals, n = v.length, { x, y } = pfScale(v);
+  const g = $("[data-pf-guide]", svg), dot = $("[data-pf-dot]", svg), vEl = $("[data-pf-v]", el), lEl = $("[data-pf-l]", el);
+  const show = i => {
+    g.setAttribute("x1", x(i)); g.setAttribute("x2", x(i)); g.setAttribute("visibility", i === n - 1 ? "hidden" : "visible");
+    dot.setAttribute("cx", x(i)); dot.setAttribute("cy", y(v[i]));
+    vEl.textContent = fmt(v[i]); lEl.textContent = P.labels[i];
+  };
+  const at = e => { const r = svg.getBoundingClientRect(), px = (e.clientX - r.left) / r.width * PF.W; return Math.max(0, Math.min(n - 1, Math.round((px - PF.pl) / ((PF.W - PF.pl - PF.pr) / (n - 1))))); };
+  svg.addEventListener("pointermove", e => show(at(e)));
+  svg.addEventListener("pointerdown", e => { svg.setPointerCapture(e.pointerId); show(at(e)); });
+  svg.addEventListener("pointerleave", () => show(n - 1));
+  svg.addEventListener("pointerup", e => { if (e.pointerType !== "mouse") show(n - 1); });
+}
 
 function lowPoints() {
   return `<div class="lowpts"><b>You're out of points. Read your way back.</b>
@@ -1494,6 +1612,7 @@ const ACT = {
   side: t => { S.drafts[cur().id].side = t.dataset.side; refresh(); },
   call: () => makeCall(),
   filter: t => { S.readFilter = t.dataset.v; refresh(); },
+  pf: t => { S.pfRange = t.dataset.v; refresh(); },
   ptab: t => { S.predictTab = t.dataset.v; refresh(); curEl().classList.remove("no-anim"); },
   btab: t => { S.boardTab = t.dataset.v; refresh(); curEl().classList.remove("no-anim"); },
   toast: t => toast(t.dataset.msg)
