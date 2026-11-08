@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Graphs and Transformations</title>
+  <meta name="description" content="Interactive H2 Math (9758) lessons on graphs and transformations: curve sketching, asymptotes, rational functions, conics and transformations of y = f(x).">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="../learn.css">
+  <link rel="stylesheet" href="../graphs.css">
+</head>
+<body>
+  <nav class="topnav" id="top">
+    <a class="brand" href="./">Graph Lab</a>
+    <a href="#explorer">Explorer</a>
+    <a href="#transformations">Transformations</a>
+    <a href="#rational">Rational functions</a>
+    <a href="#conics">Conics</a>
+    <a href="#checklist">Checklist</a>
+    <a href="../">Vector Lab</a>
+  </nav>
+
+  <main class="page">
+    <h1>Graphs and transformations</h1>
+    <p class="lede">Everything in the H2 Math <i>Graphs and transformations</i> topic, on one page. Each section has a graph you can change, a worked example and the mistakes to avoid. Drag a graph to move it, and scroll or pinch to zoom.</p>
+
+    <h3 style="margin-top:0">What the syllabus asks for</h3>
+    <ol class="syllabus">
+      <li><div>Use a graphing calculator to graph a given function. <a href="#explorer">Graph explorer →</a></div></li>
+      <li><div>Relate these equations to their graphs: <span class="eq">x²/a² ± y²/b² = 1</span>, <span class="eq">y = (ax + b)/(cx + d)</span> and <span class="eq">y = (ax² + bx + c)/(dx + e)</span>. <a href="#rational">Rational functions →</a> <a href="#conics">Conics →</a></div></li>
+      <li><div>Characteristics of graphs: symmetry, intersections with the axes, turning points and asymptotes. <a href="#explorer">Graph explorer →</a></div></li>
+      <li><div>Find the equations of asymptotes and axes of symmetry, and the restrictions on the possible values of x and/or y. <a href="#rational2">Range by discriminant →</a></div></li>
+      <li><div>The effect of <span class="eq">y = af(x)</span>, <span class="eq">y = f(x) + a</span>, <span class="eq">y = f(x + a)</span>, <span class="eq">y = f(ax)</span>, and combinations of these. <a href="#transformations">Transformations →</a></div></li>
+    </ol>
+
+    <!-- ========================================================= -->
+    <section class="lesson" id="explorer">
+      <h2 class="section-title">Graph explorer</h2>
+      <p class="lede">Type any function and see its graph with every key feature marked. This page does the same job as your GC, but it also lists every feature for you.</p>
+
+      <div class="demo">
+        <div id="ex-plot"></div>
+        <div class="controls">
+          <div class="demo-title">Plot y = f(x)</div>
+          <label class="field">y =
+            <input type="text" id="ex-input" value="(x^2 + x + 4)/(x - 1)" spellcheck="false" autocomplete="off" aria-label="Function of x">
+          </label>
+          <div class="err" id="ex-err"></div>
+          <div class="presets" id="ex-presets"></div>
+          <label class="toggle"><input type="checkbox" id="ex-points" checked> Mark intercepts and turning points</label>
+          <label class="toggle"><input type="checkbox" id="ex-asym" checked> Draw asymptotes</label>
+          <ul class="feat" id="ex-read"></ul>
+          <p class="hint">Write powers with <code>^</code>, like <code>x^2</code>. You can use <code>e^x</code>, <code>ln x</code>, <code>sqrt(x)</code>, <code>|x|</code>, <code>sin x</code> and <code>pi</code>. Values are found numerically. Simple exact values like 3/2 or √3 are recognised; anything else is given to 3 s.f.</p>
+        </div>
+      </div>
+
+      <h3>What to look for on any graph</h3>
+      <ul class="facts">
+        <li><b>Intersections with the axes.</b> Put x = 0 to get the y-intercept, and solve y = 0 for the x-intercepts. Always write them as coordinates, e.g. (0, −4).</li>
+        <li><b>Turning points.</b> These are where dy/dx = 0. Say whether each one is a maximum or a minimum. On the GC use <i>G-Solv → MAX / MIN</i>, or <i>CALC → maximum / minimum</i> on a TI.</li>
+        <li><b>Vertical asymptotes</b> x = k are where the denominator is zero but the numerator isn't. The curve shoots off to ±∞ there.</li>
+        <li><b>Horizontal asymptotes</b> y = k come from what y tends to as x → ±∞. <b>Oblique asymptotes</b> y = mx + c come from long division.</li>
+        <li><b>Symmetry.</b> If f(−x) = f(x), the graph is symmetric about the y-axis (an even function). If f(−x) = −f(x), it has rotational symmetry about the origin (an odd function).</li>
+      </ul>
+
+      <div class="callout warn">
+        <p><b>Don't trust the GC screen alone.</b></p>
+        <ul>
+          <li>A GC often draws a steep near-vertical line at an asymptote. That line is <b>not</b> part of the curve.</li>
+          <li>Pick a sensible window. Zoom out to see how the curve behaves as x → ±∞, and zoom in to see turning points that sit close together.</li>
+          <li>Give answers to 3 s.f. unless the question asks for exact values. Use the algebra (below) whenever an exact answer is asked for.</li>
+        </ul>
+      </div>
+      <p class="top-link"><a href="#top">↑ Back to top</a></p>
+    </section>
+
+    <!-- ========================================================= -->
+    <section class="lesson" id="transformations">
+      <h2 class="section-title">Transformations of y = f(x)</h2>
+      <p class="lede">Four basic moves cover every transformation in the syllabus. Changes <b>outside</b> the f act on y and do what you'd expect. Changes <b>inside</b> the f act on x and do the opposite of what they look like.</p>
+
+      <div class="table-wrap">
+        <table class="summary">
+          <thead><tr><th>New equation</th><th>Replace…</th><th>Effect on the graph of y = f(x)</th><th>Point (x, y) moves to</th></tr></thead>
+          <tbody>
+            <tr><td class="eq">y = f(x) + a</td><td>y by y − a</td><td>Translation of <b>a units in the positive y-direction</b></td><td>(x, y + a)</td></tr>
+            <tr><td class="eq">y = f(x + a)</td><td>x by x + a</td><td>Translation of <b>a units in the negative x-direction</b></td><td>(x − a, y)</td></tr>
+            <tr><td class="eq">y = af(x)</td><td>y by y/a</td><td>Scaling <b>parallel to the y-axis</b> by a factor of <b>a</b></td><td>(x, ay)</td></tr>
+            <tr><td class="eq">y = f(ax)</td><td>x by ax</td><td>Scaling <b>parallel to the x-axis</b> by a factor of <b>1/a</b></td><td>(x/a, y)</td></tr>
+            <tr><td class="eq">y = −f(x)</td><td>y by −y</td><td>Reflection in the <b>x-axis</b></td><td>(x, −y)</td></tr>
+            <tr><td class="eq">y = f(−x)</td><td>x by −x</td><td>Reflection in the <b>y-axis</b></td><td>(−x, y)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Build a sequence of transformations</h3>
+      <p>Choose a starting curve, then add transformations one at a time. Press <b>▶ Animate</b> to watch the curve move through each step in turn, or click a step to replay just that one. The equation is updated after each step. The marked points and asymptotes show where everything ends up.</p>
+      <div class="demo">
+        <div id="tf-plot"><div class="tf-now" id="tf-now"></div></div>
+        <div class="controls">
+          <div class="demo-title">Start with y = f(x)</div>
+          <select id="tf-base" aria-label="Starting curve"></select>
+          <div class="demo-title">Then apply, in order</div>
+          <ol class="seq" id="tf-seq"></ol>
+          <div class="seq-add">
+            <select id="tf-type" aria-label="Transformation">
+              <option value="xtrans">y = f(x + a)</option>
+              <option value="xscale">y = f(ax)</option>
+              <option value="yscale">y = af(x)</option>
+              <option value="ytrans">y = f(x) + a</option>
+            </select>
+            <input id="tf-val" type="text" value="2" aria-label="Value of a" spellcheck="false">
+            <button class="btn primary" id="tf-add" type="button">Add</button>
+          </div>
+          <div class="err" id="tf-err"></div>
+          <div class="presets"><button type="button" class="btn primary" id="tf-play">▶ Animate</button><button type="button" id="tf-clear">Clear steps</button><button type="button" id="tf-undo">Undo last</button></div>
+          <div class="eq-big" id="tf-eq"></div>
+          <div class="track" id="tf-track"></div>
+        </div>
+      </div>
+
+      <h3>Order matters</h3>
+      <p>Two translations commute, and so do two scalings. But a translation and a scaling <b>in the same direction</b> don't. Look at <span class="eq">y = f(2x + 6)</span>:</p>
+      <ul class="facts">
+        <li><b>Translate first:</b> f(x) → f(x + 6), a translation of 6 units in the negative x-direction. Then replace x by 2x to get f(2x + 6), a scaling parallel to the x-axis by factor ½. ✓</li>
+        <li><b>Scale first:</b> f(x) → f(2x). Then you need f(2(x + 3)), so replace x by x + 3. That's a translation of only <b>3</b> units in the negative x-direction. ✓</li>
+        <li><b>Wrong:</b> scale by ½ and then translate 6 units. That gives f(2(x + 6)) = f(2x + 12). ✗</li>
+      </ul>
+      <p>The trick: each step replaces <b>x</b> with something. It doesn't touch the numbers already in the bracket. Work it out one replacement at a time and you won't go wrong. Try both orders in the builder above.</p>
+
+      <h3>Worked examples</h3>
+      <div class="example">
+        <p class="q">The curve y = f(x) undergoes, in succession, (A) a translation of 2 units in the positive x-direction, (B) a scaling parallel to the y-axis by a factor of 3, (C) a translation of 1 unit in the negative y-direction. Find the equation of the new curve.</p>
+        <details>
+          <summary>Show solution</summary>
+          <ol>
+            <li>(A) Replace x by x − 2: <span class="eq">y = f(x − 2)</span></li>
+            <li>(B) Replace y by y/3: y/3 = f(x − 2), so <span class="eq">y = 3f(x − 2)</span></li>
+            <li>(C) Replace y by y + 1: y + 1 = 3f(x − 2), so <span class="eq"><b>y = 3f(x − 2) − 1</b></span></li>
+            <li>The point (4, 5) on y = f(x) maps to (6, 5) → (6, 15) → (6, 14).</li>
+          </ol>
+        </details>
+      </div>
+      <div class="example">
+        <p class="q">Describe a sequence of transformations that maps the graph of y = 1/x onto the graph of y = (2x + 5)/(x + 1).</p>
+        <details>
+          <summary>Show solution</summary>
+          <ol>
+            <li>Divide first: 2x + 5 = 2(x + 1) + 3, so <span class="eq">y = 2 + 3/(x + 1)</span>.</li>
+            <li>1/x → 1/(x + 1): a <b>translation of 1 unit in the negative x-direction</b>.</li>
+            <li>→ 3/(x + 1): a <b>scaling parallel to the y-axis by a factor of 3</b>.</li>
+            <li>→ 3/(x + 1) + 2: a <b>translation of 2 units in the positive y-direction</b>.</li>
+            <li>Check with the asymptotes: x = 0, y = 0 move to x = −1, y = 2. ✓</li>
+          </ol>
+        </details>
+      </div>
+      <div class="example">
+        <p class="q">The graph of y = f(x) has a maximum point at (2, 6) and asymptotes x = 1 and y = 3. Find the corresponding features of y = 2f(−x) + 1.</p>
+        <details>
+          <summary>Show solution</summary>
+          <ol>
+            <li>Point: x → −x reflects in the y-axis, then y → 2y + 1. So (2, 6) → (−2, 6) → (−2, 13).</li>
+            <li>A positive scaling keeps a maximum as a maximum, so <b>(−2, 13)</b> is still a maximum. (A negative factor would turn it into a minimum.)</li>
+            <li>Vertical asymptote x = 1 → <b>x = −1</b>. Horizontal asymptote y = 3 → y = 2(3) + 1 = <b>7</b>.</li>
+          </ol>
+        </details>
+      </div>
+
+      <h3>Practice: describe the transformations</h3>
+      <div class="practice" id="practice">
+        <p class="q" id="pr-q"></p>
+        <div class="row-btns">
+          <button class="btn" id="pr-show" type="button">Show answer</button>
+          <button class="btn" id="pr-load" type="button">Check it in the builder</button>
+          <button class="btn primary" id="pr-new" type="button">New question</button>
+        </div>
+        <div class="ans" id="pr-ans"></div>
+      </div>
+
+      <div class="callout warn">
+        <p><b>Common mistakes</b></p>
+        <ul>
+          <li>Writing "scaling by factor 2" for y = f(2x). Changes inside the bracket do the opposite: the factor is <b>½</b>, parallel to the <b>x</b>-axis.</li>
+          <li>Translating the wrong way: y = f(x − 3) moves the curve 3 units in the <b>positive</b> x-direction.</li>
+          <li>Leaving out "parallel to the x-axis / y-axis", or the direction of a translation. You lose marks without them.</li>
+          <li>Forgetting the asymptotes. Transform them as well, using the same rules as for points.</li>
+        </ul>
+      </div>
+      <p class="top-link"><a href="#top">↑ Back to top</a></p>
+    </section>
+
+    <!-- ========================================================= -->
+    <section class="lesson" id="rational">
+      <h2 class="section-title">Rational functions: y = (ax + b)/(cx + d)</h2>
+      <p class="lede">Every one of these curves is a rectangular hyperbola. It's just y = 1/x moved and stretched. Divide it out to see how.</p>
+      <div class="formula"><span class="eq">y = <span class="frac"><span>ax + b</span><span>cx + d</span></span> = <span class="frac"><span>a</span><span>c</span></span> + <span class="frac"><span>bc − ad</span><span>c(cx + d)</span></span></span></div>
+      <ul class="facts">
+        <li><b>Vertical asymptote:</b> the denominator is zero, so <span class="eq">x = −d/c</span>.</li>
+        <li><b>Horizontal asymptote:</b> as x → ±∞, y → a/c, so <span class="eq">y = a/c</span>.</li>
+        <li><b>Restrictions:</b> x ≠ −d/c, and y can take every real value except a/c.</li>
+        <li>The two asymptotes cross at (−d/c, a/c). The curve has rotational symmetry about this point. Both lines through it at gradient ±1 are also lines of symmetry.</li>
+        <li>No turning points: the gradient (ad − bc)/(cx + d)² never changes sign.</li>
+      </ul>
+      <div class="demo">
+        <div id="r1-plot"></div>
+        <div class="controls">
+          <div class="demo-title">Change a, b, c, d</div>
+          <div id="r1-sliders"></div>
+          <ul class="feat" id="r1-read"></ul>
+        </div>
+      </div>
+      <div class="example">
+        <p class="q">Sketch y = (2x − 1)/(x + 3), stating the equations of the asymptotes and the coordinates of the points where the curve crosses the axes.</p>
+        <details>
+          <summary>Show solution</summary>
+          <ol>
+            <li>Write it as y = 2 − 7/(x + 3).</li>
+            <li>Asymptotes: <b>x = −3</b> and <b>y = 2</b>.</li>
+            <li>x = 0 gives y = −1/3, so the curve crosses the y-axis at <b>(0, −1/3)</b>. y = 0 gives 2x − 1 = 0, so it crosses the x-axis at <b>(1/2, 0)</b>.</li>
+            <li>Because of the −7, the branches sit in the top-left and bottom-right of the asymptotes: as x → −3⁺, y → −∞.</li>
+          </ol>
+        </details>
+      </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <section class="lesson" id="rational2">
+      <h2 class="section-title">Rational functions: y = (ax² + bx + c)/(dx + e)</h2>
+      <p class="lede">A quadratic over a linear. Long division gives a straight line plus a small leftover. That line is the oblique asymptote.</p>
+      <div class="formula"><span class="eq">y = <span class="frac"><span>ax² + bx + c</span><span>dx + e</span></span> = px + q + <span class="frac"><span>r</span><span>dx + e</span></span></span></div>
+      <ul class="facts">
+        <li><b>Vertical asymptote:</b> <span class="eq">x = −e/d</span>.</li>
+        <li><b>Oblique asymptote:</b> <span class="eq">y = px + q</span>, because r/(dx + e) → 0 as x → ±∞.</li>
+        <li>The curve has <b>two turning points</b> when r/a &gt; 0 and <b>none</b> when r/a &lt; 0. If r = 0, the "curve" is just a straight line with a hole in it.</li>
+        <li><b>Range by the discriminant.</b> Rearrange y(dx + e) = ax² + bx + c into a quadratic in x. For a real x to exist, its discriminant must be ≥ 0. Solving that inequality gives the possible values of y.</li>
+      </ul>
+      <div class="demo">
+        <div id="r2-plot"></div>
+        <div class="controls">
+          <div class="demo-title">Change a, b, c, d, e</div>
+          <div id="r2-sliders"></div>
+          <ul class="feat" id="r2-read"></ul>
+        </div>
+      </div>
+      <div class="example">
+        <p class="q">For the curve y = (x² + x + 4)/(x − 1), find the asymptotes and the set of values that y cannot take. Hence find the turning points exactly.</p>
+        <details>
+          <summary>Show solution</summary>
+          <ol>
+            <li>Long division: x² + x + 4 = (x − 1)(x + 2) + 6, so y = x + 2 + 6/(x − 1).</li>
+            <li>Asymptotes: <b>x = 1</b> and <b>y = x + 2</b>.</li>
+            <li>y(x − 1) = x² + x + 4 rearranges to x² + (1 − y)x + (4 + y) = 0.</li>
+            <li>Real x needs (1 − y)² − 4(4 + y) ≥ 0, which simplifies to y² − 6y − 15 ≥ 0.</li>
+            <li>The roots are y = 3 ± 2√6, so y ≤ 3 − 2√6 or y ≥ 3 + 2√6. <b>y cannot take values in (3 − 2√6, 3 + 2√6)</b>.</li>
+            <li>The boundary values are the y-coordinates of the turning points. At those values the quadratic has a repeated root, x = (y − 1)/2. This gives <b>max (1 − √6, 3 − 2√6)</b> and <b>min (1 + √6, 3 + 2√6)</b>.</li>
+            <li>No x-intercepts, since x² + x + 4 = 0 has discriminant −15 &lt; 0. The y-intercept is (0, −4).</li>
+          </ol>
+        </details>
+      </div>
+      <div class="callout warn">
+        <p><b>Common mistakes</b></p>
+        <ul>
+          <li>Drawing the curve crossing its vertical asymptote. It never can.</li>
+          <li>Sketching the oblique asymptote without its equation, or without its intercepts on the axes.</li>
+          <li>Flipping the inequality from the discriminant. The y-values <b>outside</b> the two roots are allowed when the coefficient of y² is positive.</li>
+        </ul>
+      </div>
+      <p class="top-link"><a href="#top">↑ Back to top</a></p>
+    </section>
+
+    <!-- ========================================================= -->
+    <section class="lesson" id="conics">
+      <h2 class="section-title">Ellipses and hyperbolas: x²/a² ± y²/b² = 1</h2>
+      <p class="lede">With a plus sign you get an ellipse, a closed oval. With a minus sign you get a hyperbola: two branches that approach a pair of slant asymptotes.</p>
+      <div class="table-wrap">
+        <table class="summary">
+          <thead><tr><th>Equation</th><th>Shape</th><th>Key points</th><th>Asymptotes</th><th>Restrictions</th></tr></thead>
+          <tbody>
+            <tr><td class="eq">x²/a² + y²/b² = 1</td><td>Ellipse (a circle if a = b)</td><td>(±a, 0), (0, ±b)</td><td>None</td><td>−a ≤ x ≤ a, −b ≤ y ≤ b</td></tr>
+            <tr><td class="eq">x²/a² − y²/b² = 1</td><td>Hyperbola, opens left and right</td><td>Vertices (±a, 0)</td><td>y = ±(b/a)x</td><td>x ≤ −a or x ≥ a</td></tr>
+            <tr><td class="eq">y²/b² − x²/a² = 1</td><td>Hyperbola, opens up and down</td><td>Vertices (0, ±b)</td><td>y = ±(b/a)x</td><td>y ≤ −b or y ≥ b</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Replacing x by x − h and y by y − k moves the centre to (h, k). The lines of symmetry become x = h and y = k, and the asymptotes become <span class="eq">y − k = ±(b/a)(x − h)</span>.</p>
+      <div class="demo">
+        <div id="cn-plot"></div>
+        <div class="controls">
+          <div class="demo-title">Choose a conic</div>
+          <select id="cn-type" aria-label="Type of conic">
+            <option value="E">Ellipse (x − h)²/a² + (y − k)²/b² = 1</option>
+            <option value="H">Hyperbola (x − h)²/a² − (y − k)²/b² = 1</option>
+            <option value="V">Hyperbola (y − k)²/b² − (x − h)²/a² = 1</option>
+          </select>
+          <div id="cn-sliders"></div>
+          <ul class="feat" id="cn-read"></ul>
+        </div>
+      </div>
+      <div class="example">
+        <p class="q">Sketch (x − 1)²/4 + (y + 2)²/9 = 1, and state the restrictions on x and y.</p>
+        <details>
+          <summary>Show solution</summary>
+          <ol>
+            <li>It's an ellipse with centre (1, −2), a = 2 and b = 3.</li>
+            <li>Ends of the axes: (1 ± 2, −2) = (−1, −2) and (3, −2). (1, −2 ± 3) = (1, 1) and (1, −5).</li>
+            <li>Restrictions: <b>−1 ≤ x ≤ 3</b> and <b>−5 ≤ y ≤ 1</b>. Lines of symmetry: x = 1 and y = −2.</li>
+            <li>y-intercepts: put x = 0, so (y + 2)²/9 = 3/4 and y = −2 ± 3√3/2. Plot them on the sketch.</li>
+          </ol>
+        </details>
+      </div>
+      <div class="example">
+        <p class="q">Find the asymptotes of 4x² − 9y² = 36, and the coordinates of its vertices.</p>
+        <details>
+          <summary>Show solution</summary>
+          <ol>
+            <li>Divide by 36: x²/9 − y²/4 = 1, so a = 3 and b = 2.</li>
+            <li>Vertices: <b>(±3, 0)</b>. Asymptotes: <b>y = ±(2/3)x</b>.</li>
+            <li>A quick way to get the asymptotes: replace the 1 with 0. Then x²/9 = y²/4, so y = ±2x/3.</li>
+          </ol>
+        </details>
+      </div>
+      <p class="top-link"><a href="#top">↑ Back to top</a></p>
+    </section>
+
+    <!-- ========================================================= -->
+    <section class="lesson" id="related">
+      <h2 class="section-title">Related graphs: |f(x)|, f(|x|), 1/f(x) and f′(x)</h2>
+      <p class="lede">These four aren't in the <i>Graphs and transformations</i> section of the 9758 syllabus. But they come up in school notes and in other topics, like the gradient graph in calculus. Check with your teacher whether you need them.</p>
+      <div class="demo">
+        <div id="rl-plot"></div>
+        <div class="controls">
+          <div class="demo-title">Start with y = f(x)</div>
+          <select id="rl-base" aria-label="Starting curve"></select>
+          <div class="demo-title">Draw</div>
+          <div class="presets" id="rl-modes"></div>
+          <div class="readout" id="rl-read"></div>
+        </div>
+      </div>
+      <p class="top-link"><a href="#top">↑ Back to top</a></p>
+    </section>
+
+    <!-- ========================================================= -->
+    <section class="lesson" id="checklist">
+      <h2 class="section-title">Sketching checklist</h2>
+      <p class="lede">Most of the marks for a sketch come from labels, not from the shape. Before you move on, check you've done each of these.</p>
+      <ol class="steps">
+        <li><b>Asymptotes</b> drawn as dashed lines, with their <b>equations</b> written on them.</li>
+        <li><b>Axial intercepts</b> labelled as coordinates. Exact where you can, otherwise 3 s.f.</li>
+        <li><b>Turning points</b> labelled as coordinates.</li>
+        <li>The curve <b>approaches</b> each asymptote without crossing a vertical one, and the branches bend the right way.</li>
+        <li>The shape near the ends is right: what happens as x → ±∞?</li>
+        <li>Any <b>restricted domain</b> is shown, with endpoints drawn as solid or hollow dots as needed.</li>
+        <li>For a transformation question, label the <b>new</b> points and asymptotes, not the old ones.</li>
+      </ol>
+
+      <h3>Summary</h3>
+      <div class="table-wrap">
+        <table class="summary">
+          <thead><tr><th>Curve</th><th>Vertical asymptote</th><th>Other asymptote</th><th>Restrictions</th></tr></thead>
+          <tbody>
+            <tr><td class="eq">y = (ax + b)/(cx + d)</td><td>x = −d/c</td><td>y = a/c</td><td>y ≠ a/c</td></tr>
+            <tr><td class="eq">y = (ax² + bx + c)/(dx + e)</td><td>x = −e/d</td><td>y = px + q (long division)</td><td>Use the discriminant in y</td></tr>
+            <tr><td class="eq">x²/a² + y²/b² = 1</td><td>None</td><td>None</td><td>|x| ≤ a, |y| ≤ b</td></tr>
+            <tr><td class="eq">x²/a² − y²/b² = 1</td><td>None</td><td>y = ±(b/a)x</td><td>|x| ≥ a</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="top-link"><a href="#top">↑ Back to top</a></p>
+    </section>
+  </main>
+
+  <script type="module" src="../js/graphs.js"></script>
+</body>
+</html>

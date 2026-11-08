@@ -23,6 +23,18 @@ There's also a **Learn** page (`learn/`) with one section per concept. Each sect
 
 Answers come out exact where possible (fractions and surds, e.g. `7√3/3 ≈ 4.04`). Angles are given to 1 d.p.
 
+## Graph Lab: graphs and transformations
+
+`graphs/` is a second interactive page for the H2 Math **Graphs and transformations** topic (9758, section 1.2). It works in 2D and covers each point of the syllabus:
+
+- **Graph explorer.** Type any y = f(x). The page draws it and finds the intercepts, turning points, vertical, horizontal and oblique asymptotes, and any symmetry, like a GC would.
+- **Transformations.** Build a sequence of y = f(x + a), y = f(ax), y = af(x) and y = f(x) + a steps on a chosen curve. You see the equation after each step and where the key points and asymptotes end up. Includes a random "describe the transformations" practice question.
+- **y = (ax + b)/(cx + d).** Sliders for a, b, c, d. Shows asymptotes, intercepts, the divided-out form and the transformations from y = 1/x.
+- **y = (ax² + bx + c)/(dx + e).** Shows long division, the oblique asymptote and turning points, and finds the range by the discriminant method with exact surds.
+- **Conics.** Ellipses and hyperbolas x²/a² ± y²/b² = 1, with a translated centre: vertices, asymptotes and restrictions on x and y.
+- **Related graphs** (extension): |f(x)|, f(|x|), 1/f(x) and f′(x).
+- A sketching checklist, worked examples and common mistakes.
+
 ## Running it
 
 The site is plain HTML, CSS and JavaScript, with no build step. Browsers block JavaScript modules opened
@@ -49,6 +61,12 @@ learn.css         styling for the Learn pages
 js/analysis.js    the maths for each "Compare" pair: start here to add a new comparison
 js/math.js        vector operations and input parsing ("(1,2,3)", "i + 2j - k", "1/2")
 js/format.js      exam-style output: fractions, surds, column vectors, Cartesian equations
+graphs/index.html the Graph Lab page (graphs and transformations)
+graphs.css        styling for the Graph Lab page
+js/graphs.js      the Graph Lab demos: explorer, transformation builder, rational functions, conics
+js/plot2d.js      small 2D canvas plotter with pan and zoom
+js/expr.js        safe parser for functions of x ("2x^2 - 3", "e^(-x) sin x", "|x| - 1")
+js/features.js    finds intercepts, turning points and asymptotes numerically
 lib/three/        three.js r160 (MIT licence), saved here so the site works offline
 ```
 

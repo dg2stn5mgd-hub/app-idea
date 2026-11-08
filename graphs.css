@@ -1,0 +1,110 @@
+/* Styles for the Graphs & Transformations page. Load after style.css and learn.css. */
+
+.plot { position: relative; overflow: hidden; background: #fff; min-height: 420px; }
+.plot canvas { position: absolute; inset: 0; display: block; touch-action: none; cursor: grab; }
+.plot canvas:active { cursor: grabbing; }
+.plot-tip {
+  position: absolute; display: none; pointer-events: none; z-index: 3;
+  background: var(--ink); color: #fff; font-size: 0.8rem; padding: 3px 8px; border-radius: 6px; white-space: nowrap;
+}
+.plot-legend {
+  position: absolute; right: 10px; top: 10px; z-index: 2; display: grid; gap: 2px;
+  background: rgba(255, 255, 255, 0.92); border: 1px solid var(--line); border-radius: 8px; padding: 5px 9px;
+  font-size: 0.8rem; pointer-events: none; max-width: 70%;
+}
+.plot-legend span { display: flex; align-items: center; gap: 6px; }
+.plot-legend i { width: 16px; height: 0; border-top: 3px solid var(--c); flex: none; }
+.plot-legend i.dash { border-top-style: dashed; border-top-width: 2px; }
+
+.demo .controls label.field { display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem; color: var(--muted); }
+.demo .controls input[type=text], .demo .controls select, .seq-add input, .seq-add select {
+  border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; font-size: 0.95rem; background: #fff; min-width: 0;
+}
+.demo .controls input[type=text] { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.demo .controls input.bad { border-color: var(--bad); background: #fef2f2; }
+.demo .err { margin-top: -6px; }
+
+.presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.presets button, .btn {
+  border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 4px 11px;
+  font-size: 0.82rem; cursor: pointer;
+}
+.presets button:hover, .btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.primary:hover { background: #1d4ed8; color: #fff; }
+
+/* sliders: label | range | value */
+.slider { display: grid; grid-template-columns: 1.6em 1fr 2.6em; align-items: center; gap: 8px; font-size: 0.9rem; }
+.slider span { font-style: italic; font-family: Georgia, serif; color: var(--c, var(--ink)); font-weight: 600; }
+.slider input { width: 100%; accent-color: var(--c, var(--accent)); }
+.slider output { text-align: right; font-variant-numeric: tabular-nums; }
+
+.feat { list-style: none; padding: 0; margin: 0; display: grid; gap: 4px; font-size: 0.9rem; }
+.feat li { display: grid; grid-template-columns: 8.5em 1fr; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--line); }
+.feat li:last-child { border-bottom: none; }
+.feat .k { color: var(--muted); }
+.feat .v { font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+
+.eq { font-family: Georgia, "Times New Roman", serif; font-size: 1.15rem; }
+.eq-big { font-family: Georgia, "Times New Roman", serif; font-size: 1.3rem; text-align: center; padding: 6px 0; overflow-x: auto; }
+.fn-f { font-style: italic; }
+.frac { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; font-size: 0.9em; margin: 0 2px; }
+.frac > span:first-child { border-bottom: 1.3px solid currentColor; padding: 0 3px; }
+.frac > span:last-child { padding: 0 3px; }
+
+/* transformation sequence */
+.seq { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; counter-reset: step; }
+.seq li {
+  counter-increment: step; display: grid; grid-template-columns: 1.6em 1fr auto; gap: 8px; align-items: start;
+  border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font-size: 0.88rem; background: #fff;
+  border-left: 4px solid var(--c);
+}
+.seq li::before { content: counter(step); font-weight: 700; color: var(--c); }
+.seq li .what { display: grid; gap: 2px; }
+.seq li .then { color: var(--muted); font-family: Georgia, serif; }
+.seq li button { border: none; background: none; color: var(--muted); cursor: pointer; padding: 0 4px; font-size: 1.1rem; line-height: 1; }
+.seq li button:hover { color: var(--bad); }
+.seq-empty { color: var(--muted); font-size: 0.88rem; }
+.seq-add { display: grid; grid-template-columns: 1fr 5em auto; gap: 6px; }
+
+.track { font-size: 0.88rem; display: grid; gap: 3px; }
+.track b { font-variant-numeric: tabular-nums; }
+
+/* practice */
+.practice { border: 1px solid var(--line); border-radius: 14px; background: var(--panel); padding: 16px; margin: 16px 0; }
+.practice .q { font-size: 1.05rem; margin: 0 0 10px; }
+.practice .row-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.practice ol { padding-left: 1.3em; margin: 10px 0 0; }
+.practice .ans { display: none; margin-top: 10px; }
+.practice .ans.show { display: block; }
+
+.syllabus { counter-reset: s; list-style: none; padding: 0; display: grid; gap: 8px; }
+.syllabus li {
+  counter-increment: s; display: grid; grid-template-columns: 2em 1fr; gap: 8px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px;
+}
+.syllabus li::before { content: counter(s, lower-alpha) ")"; font-weight: 700; color: var(--accent); }
+.syllabus a { font-size: 0.9rem; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; }
+.steps { padding-left: 1.3em; }
+.steps li { margin-bottom: 6px; }
+
+@media (max-width: 760px) {
+  .plot { min-height: 340px; }
+  .demo .plot { height: 340px; }
+  .feat li { grid-template-columns: 7em 1fr; }
+}
+td.eq { white-space: nowrap; }
+
+/* animation */
+.tf-now:empty { display: none; }
+.tf-now {
+  position: absolute; left: 10px; top: 10px; z-index: 3; max-width: 60%;
+  background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--c); border-radius: 8px;
+  padding: 6px 10px; font-size: 0.88rem; font-weight: 600; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+.seq li { cursor: pointer; transition: opacity 0.2s, box-shadow 0.2s; }
+.seq li:hover { box-shadow: 0 0 0 2px color-mix(in srgb, var(--c) 30%, transparent); }
+.seq li.active { box-shadow: 0 0 0 2px var(--c); background: color-mix(in srgb, var(--c) 6%, #fff); }
+.seq li.dim { opacity: 0.45; }
