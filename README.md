@@ -35,6 +35,15 @@ Answers come out exact where possible (fractions and surds, e.g. `7√3/3 ≈ 4.
 - **Related graphs** (extension): |f(x)|, f(|x|), 1/f(x) and f′(x).
 - A sketching checklist, worked examples and common mistakes.
 
+## Call It: news app concept mockup
+
+`callit/index.html` is a separate, self-contained clickable mockup for **Call It** (placeholder name), a news app concept for the *Tomorrow's News, Today* ideathon: "Read to earn, predict to win." Open the file in a browser; no server or build step is needed.
+
+- Phone frame (390×844) with a bottom tab bar: Home, Read, Predict, Leaderboard, Profile.
+- Screens: Home, Article (with "Explain this simply"), Quiz, quiz results, Predict list, Prediction detail (chart, related reads, friends' calls, stake slider), Results Day, Leaderboard and Profile.
+- On wide screens a side panel jumps straight to any screen, and has demo states ("Out of points", "Reset demo").
+- All stories, markets, friends and badges are mock data in the `DATA` object at the top of the `<script>`. Edit it to change the content.
+
 ## Running it
 
 The site is plain HTML, CSS and JavaScript, with no build step. Browsers block JavaScript modules opened
