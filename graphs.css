@@ -96,3 +96,15 @@
   .feat li { grid-template-columns: 7em 1fr; }
 }
 td.eq { white-space: nowrap; }
+
+/* animation */
+.tf-now:empty { display: none; }
+.tf-now {
+  position: absolute; left: 10px; top: 10px; z-index: 3; max-width: 60%;
+  background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--c); border-radius: 8px;
+  padding: 6px 10px; font-size: 0.88rem; font-weight: 600; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+.seq li { cursor: pointer; transition: opacity 0.2s, box-shadow 0.2s; }
+.seq li:hover { box-shadow: 0 0 0 2px color-mix(in srgb, var(--c) 30%, transparent); }
+.seq li.active { box-shadow: 0 0 0 2px var(--c); background: color-mix(in srgb, var(--c) 6%, #fff); }
+.seq li.dim { opacity: 0.45; }

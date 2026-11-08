@@ -94,9 +94,9 @@
       </div>
 
       <h3>Build a sequence of transformations</h3>
-      <p>Choose a starting curve, then add transformations one at a time. The equation is updated after each step. The marked points and asymptotes show where everything ends up.</p>
+      <p>Choose a starting curve, then add transformations one at a time. Press <b>▶ Animate</b> to watch the curve move through each step in turn, or click a step to replay just that one. The equation is updated after each step. The marked points and asymptotes show where everything ends up.</p>
       <div class="demo">
-        <div id="tf-plot"></div>
+        <div id="tf-plot"><div class="tf-now" id="tf-now"></div></div>
         <div class="controls">
           <div class="demo-title">Start with y = f(x)</div>
           <select id="tf-base" aria-label="Starting curve"></select>
@@ -113,7 +113,7 @@
             <button class="btn primary" id="tf-add" type="button">Add</button>
           </div>
           <div class="err" id="tf-err"></div>
-          <div class="presets"><button type="button" id="tf-clear">Clear steps</button><button type="button" id="tf-undo">Undo last</button></div>
+          <div class="presets"><button type="button" class="btn primary" id="tf-play">▶ Animate</button><button type="button" id="tf-clear">Clear steps</button><button type="button" id="tf-undo">Undo last</button></div>
           <div class="eq-big" id="tf-eq"></div>
           <div class="track" id="tf-track"></div>
         </div>

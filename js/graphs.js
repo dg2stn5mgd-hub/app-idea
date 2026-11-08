@@ -186,40 +186,94 @@ function initTransformations() {
   let base = BASES[0];
   let steps = [{ type: 'xtrans', a: -1 }, { type: 'yscale', a: 2 }];
   let lastHome = '';
+  let anim = null; // { i, t }: step i is t (0..1) of the way done
+  let raf = 0;
+  const ID = { p: 1, m: 1, n: 0, q: 0 };
+
+  // Step i only partly applied, so the curve can slide / stretch smoothly.
+  function partial(s, t) {
+    if (s.type === 'xtrans' || s.type === 'ytrans') return { ...s, a: s.a * t };
+    if (s.type === 'yscale') return { ...s, a: 1 + (s.a - 1) * t };
+    // x-scaling: move the factor 1/a smoothly (a reflection squashes through the y-axis and flips)
+    let k = 1 + (1 / s.a - 1) * t;
+    if (Math.abs(k) < 0.03) k = 0.03 * (Math.sign(1 / s.a) || 1);
+    return { ...s, a: 1 / k };
+  }
+  const ease = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+
+  function play(from = 0, to = steps.length - 1) {
+    cancelAnimationFrame(raf);
+    if (!steps.length) return;
+    const dur = 1300, gap = 450;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let i = from, t0 = null;
+    $('tf-play').textContent = '■ Stop';
+    const frame = (now) => {
+      if (t0 === null) t0 = now;
+      const el = now - t0;
+      const t = reduce ? 1 : Math.min(1, el / dur);
+      anim = { i, t: ease(t) };
+      render();
+      if (el >= (reduce ? 700 : dur + gap)) {
+        if (i >= to) { stop(); return; }
+        i++; t0 = now;
+      }
+      raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+  }
+  function stop() {
+    cancelAnimationFrame(raf); raf = 0; anim = null;
+    $('tf-play').textContent = '▶ Animate';
+    render();
+  }
 
   function render() {
     const { states } = compose(steps);
-    const fin = states.length ? states[states.length - 1] : { p: 1, m: 1, n: 0, q: 0 };
+    const fin = states.length ? states[states.length - 1] : ID;
     const g = (st) => (x) => st.p * base.f(st.m * x + st.n) + st.q;
+    // What the moving curve shows right now.
+    const cur = anim ? compose([...steps.slice(0, anim.i), partial(steps[anim.i], anim.t)]).states.at(-1) : fin;
 
-    // list
     const seq = $('tf-seq');
+    if (anim) {
+      [...seq.children].forEach((li, j) => { li.classList.toggle('active', j === anim.i); li.classList.toggle('dim', j > anim.i); });
+    } else {
     seq.innerHTML = steps.length ? '' : '<li style="--c:#cbd5e1" class="seq-empty">No steps yet. Add one below.</li>';
     steps.forEach((s, i) => {
       const item = document.createElement('li');
       item.style.setProperty('--c', STEP_COLORS[i % STEP_COLORS.length]);
       const rule = { xtrans: `replace x by x ${s.a < 0 ? MINUS : '+'} ${frac(Math.abs(s.a))}`, xscale: `replace x by ${poly([[s.a, 'x']])}`, yscale: `multiply y by ${frac(s.a)}`, ytrans: s.a > 0 ? `add ${frac(s.a)} to y` : `subtract ${frac(-s.a)} from y` }[s.type];
       item.innerHTML = `<div class="what"><span>${describe(s)}</span><span class="then">${rule} → ${esc(eqText(states[i], base))}</span></div><button type="button" aria-label="Remove step">×</button>`;
-      item.querySelector('button').addEventListener('click', () => { steps.splice(i, 1); render(); });
+      item.querySelector('button').addEventListener('click', (e) => { e.stopPropagation(); stop(); steps.splice(i, 1); render(); });
+      item.title = 'Click to animate this step';
+      item.addEventListener('click', () => play(i, i));
       seq.appendChild(item);
     });
     if (!steps.length) seq.firstChild.style.gridTemplateColumns = '1fr';
+    }
 
     // plot: original, faint intermediates, final
     plot.clear();
     const startEq = base.show ? `y = ${base.show('x')}` : 'y = f(x)';
     const finEq = eqText(fin, base);
-    for (const v of base.vas) plot.vline((v - fin.n) / fin.m, { color: C.blue, label: `x = ${nice((v - fin.n) / fin.m)}` });
-    for (const h of base.has) plot.sline(0, fin.p * h + fin.q, { color: C.blue, label: `y = ${nice(fin.p * h + fin.q)}` });
+    const lab = (v) => (anim ? '' : v);
+    for (const v of base.vas) plot.vline((v - cur.n) / cur.m, { color: C.blue, label: lab(`x = ${nice((v - fin.n) / fin.m)}`) });
+    for (const h of base.has) plot.sline(0, cur.p * h + cur.q, { color: C.blue, label: lab(`y = ${nice(fin.p * h + fin.q)}`) });
     plot.fn(base.f, { color: C.grey, width: 2.2, dash: [5, 5] });
-    states.slice(0, -1).forEach((st, i) => plot.fn(g(st), { color: STEP_COLORS[i % STEP_COLORS.length], width: 1.6, alpha: 0.45 }));
-    if (states.length) plot.fn(g(fin), { color: C.blue, width: 3 });
+    if (anim) {
+      // faint ghost of where this step ends up
+      plot.fn(g(states[anim.i]), { color: STEP_COLORS[anim.i % STEP_COLORS.length], width: 2, alpha: 0.35, dash: [4, 4] });
+    } else states.slice(0, -1).forEach((st, i) => plot.fn(g(st), { color: STEP_COLORS[i % STEP_COLORS.length], width: 1.6, alpha: 0.45 }));
+    if (states.length) plot.fn(g(cur), { color: C.blue, width: 3 });
 
     const trackLines = [];
     for (const [x0, y0, kind] of base.pts) {
       const x1 = (x0 - fin.n) / fin.m, y1 = fin.p * y0 + fin.q;
       plot.point(x0, y0, { color: C.grey, tip: `Original ${pt(x0, y0)}` });
-      if (states.length) {
+      if (anim) {
+        plot.point((x0 - cur.n) / cur.m, cur.p * y0 + cur.q, { color: C.blue });
+      } else if (states.length) {
         plot.arrow(x0, y0, x1, y1, { color: '#94a3b8', dash: [3, 4], width: 1.3 });
         // a negative y-scaling swaps maxima and minima
         let k2 = kind;
@@ -227,6 +281,7 @@ function initTransformations() {
         plot.point(x1, y1, { color: C.blue, label: pt(x1, y1), tip: `${k2 ? (k2 === 'max' ? 'Maximum ' : 'Minimum ') : ''}${pt(x1, y1)}` });
         trackLines.push(`<div>${pt(x0, y0)} → <b>${pt(x1, y1)}</b>${k2 ? ` <span class="muted">(${k2})</span>` : ''}</div>`);
       }
+      if (anim && states.length) trackLines.push(`<div>${pt(x0, y0)} → <b>${pt(x1, y1)}</b></div>`);
     }
     for (const v of base.vas) trackLines.push(`<div>Asymptote x = ${nice(v)} → <b>x = ${nice((v - fin.n) / fin.m)}</b></div>`);
     for (const h of base.has) trackLines.push(`<div>Asymptote y = ${nice(h)} → <b>y = ${nice(fin.p * h + fin.q)}</b></div>`);
@@ -243,11 +298,14 @@ function initTransformations() {
     if (key !== lastHome) { lastHome = key; plot.setHome(home); } else plot.draw();
     legend(plot, [[C.grey, esc(startEq), true], ...(states.length ? [[C.blue, esc(finEq)]] : [])]);
 
-    $('tf-eq').textContent = finEq;
+    $('tf-eq').textContent = anim ? eqText(states[anim.i], base) : finEq;
+    $('tf-now').textContent = anim ? `Step ${anim.i + 1}: ${describe(steps[anim.i])}` : '';
+    $('tf-now').style.setProperty('--c', anim ? STEP_COLORS[anim.i % STEP_COLORS.length] : 'transparent');
     $('tf-track').innerHTML = states.length ? `<div class="demo-title">Where things go</div>${trackLines.join('')}` : '';
   }
 
   baseSel.addEventListener('change', () => {
+    stop();
     base = BASES.find((b) => b.id === baseSel.value);
     render();
   });
@@ -259,18 +317,23 @@ function initTransformations() {
     if (a === 0 && (type === 'xscale' || type === 'yscale')) { $('tf-err').textContent = 'A scale factor of 0 would squash the graph flat. Pick another value.'; return; }
     if (a === 0) { $('tf-err').textContent = 'Translating by 0 does nothing. Pick another value.'; return; }
     $('tf-err').textContent = '';
+    stop();
     steps.push({ type, a });
     render();
+    play(steps.length - 1, steps.length - 1);
   });
   $('tf-val').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('tf-add').click(); });
-  $('tf-clear').addEventListener('click', () => { steps = []; render(); });
-  $('tf-undo').addEventListener('click', () => { steps.pop(); render(); });
+  $('tf-clear').addEventListener('click', () => { stop(); steps = []; render(); });
+  $('tf-undo').addEventListener('click', () => { stop(); steps.pop(); render(); });
+  $('tf-play').addEventListener('click', () => (raf ? stop() : play()));
 
   loadIntoBuilder = (newSteps) => {
     steps = newSteps.map((s) => ({ ...s }));
     base = BASES[0];
     baseSel.value = base.id;
+    stop();
     render();
+    setTimeout(() => play(), 600);
     $('tf-plot').scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
   render();
