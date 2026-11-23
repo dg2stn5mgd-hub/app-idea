@@ -91,6 +91,10 @@ You're already on your way to school or work. If the other person runs late, get
 - **Bus stops and services** (in the prototype now): all 5,208 bus stops and 602 services with their stops in order, from [sgbusdata](https://github.com/cheeaun/sgbusdata) by Lim Chee Aun, built from LTA data.
 - **LTA DataMall** (free, from Singapore's Land Transport Authority; the same data MyTransport.SG uses): live bus arrivals and train service alerts, through the small server in [`server/`](server/README.md), which keeps the LTA key secret. Setup guide: [server/README.md](server/README.md).
 
+## Look and feel
+
+Clean and minimal, in the style of Apple's own apps: a soft grey background with white rounded cards, the iPhone's own font, and Apple blue for buttons and links. The only other colours are the MRT line and bus colours, since Carriage covers every line. Things that float over the content (the tab bar, map buttons, navigation panels, messages that pop up) are frosted "liquid glass". Screens glide in, groups unfold, the tab bar's highlight slides to the tab you pick, and buttons give a little when pressed. Everything follows the phone's light or dark mode, and nothing moves for people who turn motion off. The map uses OneMap's calm grey style (its night style in dark mode).
+
 ## Prototype
 
 **Live site:** https://carriage-eob.pages.dev (sign-up version at `/new-user`), hosted on Cloudflare Pages from this branch's `prototype/` folder. It updates by itself on every push. Live bus times come from the `carriage-live` server.
@@ -100,7 +104,7 @@ There are two versions, built from one source file, `prototype/src/carriage.html
 - **an existing user** already using the app (bottom tabs, waves, people met): `prototype/index.html` on the website
 - **a new user** signing up (mobile number and code, name, birthday, school or work, optional photo, daily commute and days, interests, who to meet, safety rules), ending in the app with a made-up history built around their own commute (people who waved, a match to plan, a friend to chat with, a ride to rate), so every tab can be demoed: `prototype/new-user.html` on the website
 
-After changing `src/carriage.html`, run `python3 prototype/build.py`. It writes the two website pages (full pages with the home-screen icon and app settings) and the two claude.ai preview copies in `prototype/artifact/`.
+After changing `src/carriage.html`, run `python3 prototype/build.py`, then `node prototype/test.js` (with Playwright) to walk through the whole app. It writes the two website pages (full pages with the home-screen icon and app settings) and the two claude.ai preview copies in `prototype/artifact/`.
 
 **On the home screen:** open the site in Safari, tap Share, then **Add to Home Screen**. Carriage then opens full-screen with its own icon. The app tells people how on the Map tab, and on Android it shows an **Install** button. A small offline helper (`sw.js`) keeps a copy on the phone, so it opens even with weak signal on the MRT; live bus times always come fresh. Links like `/#waves` or `/#rides` open straight to that tab.
 
