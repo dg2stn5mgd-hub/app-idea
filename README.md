@@ -93,9 +93,9 @@ You're already on your way to school or work. If the other person runs late, get
 
 ## Look and feel
 
-**"Trust & Transit Green":** deep navy (#0A192F) for backgrounds, bars and headers; vibrant mint (#00E676) for active routes, badges and the main buttons; white and soft cool grey (#CBD5E1) for text. A soft mint glow sits behind each screen, and the only other colours are the MRT line and bus colours. The Map tab greets you ("Good morning") and shows roughly how much CO₂ each trip saves compared with driving.
+**"Forest & cream":** warm and organic. A warm cream background (#FAF6EE) with white cards, deep forest green (#2F6B4F) for the main buttons, active routes and your chat bubbles, a touch of soft terracotta (#E07A5F) for destinations, and warm brown-black text. A soft warm light sits at the top of each screen, and the only other colours are the MRT line and bus colours. The Map tab greets you ("Good morning") and shows roughly how much CO₂ each trip saves compared with driving.
 
-Things that float over the content (the tab bar, map buttons, navigation panels, messages that pop up) are frosted "liquid glass". Screens glide in, groups unfold, the tab bar's highlight slides to the tab you pick, and buttons give a little when pressed; nothing moves for people who turn motion off. The map uses OneMap's night style. The app icon is navy with a mint "C" and a dot for each MRT line.
+Things that float over the content (the tab bar, map buttons, navigation panels, messages that pop up) are frosted "liquid glass". Screens glide in, groups unfold, the tab bar's highlight slides to the tab you pick, and buttons give a little when pressed; nothing moves for people who turn motion off. The map uses OneMap's standard style. The app icon is forest green with a cream "C" and a dot for each MRT line.
 
 ## Prototype
 

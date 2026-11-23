@@ -5,18 +5,18 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Carriage Prototype</title>
 <meta name="description" content="Meet people on your daily train or bus ride.">
-<meta name="theme-color" content="#0a192f">
+<meta name="theme-color" content="#faf6ee">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Carriage">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="/icons/icon-192.png">
 <link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
 <script src="/vendor/leaflet/leaflet.js"></script>
 <style>
-:root { color-scheme: dark; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+:root { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
 body { margin: 0; font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
 img { max-width: 100%; }
 [hidden] { display: none !important; }
@@ -28,46 +28,49 @@ img { max-width: 100%; }
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <style>
-/* Design: "Trust & Transit Green". Deep navy for backgrounds and bars, mint for active routes, badges and the
-   main buttons, white and cool grey text. Rounded cards, frosted "liquid glass" for things that float over content
-   (tab bar, map buttons, navigation panels, toasts); the MRT line and bus colours are the only other colours. */
+/* Design: "Forest & cream". Warm and organic: a cream background, white cards, deep forest green for the main
+   buttons and active routes, a touch of soft terracotta, and warm brown-black text. Rounded cards, frosted
+   "liquid glass" for things that float over content (tab bar, map buttons, navigation panels, toasts); the MRT
+   line and bus colours are the only other colours. */
 :root {
-  --bg: #0a192f;                           /* deep navy */
-  --surface: #112240;                      /* cards: a step lighter */
-  --surface-2: #172a4b;
-  --fill: rgba(203, 213, 225, .09);        /* tinted controls */
-  --fg: #ffffff;
-  --text: #cbd5e1;                         /* body text: soft cool grey */
-  --muted: #8b9bb4;
-  --line: rgba(203, 213, 225, .1);
-  --accent: #00e676;                       /* vibrant mint */
-  --accent-soft: rgba(0, 230, 118, .14);
-  --on-accent: #0a192f;
-  --match: #00e676;
-  --match-fill: #00e676;
-  --match-soft: rgba(0, 230, 118, .13);
-  --teal: #00b4d8;
-  --warn-soft: rgba(255, 184, 0, .14);
-  --warn-fg: #ffc94d;
-  --danger: #ff5c6c;
-  --map: #0f2242;
-  --map-edge: #1e3a60;
-  --water: #071426;
-  --glass: rgba(17, 34, 64, .62);
-  --glass-strong: rgba(17, 34, 64, .86);
-  --glass-edge: rgba(203, 213, 225, .12);
-  --glass-dark: rgba(6, 16, 32, .82);
-  --shadow: 0 0 0 1px rgba(203, 213, 225, .06), 0 8px 24px rgba(0, 0, 0, .22);
-  --shadow-float: 0 14px 38px rgba(0, 0, 0, .45), 0 0 0 1px rgba(203, 213, 225, .05);
-  --glow: 0 6px 22px rgba(0, 230, 118, .32);
-  --avatar: linear-gradient(160deg, #2c4c7c, #1a3359);
+  --bg: #faf6ee;                           /* warm cream */
+  --surface: #ffffff;
+  --surface-2: #f3ede2;                    /* sand, for things inside cards */
+  --fill: rgba(43, 42, 38, .06);           /* tinted controls */
+  --fg: #2b2a26;                           /* headings: brown-black */
+  --text: #3d3b35;
+  --muted: #7d776b;                        /* warm grey */
+  --line: rgba(43, 42, 38, .1);
+  --accent: #2f6b4f;                       /* forest green */
+  --accent-soft: rgba(47, 107, 79, .12);
+  --accent-light: #4f9a73;                 /* for gradients */
+  --on-accent: #ffffff;
+  --match: #2f6b4f;
+  --match-fill: #2f6b4f;
+  --match-soft: rgba(47, 107, 79, .12);
+  --accent-2: #e07a5f;                     /* soft terracotta */
+  --warn-soft: rgba(217, 164, 65, .16);
+  --warn-fg: #8a5a12;
+  --danger: #d64545;
+  --map: #efe9dd;
+  --map-edge: #d8cfbd;
+  --water: #d4e4e0;
+  --glass: rgba(255, 252, 246, .72);
+  --glass-strong: rgba(255, 252, 246, .9);
+  --glass-edge: rgba(255, 255, 255, .85);
+  --glass-dark: rgba(43, 42, 38, .86);
+  --halo: rgba(224, 122, 95, .1);          /* warm light at the top of each screen */
+  --shadow: 0 1px 2px rgba(60, 50, 30, .05), 0 8px 24px rgba(60, 50, 30, .07);
+  --shadow-float: 0 12px 32px rgba(60, 50, 30, .15), 0 2px 6px rgba(60, 50, 30, .06);
+  --glow: 0 6px 18px rgba(47, 107, 79, .24);
+  --avatar: linear-gradient(160deg, #cbb998, #a8967a);
   --radius: 22px;
   --spring: cubic-bezier(.3, 1.25, .5, 1);
   --ease: cubic-bezier(.2, .8, .2, 1);
   --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, sans-serif;
   --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  color-scheme: dark;
+  color-scheme: light;
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body {
@@ -80,7 +83,7 @@ body {
 }
 .phone {
   max-width: 420px; margin: 0 auto;
-  background: radial-gradient(120% 420px at 50% -120px, rgba(0, 230, 118, .13), transparent 70%), radial-gradient(90% 360px at 110% 30%, rgba(0, 180, 216, .08), transparent 70%), var(--bg);
+  background: radial-gradient(120% 420px at 50% -120px, var(--halo), transparent 70%), radial-gradient(90% 360px at 110% 30%, var(--match-soft), transparent 70%), var(--bg);
   border: 1px solid var(--line); border-radius: 32px; overflow: clip;
   display: flex; flex-direction: column;
   /* Reaches the bottom of the screen; the tab bar floats there (see .tabbar) */
@@ -101,6 +104,7 @@ body {
 .dots span.on { background: var(--accent); }
 main { padding: 12px 20px 26px; display: flex; flex-direction: column; gap: 20px; flex: 1; }
 b, strong { color: var(--fg); }
+.nav-top b, .toast b, .update-bar b, .btn b { color: inherit; }
 h1, h2, h3 { color: var(--fg); font-family: var(--font-display); text-wrap: balance; margin: 0; letter-spacing: -0.025em; font-weight: 700; }
 h1 { font-size: 34px; line-height: 1.08; }
 h2 { font-size: 28px; line-height: 1.12; }
@@ -169,7 +173,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, .chip:focus-vis
 /* Segmented control, like iOS */
 .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: var(--fill); padding: 3px; border-radius: 12px; }
 .seg button { font: inherit; font-size: 15px; font-weight: 500; border: 0; border-radius: 9px; padding: 9px; background: transparent; color: var(--fg); cursor: pointer; }
-.seg button[aria-pressed="true"] { background: var(--surface-2); color: var(--accent); font-weight: 600; box-shadow: 0 3px 10px rgba(0,0,0,.3), inset 0 0 0 1px rgba(0,230,118,.25); }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--accent); font-weight: 600; box-shadow: 0 3px 8px rgba(60,50,30,.12), 0 1px 1px rgba(60,50,30,.05); }
 .seg.three { grid-template-columns: repeat(3, 1fr); }
 .rating { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .rating button { font: inherit; font-weight: 600; padding: 16px 10px; border-radius: 18px; border: 0; background: var(--surface); color: var(--fg); cursor: pointer; box-shadow: var(--shadow); }
@@ -183,7 +187,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, .chip:focus-vis
 .card.faded { opacity: 0.7; }
 .actions { flex-wrap: wrap; }
 .brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 20px; letter-spacing: -0.02em; }
-.logo { width: 32px; height: 32px; border-radius: 9px; background: linear-gradient(150deg, var(--accent), var(--teal)); color: var(--on-accent); display: grid; place-items: center; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,.18); }
+.logo { width: 32px; height: 32px; border-radius: 9px; background: linear-gradient(150deg, var(--accent-light), var(--accent)); color: var(--on-accent); display: grid; place-items: center; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,.18); }
 .search { display: flex; align-items: center; gap: 10px; background: var(--surface); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow); }
 .search .place-btn { box-shadow: none; background: var(--fill); }
 .search-fields { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
@@ -195,9 +199,9 @@ button:focus-visible, select:focus-visible, input:focus-visible, .chip:focus-vis
 .land { fill: var(--map); stroke: var(--map-edge); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .net { fill: none; stroke-width: 2.5; opacity: 0.3; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .net-dot { fill: var(--map-edge); }
-.ride { fill: none; filter: drop-shadow(0 0 4px rgba(255, 255, 255, .25)); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.ride { fill: none; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .dot-fill { fill: #ffffff; }
-.dot-end { fill: var(--accent); stroke: #ffffff; }
+.dot-end { fill: var(--accent-2); stroke: #ffffff; }
 .map-label { font-family: var(--font-body); font-weight: 700; fill: var(--fg); paint-order: stroke; stroke: var(--map); stroke-linejoin: round; }
 .map-place { font-family: var(--font-body); font-weight: 500; fill: var(--muted); paint-order: stroke; stroke: var(--map); stroke-linejoin: round; }
 /* Liquid glass: frosted, a bright top edge, floating above what's underneath */
@@ -246,7 +250,7 @@ section.list > div { display: flex; flex-direction: column; gap: 2px; }
 .me-row > .muted { white-space: nowrap; }
 .top-gap { height: 8px; }
 .avatar.big { width: 64px; height: 64px; font-size: 24px; }
-.avatar.huge { width: 96px; height: 96px; font-size: 34px; background: linear-gradient(150deg, var(--accent), var(--teal)); color: var(--on-accent); box-shadow: 0 10px 30px rgba(0,230,118,.3); }
+.avatar.huge { width: 96px; height: 96px; font-size: 34px; background: linear-gradient(150deg, var(--accent-light), var(--accent)); color: var(--on-accent); box-shadow: 0 10px 28px rgba(47,107,79,.28); }
 /* Me tab: a centred profile, a strip of numbers, and grouped rows like Settings */
 .profile { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding-top: 6px; }
 .profile h2 { margin-top: 8px; }
@@ -333,7 +337,7 @@ img.avatar { object-fit: cover; }
 .lmap .leaflet-bar a:hover { background: var(--fill); }
 .map-pin { border-radius: 50%; border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
 .map-pin.start { background: var(--accent); }
-.map-pin.end { background: var(--accent); }
+.map-pin.end { background: var(--accent-2); }
 .leaflet-tooltip { background: var(--surface); color: var(--fg); border: 1px solid var(--glass-edge); border-radius: 10px; box-shadow: var(--shadow-float); }
 .leaflet-tooltip-top::before { border-top-color: var(--surface); }
 .leaflet-tooltip-right::before { border-right-color: var(--surface); }
@@ -383,9 +387,9 @@ a.back.link.center { display: block; text-align: center; font-size: 15px; }
 .me-wrap { pointer-events: none; }
 .me-dot { position: relative; width: 64px; height: 64px; }
 .me-beam { position: absolute; inset: 0; border-radius: 50%; opacity: 0; transition: transform .25s;
-  background: conic-gradient(from -28deg, rgba(0,230,118,.55), rgba(0,230,118,.05) 56deg, transparent 56deg);
+  background: conic-gradient(from -28deg, rgba(47,107,79,.55), rgba(47,107,79,.05) 56deg, transparent 56deg);
   -webkit-mask: radial-gradient(circle, #000 0 68%, transparent 70%); mask: radial-gradient(circle, #000 0 68%, transparent 70%); }
-.me-core { position: absolute; left: 50%; top: 50%; width: 20px; height: 20px; margin: -10px; border-radius: 50%; background: var(--accent); border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(0,230,118,.22), 0 1px 6px rgba(0,0,0,.35); }
+.me-core { position: absolute; left: 50%; top: 50%; width: 20px; height: 20px; margin: -10px; border-radius: 50%; background: var(--accent); border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(47,107,79,.2), 0 1px 6px rgba(0,0,0,.35); }
 .map-locate { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--glass-edge); background: var(--glass); color: var(--accent); display: grid; place-items: center; cursor: pointer; box-shadow: var(--shadow-float); }
 .map-locate svg { width: 16px; height: 16px; fill: currentColor; }
 /* Chats, like Messages */
@@ -406,7 +410,7 @@ a.back.link.center { display: block; text-align: center; font-size: 15px; }
 .chat-row.unread .chat-preview { color: var(--fg); }
 .chat-row.unread .chat-time { color: var(--accent); font-weight: 600; }
 .unread-badge { flex: none; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: var(--accent); color: var(--on-accent); font-size: 12.5px; font-weight: 600; display: grid; place-items: center; }
-.ticks { color: rgba(10,25,47,.65); font-size: 12px; letter-spacing: -2px; }
+.ticks { color: rgba(255,255,255,.75); font-size: 12px; letter-spacing: -2px; }
 .chat-head { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 4; display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: var(--glass-strong); border-bottom: 1px solid var(--line); }
 .chat-head h2 { font-size: 18px; letter-spacing: -0.02em; }
 .chat-head .avatar { width: 40px; height: 40px; }
@@ -437,7 +441,7 @@ a.back.link.center { display: block; text-align: center; font-size: 15px; }
 .fold-title b { font-weight: 600; }
 .faces { display: flex; flex: none; }
 .face { width: 28px; height: 28px; border-radius: 50%; background: var(--avatar); color: #fff; font-size: 11.5px; font-weight: 600; display: grid; place-items: center; border: 2px solid var(--surface); margin-left: -8px; }
-.fold.waved .face, .fold.friends .face { background: linear-gradient(150deg, var(--accent), var(--teal)); color: var(--on-accent); }
+.fold.waved .face, .fold.friends .face { background: linear-gradient(150deg, var(--accent-light), var(--accent)); color: var(--on-accent); }
 .face.more { background: var(--fill); color: var(--muted); }
 .chev { font-size: 22px; color: var(--muted); opacity: .6; transition: transform .4s var(--spring); }
 .fold.open .chev { transform: rotate(90deg); }
@@ -490,10 +494,10 @@ a.back.link.center { display: block; text-align: center; font-size: 15px; }
   box-shadow: var(--shadow-float); border: 1px solid rgba(255,255,255,.1); text-align: center;
 }
 .hero-line { display: flex; align-items: center; gap: 8px; background: var(--surface); border-radius: var(--radius); padding: 18px 18px 14px; box-shadow: var(--shadow); }
-.hero-line .seg-line { flex: 1; height: 5px; background: linear-gradient(90deg, var(--teal), var(--accent)); border-radius: 3px; box-shadow: 0 0 10px rgba(0,230,118,.35); }
-.hero-line .dot { width: 16px; height: 16px; border: 4px solid var(--teal); border-radius: 50%; background: var(--surface); }
-.hero-line .dot.you { background: var(--teal); }
-.hero-line .dot.them { border-color: var(--match-fill); background: var(--match-fill); }
+.hero-line .seg-line { flex: 1; height: 5px; background: linear-gradient(90deg, var(--accent-light), var(--accent)); border-radius: 3px; }
+.hero-line .dot { width: 16px; height: 16px; border: 4px solid var(--accent); border-radius: 50%; background: var(--surface); }
+.hero-line .dot.you { background: var(--accent); }
+.hero-line .dot.them { border-color: var(--accent-2); background: var(--accent-2); }
 
 /* Motion: screens slide in, sheets rise, folds open, messages pop. Nothing moves for people who turn motion off. */
 @media (prefers-reduced-motion: no-preference) {
@@ -527,7 +531,7 @@ a.back.link.center { display: block; text-align: center; font-size: 15px; }
 <script>
 // Which version of the prototype this page shows. new-user.html is the same file with this set to "new".
 const START_AS = "existing";
-const BUILD = "23 Nov, 16:00";                 // when this version was made; build.py fills it in
+const BUILD = "23 Nov, 16:21";                 // when this version was made; build.py fills it in
 
 // Address of your live-data server (see server/README.md), e.g. "https://carriage-live.yourname.workers.dev".
 // Empty, or unreachable, means the Ride day screen shows clearly labelled sample times instead.
@@ -1236,7 +1240,7 @@ function drawDetailedMap({ r, trip }) {
       if (locWatch !== null) navigator.geolocation.clearWatch(locWatch);
       locWatch = navigator.geolocation.watchPosition(pos => {
         const ll = [pos.coords.latitude, pos.coords.longitude];
-        if (!m._me) m._me = [L.circle(ll, { radius: pos.coords.accuracy, color: "#00e676", weight: 1, fillOpacity: .12, interactive: false }).addTo(m), meMarker(ll).addTo(m)];
+        if (!m._me) m._me = [L.circle(ll, { radius: pos.coords.accuracy, color: "#2f6b4f", weight: 1, fillOpacity: .12, interactive: false }).addTo(m), meMarker(ll).addTo(m)];
         m._me[0].setLatLng(ll).setRadius(pos.coords.accuracy); m._me[1].setLatLng(ll);
         gpsHeading = Number.isFinite(pos.coords.heading) && pos.coords.speed > 0.5 ? pos.coords.heading : gpsHeading;
         setMeHeading(m._me[1], compass ?? gpsHeading);
@@ -1251,7 +1255,7 @@ function drawDetailedMap({ r, trip }) {
 }
 function addTiles(m) {
   let failed = 0;
-  L.tileLayer("https://www.onemap.gov.sg/maps/tiles/Night/{z}/{x}/{y}.png", {
+  L.tileLayer("https://www.onemap.gov.sg/maps/tiles/Default/{z}/{x}/{y}.png", {
     minZoom: 11, maxZoom: 19, detectRetina: true,
     attribution: '<a href="https://www.onemap.gov.sg/" target="_blank" rel="noopener">OneMap</a> &copy; contributors &#124; <a href="https://www.sla.gov.sg/" target="_blank" rel="noopener">Singapore Land Authority</a>',
   }).on("tileerror", () => {
@@ -2168,14 +2172,14 @@ const screens = {
       </div>
       <div class="stats">${stats.map(([n, what]) => `<div><b>${n}</b><span>${what}</span></div>`).join("")}</div>
       <div class="group">
-        ${row(ICONS.rides, "#00b4d8", "Daily commute", `${esc(placeName(state.commute.from))} → ${esc(placeName(state.commute.to))} · ${state.commute.time}${r ? ` ${r.legs.map(l => pill(l.line)).join(" ")}` : ""}`, 'data-go="1"')}
-        ${row(ICONS.star, "#ffb800", "Interests", [...state.interests].map(esc).join(", "), 'data-go="2"')}
-        ${row(ICONS.met, "#00e676", "Who you want to meet", `Ages ${state.minAge}–${state.maxAge} · within ${state.window} min of your train`, 'data-go="3"')}
+        ${row(ICONS.rides, "#3a7d8c", "Daily commute", `${esc(placeName(state.commute.from))} → ${esc(placeName(state.commute.to))} · ${state.commute.time}${r ? ` ${r.legs.map(l => pill(l.line)).join(" ")}` : ""}`, 'data-go="1"')}
+        ${row(ICONS.star, "#d9a441", "Interests", [...state.interests].map(esc).join(", "), 'data-go="2"')}
+        ${row(ICONS.met, "#2f6b4f", "Who you want to meet", `Ages ${state.minAge}–${state.maxAge} · within ${state.window} min of your train`, 'data-go="3"')}
       </div>
       <p class="note">Your daily commute is what Rides use, so you can check them anytime without searching. Use the Map for one-off trips.</p>
       <div class="group">
-        ${row(ICONS.shield, "#a78bfa", "Privacy and safety", "", 'data-toast="Nobody sees your stations or time until you both wave. Under-18s only meet under-18s. Ratings stay private."')}
-        ${row(ICONS.share, "#cbd5e1", "Tell a friend about Carriage", "", 'data-shareapp')}
+        ${row(ICONS.shield, "#8a6fb0", "Privacy and safety", "", 'data-toast="Nobody sees your stations or time until you both wave. Under-18s only meet under-18s. Ratings stay private."')}
+        ${row(ICONS.share, "#e07a5f", "Tell a friend about Carriage", "", 'data-shareapp')}
       </div>
       <p class="small muted center">Carriage · version ${esc(BUILD)}</p>
     </main>`;
