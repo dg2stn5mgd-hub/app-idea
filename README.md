@@ -93,7 +93,9 @@ You're already on your way to school or work. If the other person runs late, get
 
 ## Look and feel
 
-Clean and minimal, in the style of Apple's own apps: a soft grey background with white rounded cards, the iPhone's own font, and Apple blue for buttons and links. The only other colours are the MRT line and bus colours, since Carriage covers every line. Things that float over the content (the tab bar, map buttons, navigation panels, messages that pop up) are frosted "liquid glass". Screens glide in, groups unfold, the tab bar's highlight slides to the tab you pick, and buttons give a little when pressed. Everything follows the phone's light or dark mode, and nothing moves for people who turn motion off. The map uses OneMap's calm grey style (its night style in dark mode).
+**"Trust & Transit Green":** deep navy (#0A192F) for backgrounds, bars and headers; vibrant mint (#00E676) for active routes, badges and the main buttons; white and soft cool grey (#CBD5E1) for text. A soft mint glow sits behind each screen, and the only other colours are the MRT line and bus colours. The Map tab greets you ("Good morning") and shows roughly how much CO₂ each trip saves compared with driving.
+
+Things that float over the content (the tab bar, map buttons, navigation panels, messages that pop up) are frosted "liquid glass". Screens glide in, groups unfold, the tab bar's highlight slides to the tab you pick, and buttons give a little when pressed; nothing moves for people who turn motion off. The map uses OneMap's night style. The app icon is navy with a mint "C" and a dot for each MRT line.
 
 ## Prototype
 
