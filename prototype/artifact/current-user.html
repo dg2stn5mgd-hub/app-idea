@@ -1,45 +1,51 @@
 <title>Carriage Prototype</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Poppins:wght@400;500;600;700&display=swap">
 <style>
 /* Design: "Forest & cream". Warm and organic: a cream background, white cards, deep forest green for the main
    buttons and active routes, a touch of soft terracotta, and warm brown-black text. Rounded cards, frosted
    "liquid glass" for things that float over content (tab bar, map buttons, navigation panels, toasts); the MRT
    line and bus colours are the only other colours. */
+/* Five colours make a look: background, cards, text, the main colour and a second colour. Everything else is
+   mixed from them, so the Appearance screen can swap looks (or take your own colours) live. */
 :root {
   --bg: #faf6ee;                           /* warm cream */
-  --surface: #ffffff;
-  --surface-2: #f3ede2;                    /* sand, for things inside cards */
-  --fill: rgba(43, 42, 38, .06);           /* tinted controls */
-  --fg: #2b2a26;                           /* headings: brown-black */
-  --text: #3d3b35;
-  --muted: #7d776b;                        /* warm grey */
-  --line: rgba(43, 42, 38, .1);
-  --accent: #2f6b4f;                       /* forest green */
-  --accent-soft: rgba(47, 107, 79, .12);
-  --accent-light: #4f9a73;                 /* for gradients */
-  --on-accent: #ffffff;
-  --match: #2f6b4f;
-  --match-fill: #2f6b4f;
-  --match-soft: rgba(47, 107, 79, .12);
-  --accent-2: #e07a5f;                     /* soft terracotta */
+  --surface: #ffffff;                      /* cards */
+  --fg: #2b2a26;                           /* text: brown-black */
+  --accent: #2f6b4f;                       /* main colour: forest green */
+  --accent-2: #e07a5f;                     /* second colour: soft terracotta */
+  --on-accent: #ffffff;                    /* text on the main colour (worked out from it) */
+
+  --surface-2: color-mix(in srgb, var(--surface) 45%, var(--bg));
+  --fill: color-mix(in srgb, var(--fg) 7%, transparent);
+  --text: color-mix(in srgb, var(--fg) 88%, var(--bg));
+  --muted: color-mix(in srgb, var(--fg) 58%, var(--bg));
+  --line: color-mix(in srgb, var(--fg) 11%, transparent);
+  --accent-soft: color-mix(in srgb, var(--accent) 13%, transparent);
+  --accent-light: color-mix(in srgb, var(--accent) 72%, #ffffff);
+  --match: var(--accent);
+  --match-fill: var(--accent);
+  --match-soft: var(--accent-soft);
   --warn-soft: rgba(217, 164, 65, .16);
-  --warn-fg: #8a5a12;
+  --warn-fg: color-mix(in srgb, #b07a16 70%, var(--fg));
   --danger: #d64545;
-  --map: #efe9dd;
-  --map-edge: #d8cfbd;
-  --water: #d4e4e0;
-  --glass: rgba(255, 252, 246, .72);
-  --glass-strong: rgba(255, 252, 246, .9);
+  --map: color-mix(in srgb, var(--bg) 93%, var(--fg));
+  --map-edge: color-mix(in srgb, var(--bg) 80%, var(--fg));
+  --water: color-mix(in srgb, var(--bg) 72%, #5b9bd5);
+  --glass: color-mix(in srgb, var(--surface) 70%, transparent);
+  --glass-strong: color-mix(in srgb, var(--surface) 90%, transparent);
   --glass-edge: rgba(255, 255, 255, .85);
-  --glass-dark: rgba(43, 42, 38, .86);
-  --halo: rgba(224, 122, 95, .1);          /* warm light at the top of each screen */
-  --shadow: 0 1px 2px rgba(60, 50, 30, .05), 0 8px 24px rgba(60, 50, 30, .07);
-  --shadow-float: 0 12px 32px rgba(60, 50, 30, .15), 0 2px 6px rgba(60, 50, 30, .06);
-  --glow: 0 6px 18px rgba(47, 107, 79, .24);
-  --avatar: linear-gradient(160deg, #cbb998, #a8967a);
+  --glass-dark: color-mix(in srgb, var(--fg) 88%, transparent);
+  --halo: color-mix(in srgb, var(--accent-2) 12%, transparent);   /* soft light at the top of each screen */
+  --shadow-c: color-mix(in srgb, var(--fg) 60%, #3c321e);
+  --shadow: 0 1px 2px color-mix(in srgb, var(--shadow-c) 6%, transparent), 0 8px 24px color-mix(in srgb, var(--shadow-c) 8%, transparent);
+  --shadow-float: 0 12px 32px color-mix(in srgb, var(--shadow-c) 16%, transparent), 0 2px 6px color-mix(in srgb, var(--shadow-c) 6%, transparent);
+  --glow-c: color-mix(in srgb, var(--accent) 26%, transparent);
+  --glow: 0 6px 18px var(--glow-c);
+  --avatar: linear-gradient(160deg, color-mix(in srgb, var(--accent-2) 22%, color-mix(in srgb, var(--fg) 32%, var(--bg))), color-mix(in srgb, var(--fg) 48%, var(--bg)));
   --radius: 22px;
+  --btn-radius: 999px;
   --spring: cubic-bezier(.3, 1.25, .5, 1);
   --ease: cubic-bezier(.2, .8, .2, 1);
   --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, sans-serif;
@@ -47,6 +53,20 @@
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   color-scheme: light;
 }
+/* Dark looks: glass and shadows work differently on a dark background */
+:root[data-mode="dark"] {
+  --glass-edge: rgba(255, 255, 255, .12);
+  --glass-dark: color-mix(in srgb, color-mix(in srgb, var(--bg) 55%, #000) 88%, transparent);
+  --shadow: 0 0 0 1px color-mix(in srgb, var(--fg) 6%, transparent), 0 8px 24px rgba(0, 0, 0, .25);
+  --shadow-float: 0 14px 38px rgba(0, 0, 0, .45), 0 0 0 1px color-mix(in srgb, var(--fg) 5%, transparent);
+  --map: color-mix(in srgb, var(--bg) 88%, var(--fg));
+  --water: color-mix(in srgb, var(--bg) 80%, #000);
+  --warn-fg: #ffc94d;
+  color-scheme: dark;
+}
+/* Glass turned off on the Appearance screen: solid panels instead */
+:root.no-glass { --glass: var(--surface); --glass-strong: var(--surface); }
+:root.no-glass * { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body {
   background: var(--bg); color: var(--text);
@@ -99,7 +119,7 @@ input:focus, select:focus { outline: none; box-shadow: 0 0 0 3px var(--accent-so
 .row { display: flex; gap: 10px; }
 .row > * { flex: 1; min-width: 0; }
 .btn {
-  font: inherit; font-size: 17px; font-weight: 600; letter-spacing: -0.02em; border: 0; border-radius: 999px; padding: 15px 20px; min-height: 52px;
+  font: inherit; font-size: 17px; font-weight: 600; letter-spacing: -0.02em; border: 0; border-radius: var(--btn-radius); padding: 15px 20px; min-height: 52px;
   background: var(--accent); color: var(--on-accent); cursor: pointer; width: 100%; box-shadow: var(--glow);
 }
 .btn b { color: inherit; }
@@ -148,7 +168,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, .chip:focus-vis
 /* Segmented control, like iOS */
 .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: var(--fill); padding: 3px; border-radius: 12px; }
 .seg button { font: inherit; font-size: 15px; font-weight: 500; border: 0; border-radius: 9px; padding: 9px; background: transparent; color: var(--fg); cursor: pointer; }
-.seg button[aria-pressed="true"] { background: var(--surface); color: var(--accent); font-weight: 600; box-shadow: 0 3px 8px rgba(60,50,30,.12), 0 1px 1px rgba(60,50,30,.05); }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--accent); font-weight: 600; box-shadow: var(--shadow); }
 .seg.three { grid-template-columns: repeat(3, 1fr); }
 .rating { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .rating button { font: inherit; font-weight: 600; padding: 16px 10px; border-radius: 18px; border: 0; background: var(--surface); color: var(--fg); cursor: pointer; box-shadow: var(--shadow); }
@@ -225,7 +245,7 @@ section.list > div { display: flex; flex-direction: column; gap: 2px; }
 .me-row > .muted { white-space: nowrap; }
 .top-gap { height: 8px; }
 .avatar.big { width: 64px; height: 64px; font-size: 24px; }
-.avatar.huge { width: 96px; height: 96px; font-size: 34px; background: linear-gradient(150deg, var(--accent-light), var(--accent)); color: var(--on-accent); box-shadow: 0 10px 28px rgba(47,107,79,.28); }
+.avatar.huge { width: 96px; height: 96px; font-size: 34px; background: linear-gradient(150deg, var(--accent-light), var(--accent)); color: var(--on-accent); box-shadow:  0 10px 28px var(--glow-c); }
 /* Me tab: a centred profile, a strip of numbers, and grouped rows like Settings */
 .profile { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding-top: 6px; }
 .profile h2 { margin-top: 8px; }
@@ -245,6 +265,24 @@ section.list > div { display: flex; flex-direction: column; gap: 2px; }
 .set-text b { font-weight: 500; }
 .set-text > span { font-size: 14px; color: var(--muted); }
 .set-chev { flex: none; font-size: 22px; color: var(--muted); opacity: .5; }
+/* Appearance */
+.looks { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.look-tile { font: inherit; display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 18px; border: 1px solid var(--line); cursor: pointer; text-align: left;
+  transition: transform .35s var(--spring), box-shadow .2s var(--ease); }
+.look-tile:active { transform: scale(.96); }
+.look-tile[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--accent); }
+.look-tile b { font-size: 14px; font-weight: 600; }
+.look-card { display: flex; gap: 6px; padding: 10px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+.look-card i { width: 22px; height: 22px; border-radius: 50%; }
+.look-colours { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.look-colour { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11.5px; color: var(--muted); text-align: center; cursor: pointer; }
+.look-colour input { width: 46px; height: 46px; min-height: 0; padding: 0; border: 0; border-radius: 50%; overflow: hidden; background: none; box-shadow: var(--shadow); cursor: pointer; }
+.look-colour input::-webkit-color-swatch-wrapper { padding: 0; }
+.look-colour input::-webkit-color-swatch { border: 0; border-radius: 50%; }
+.seg.four { grid-template-columns: repeat(4, 1fr); }
+.seg.four button { font-size: 14px; padding: 9px 2px; }
+input[type="range"] { width: 100%; accent-color: var(--accent); box-shadow: none; background: none; min-height: 0; padding: 0; }
+.look-preview .card-actions { display: flex; gap: 10px; }
 .progress { flex: 1; height: 4px; border-radius: 2px; background: var(--fill); overflow: hidden; margin-left: 8px; }
 .progress span { display: block; height: 100%; background: var(--accent); border-radius: 2px; transition: width .5s var(--ease); }
 .phone-row { display: flex; gap: 8px; }
@@ -362,9 +400,9 @@ a.back.link.center { display: block; text-align: center; font-size: 15px; }
 .me-wrap { pointer-events: none; }
 .me-dot { position: relative; width: 64px; height: 64px; }
 .me-beam { position: absolute; inset: 0; border-radius: 50%; opacity: 0; transition: transform .25s;
-  background: conic-gradient(from -28deg, rgba(47,107,79,.55), rgba(47,107,79,.05) 56deg, transparent 56deg);
+  background: conic-gradient(from -28deg, color-mix(in srgb, var(--accent) 55%, transparent), color-mix(in srgb, var(--accent) 5%, transparent) 56deg, transparent 56deg);
   -webkit-mask: radial-gradient(circle, #000 0 68%, transparent 70%); mask: radial-gradient(circle, #000 0 68%, transparent 70%); }
-.me-core { position: absolute; left: 50%; top: 50%; width: 20px; height: 20px; margin: -10px; border-radius: 50%; background: var(--accent); border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(47,107,79,.2), 0 1px 6px rgba(0,0,0,.35); }
+.me-core { position: absolute; left: 50%; top: 50%; width: 20px; height: 20px; margin: -10px; border-radius: 50%; background: var(--accent); border: 3px solid #fff; box-shadow: 0 0 0 6px var(--glow-c), 0 1px 6px rgba(0,0,0,.35); }
 .map-locate { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--glass-edge); background: var(--glass); color: var(--accent); display: grid; place-items: center; cursor: pointer; box-shadow: var(--shadow-float); }
 .map-locate svg { width: 16px; height: 16px; fill: currentColor; }
 /* Chats, like Messages */
@@ -506,7 +544,7 @@ a.back.link.center { display: block; text-align: center; font-size: 15px; }
 <script>
 // Which version of the prototype this page shows. new-user.html is the same file with this set to "new".
 const START_AS = "existing";
-const BUILD = "23 Nov, 16:21";                 // when this version was made; build.py fills it in
+const BUILD = "26 Nov, 16:31";                 // when this version was made; build.py fills it in
 
 // Address of your live-data server (see server/README.md), e.g. "https://carriage-live.yourname.workers.dev".
 // Empty, or unreachable, means the Ride day screen shows clearly labelled sample times instead.
@@ -1215,7 +1253,7 @@ function drawDetailedMap({ r, trip }) {
       if (locWatch !== null) navigator.geolocation.clearWatch(locWatch);
       locWatch = navigator.geolocation.watchPosition(pos => {
         const ll = [pos.coords.latitude, pos.coords.longitude];
-        if (!m._me) m._me = [L.circle(ll, { radius: pos.coords.accuracy, color: "#2f6b4f", weight: 1, fillOpacity: .12, interactive: false }).addTo(m), meMarker(ll).addTo(m)];
+        if (!m._me) m._me = [L.circle(ll, { radius: pos.coords.accuracy, color: getComputedStyle(document.documentElement).getPropertyValue("--accent").trim(), weight: 1, fillOpacity: .12, interactive: false }).addTo(m), meMarker(ll).addTo(m)];
         m._me[0].setLatLng(ll).setRadius(pos.coords.accuracy); m._me[1].setLatLng(ll);
         gpsHeading = Number.isFinite(pos.coords.heading) && pos.coords.speed > 0.5 ? pos.coords.heading : gpsHeading;
         setMeHeading(m._me[1], compass ?? gpsHeading);
@@ -1230,7 +1268,7 @@ function drawDetailedMap({ r, trip }) {
 }
 function addTiles(m) {
   let failed = 0;
-  L.tileLayer("https://www.onemap.gov.sg/maps/tiles/Default/{z}/{x}/{y}.png", {
+  L.tileLayer(`https://www.onemap.gov.sg/maps/tiles/${document.documentElement.dataset.mode === "dark" ? "Night" : "Default"}/{z}/{x}/{y}.png`, {
     minZoom: 11, maxZoom: 19, detectRetina: true,
     attribution: '<a href="https://www.onemap.gov.sg/" target="_blank" rel="noopener">OneMap</a> &copy; contributors &#124; <a href="https://www.sla.gov.sg/" target="_blank" rel="noopener">Singapore Land Authority</a>',
   }).on("tileerror", () => {
@@ -2153,6 +2191,7 @@ const screens = {
       </div>
       <p class="note">Your daily commute is what Rides use, so you can check them anytime without searching. Use the Map for one-off trips.</p>
       <div class="group">
+        ${row(ICONS.palette, "#e07a5f", "Appearance", `${esc(look.custom ? "My own colours" : lookColors().name)} · try different looks`, 'data-go="40"')}
         ${row(ICONS.shield, "#8a6fb0", "Privacy and safety", "", 'data-toast="Nobody sees your stations or time until you both wave. Under-18s only meet under-18s. Ratings stay private."')}
         ${row(ICONS.share, "#e07a5f", "Tell a friend about Carriage", "", 'data-shareapp')}
       </div>
@@ -2722,6 +2761,52 @@ Object.assign(screens, {
 });
 
 const BACK = `<svg class="chev-back" viewBox="0 0 12 20" aria-hidden="true"><path d="M10 2 2 10l8 8"/></svg>Back`;
+// ---------- Appearance: try looks live. Kept on this phone only. ----------
+const LOOKS = [
+  { id: "forest", name: "Forest & cream", bg: "#faf6ee", surface: "#ffffff", fg: "#2b2a26", accent: "#2f6b4f", accent2: "#e07a5f" },
+  { id: "matcha", name: "Matcha latte", bg: "#f3f1e7", surface: "#fffdf6", fg: "#2e3a2f", accent: "#6f8f4e", accent2: "#c9a37a" },
+  { id: "kopi", name: "Kopi-O", bg: "#f5ede3", surface: "#fffaf3", fg: "#3b2a20", accent: "#8a5a3b", accent2: "#d9a441" },
+  { id: "sunset", name: "Sunset coral", bg: "#fff5ef", surface: "#ffffff", fg: "#2d2226", accent: "#e2604b", accent2: "#f2a65a" },
+  { id: "lilac", name: "Lilac", bg: "#f5f2fb", surface: "#ffffff", fg: "#26213a", accent: "#7556d1", accent2: "#ef8fb3" },
+  { id: "sky", name: "Morning sky", bg: "#f1f5fa", surface: "#ffffff", fg: "#1d2433", accent: "#2f6fdb", accent2: "#21b3a2" },
+  { id: "sage", name: "Sage & navy", bg: "#14213d", surface: "#1c2c4c", fg: "#f4efe6", accent: "#8fcb9b", accent2: "#e9b872" },
+  { id: "gold", name: "Deep green & gold", bg: "#12261e", surface: "#1b3529", fg: "#f1ede4", accent: "#e9c46a", accent2: "#7fb77e" },
+  { id: "peach", name: "Teal & peach", bg: "#10302f", surface: "#183f3d", fg: "#f6f1ea", accent: "#f4a988", accent2: "#84c7ae" },
+  { id: "nightbus", name: "Night bus", bg: "#17131f", surface: "#231c30", fg: "#f3eefb", accent: "#ff7aa8", accent2: "#7ad0ff" },
+  { id: "mint", name: "Navy & mint", bg: "#0a192f", surface: "#112240", fg: "#ffffff", accent: "#00e676", accent2: "#00b4d8" },
+];
+const FONTS = {
+  system: { name: "System" },
+  rounded: { name: "Rounded", display: '"Nunito", ui-rounded, system-ui, sans-serif', body: '"Nunito", ui-rounded, system-ui, sans-serif' },
+  editorial: { name: "Editorial", display: '"Fraunces", ui-serif, Georgia, serif' },
+  geometric: { name: "Geometric", display: '"Poppins", system-ui, sans-serif', body: '"Poppins", system-ui, sans-serif' },
+};
+const LOOK_START = { palette: "forest", custom: null, font: "system", radius: 22, buttons: "pill", glass: true };
+let look = { ...LOOK_START };
+try { Object.assign(look, JSON.parse(localStorage.getItem("carriage-look") || "{}")); } catch (e) {}
+const saveLook = () => { try { localStorage.setItem("carriage-look", JSON.stringify(look)); } catch (e) {} };
+const lookColors = () => look.custom || LOOKS.find(l => l.id === look.palette) || LOOKS[0];
+// How bright a colour is (0 = black, 1 = white), to pick readable text and light or dark glass
+function brightness(hex) {
+  const n = parseInt(hex.slice(1), 16), ch = [n >> 16, n >> 8 & 255, n & 255].map(v => { v /= 255; return v <= .04 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; });
+  return .2126 * ch[0] + .7152 * ch[1] + .0722 * ch[2];
+}
+function applyLook() {
+  const c = lookColors(), root = document.documentElement, set = (k, v) => v ? root.style.setProperty(k, v) : root.style.removeProperty(k);
+  const dark = brightness(c.bg) < .2;
+  set("--bg", c.bg); set("--surface", c.surface); set("--fg", c.fg); set("--accent", c.accent); set("--accent-2", c.accent2);
+  set("--on-accent", brightness(c.accent) > .4 ? (dark ? c.bg : c.fg) : "#ffffff");
+  const f = FONTS[look.font] || FONTS.system;
+  set("--font-display", f.display); set("--font-body", f.body);
+  set("--radius", look.radius + "px"); set("--btn-radius", look.buttons === "pill" ? "999px" : Math.round(look.radius * .6) + "px");
+  root.dataset.mode = dark ? "dark" : "light";
+  root.classList.toggle("no-glass", !look.glass);
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.content = c.bg;
+}
+const lookText = () => { const c = lookColors(), f = FONTS[look.font] || FONTS.system;
+  return `Carriage look: ${look.custom ? "my own colours" : lookColors().name}. Background ${c.bg}, cards ${c.surface}, text ${c.fg}, main colour ${c.accent}, second colour ${c.accent2}. Font: ${f.name}. Corners: ${look.radius}px. Buttons: ${look.buttons}. Glass: ${look.glass ? "on" : "off"}.`; };
+
 const ICONS = {
   map: '<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Zm0 0v14m6-12v14"/>',
   rides: '<rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M8 21l2-4m6 4-2-4"/><circle cx="9" cy="14" r=".5"/><circle cx="15" cy="14" r=".5"/>',
@@ -2732,9 +2817,10 @@ const ICONS = {
   star: '<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9Z"/>',
   shield: '<path d="M12 3 5 6v6c0 4.4 3 7.6 7 9 4-1.4 7-4.6 7-9V6l-7-3Z"/><path d="m9 12 2 2 4-4"/>',
   share: '<path d="M12 15V3m0 0L8 7m4-4 4 4M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/>',
+  palette: '<path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.7-.9 1.4-1.9-.3-.9.3-1.9 1.3-1.9H17a4 4 0 0 0 4-4c0-5.6-4-10.2-9-10.2Z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7.5" r="1"/>',
 };
 function tabBar() {
-  const on = { 0: "map", 4: "rides", 5: "rides", 6: "rides", 7: "rides", 11: "rides", 9: "rides", 12: "chats", 13: "chats", 8: "met", 10: "me", 1: "me", 2: "me", 3: "me" }[state.step];
+  const on = { 0: "map", 4: "rides", 5: "rides", 6: "rides", 7: "rides", 11: "rides", 9: "rides", 12: "chats", 13: "chats", 8: "met", 10: "me", 1: "me", 2: "me", 3: "me", 40: "me" }[state.step];
   const badge = { rides: wavedAtMe().length, chats: Object.values(state.unread).reduce((a, n) => a + n, 0) };
   const tab = (key, label, step) => `<button class="tab" data-tab="${step}" aria-current="${on === key ? "page" : "false"}">
     ${on === key ? '<span class="tab-bubble"></span>' : ""}<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[key]}</svg>${label}${badge[key] ? `<span class="tab-badge">${badge[key]}</span>` : ""}</button>`;
@@ -2747,7 +2833,7 @@ function render() {
   const entering = state.step !== shownStep, oldBubble = document.querySelector(".tab-bubble");
   const from = oldBubble && oldBubble.getBoundingClientRect();
   shownStep = state.step;
-  app.innerHTML = `<div class="screen${entering ? " enter" : ""}">${screens[state.step]()}</div>${state.step >= 20 ? "" : tabBar()}${state.pick ? pickerOverlay() : ""}`;
+  app.innerHTML = `<div class="screen${entering ? " enter" : ""}">${screens[state.step]()}</div>${state.step >= 20 && state.step <= 30 ? "" : tabBar()}${state.pick ? pickerOverlay() : ""}`;
   state.justOpened = null;
   const bubble = document.querySelector(".tab-bubble");
   if (from && bubble && bubble.animate && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -2887,6 +2973,15 @@ app.addEventListener("click", e => {
     render(); window.scrollTo(0, 0); toast("Plan sent to " + state.planFor);
   }
   else if (d.late !== undefined) { toast(state.planFor + " knows you're running late. They'll save you a spot."); }
+  else if (d.look) { look.palette = d.look; look.custom = null; saveLook(); applyLook(); render(); }
+  else if (d.lookfont) { look.font = d.lookfont; saveLook(); applyLook(); render(); }
+  else if (d.lookbtn) { look.buttons = d.lookbtn; saveLook(); applyLook(); render(); }
+  else if (d.lookglass) { look.glass = d.lookglass === "on"; saveLook(); applyLook(); render(); }
+  else if (d.lookreset !== undefined) { look = { ...LOOK_START }; saveLook(); applyLook(); render(); toast("Back to Forest & cream"); }
+  else if (d.lookcopy !== undefined) {
+    const text = lookText();
+    try { navigator.clipboard.writeText(text).then(() => toast("Copied. Paste it in your message to Claude."), () => toast(text)); } catch (e) { toast(text); }
+  }
   else if (d.shareapp !== undefined) {
     const msg = { title: "Carriage", text: "Meet people on your daily train or bus ride.", url: "https://carriage-eob.pages.dev/new-user" };
     if (navigator.share) navigator.share(msg).catch(() => {});
@@ -2906,6 +3001,11 @@ app.addEventListener("input", e => {
   if (k === "ans") state.answers[t.dataset.question] = t.value;
   if (k === "handle") state.fb.handle = t.value;
   if (k === "chat") state.draft = t.value;
+  if (k === "look") {
+    if (t.id === "look-radius") { look.radius = Number(t.value); t.previousElementSibling.textContent = `Corners · ${look.radius}px`; }
+    else look.custom = { ...lookColors(), name: "My own colours", [t.id.slice(5)]: t.value };
+    saveLook(); applyLook();
+  }
   if (k === "pickq") { state.pick.q = t.value; document.getElementById("pick-results").innerHTML = pickResults(t.value); searchOnline(t.value); }
   if (k === "pf") {
     state.profile[t.dataset.field] = t.dataset.field === "phone" || t.dataset.field === "otp" ? t.value.replace(/[^\d\s]/g, "") : t.value;
@@ -2916,6 +3016,7 @@ app.addEventListener("input", e => {
 app.addEventListener("change", e => {
   const t = e.target;
   if (t.id === "ob-birthday") { state.profile.birthday = t.value; render(); return; }
+  if (t.dataset.keep === "look") { render(); return; }
   if (t.dataset.keep) return;
   if (t.id === "ob-photo") {
     const f = t.files && t.files[0];
@@ -2946,6 +3047,36 @@ app.addEventListener("change", e => {
 
 const TAB_LINKS = { rides: 4, waves: 4, chats: 12, met: 8, me: 10 };
 screens[9] = screens[4];   // the old Waves page now lives at the top of Rides
+screens[40] = function () {
+  const c = lookColors(), on = look.custom ? "custom" : look.palette;
+  const seg = (attr, value, label, now) => `<button data-${attr}="${value}" aria-pressed="${now === value}">${label}</button>`;
+  const colour = (key, label) => `<label class="look-colour"><input type="color" id="look-${key}" data-keep="look" value="${c[key]}"><span>${label}</span></label>`;
+  return `${header(10)}
+  <main class="fade">
+    <div><h2>Appearance</h2><p class="muted">Try looks on the real app. Your choice stays on this phone. When you like one, copy it and send it over.</p></div>
+    <div class="card look-preview">
+      <div class="who"><div class="avatar">Y</div><div class="meta"><h3>Yu Ting, 17</h3><p class="small muted">Poly Y1 · ranked grinder, ask me about Valorant</p></div></div>
+      <div class="bar"><span class="on"></span><span class="on"></span><span class="on"></span><span></span></div>
+      <div class="chips"><span class="tag shared">Gaming</span><span class="tag shared">Music</span><span class="tag">Anime</span></div>
+      <div class="card-actions"><button class="btn small-btn" type="button">Wave</button><button class="btn small-btn ghost" type="button">Not now</button></div>
+    </div>
+    <div class="field"><span class="label">Colours</span>
+      <div class="looks">${LOOKS.map(l => `<button class="look-tile" data-look="${l.id}" aria-pressed="${on === l.id}" style="background:${l.bg};color:${l.fg}">
+        <span class="look-card" style="background:${l.surface}"><i style="background:${l.accent}"></i><i style="background:${l.accent2}"></i></span><b style="color:${l.fg}">${l.name}</b></button>`).join("")}</div>
+    </div>
+    <div class="field"><span class="label">Or pick your own${look.custom ? " (on now)" : ""}</span>
+      <div class="look-colours">${colour("bg", "Background")}${colour("surface", "Cards")}${colour("fg", "Text")}${colour("accent", "Main colour")}${colour("accent2", "Second colour")}</div>
+    </div>
+    <div class="field"><span class="label">Font</span><div class="seg four">${Object.entries(FONTS).map(([k, f]) => seg("lookfont", k, `<span style="font-family:${f.display || "inherit"}">${f.name}</span>`, look.font)).join("")}</div></div>
+    <div class="field"><label class="label" for="look-radius">Corners · ${look.radius}px</label><input type="range" id="look-radius" data-keep="look" min="4" max="32" step="2" value="${look.radius}"></div>
+    <div class="row">
+      <div class="field"><span class="label">Buttons</span><div class="seg">${seg("lookbtn", "pill", "Pill", look.buttons)}${seg("lookbtn", "rounded", "Rounded", look.buttons)}</div></div>
+      <div class="field"><span class="label">Glass</span><div class="seg">${seg("lookglass", "on", "On", look.glass ? "on" : "off")}${seg("lookglass", "off", "Off", look.glass ? "on" : "off")}</div></div>
+    </div>
+    <button class="btn" data-lookcopy>Copy my look</button>
+    <button class="btn ghost" data-lookreset>Back to Forest & cream</button>
+  </main>`;
+};
 screens[30] = function () {
   const nv = state.navi;
   if (!nv) return screens[0]();
@@ -2955,6 +3086,7 @@ screens[30] = function () {
     <div class="nav-panel" id="nav-panel"></div>
   </div>`;
 };
+applyLook();
 if (!state.isNew && TAB_LINKS[location.hash.slice(1)] !== undefined) state.step = TAB_LINKS[location.hash.slice(1)];
 if (state.isNew) {
   Object.assign(state, { step: 20, interests: new Set(), waves: {}, incoming: {}, sentWhen: {}, friends: {}, chats: {}, unread: {} });
