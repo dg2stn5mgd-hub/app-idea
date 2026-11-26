@@ -372,6 +372,17 @@ img.avatar { object-fit: cover; }
 .nav-eta .btn.small-btn { background: var(--danger); color: #fff; }
 .nav-meet { display: grid; gap: 10px; border-top: 1px solid var(--line); padding-top: 14px; }
 .nav-meet p { margin: 0; }
+.nav-meet.compact { gap: 8px; }
+.ride-card { display: flex; flex-direction: column; gap: 8px; background: var(--surface); border-radius: 26px; padding: 20px; box-shadow: var(--shadow-float); border-top: 6px solid var(--match-fill); }
+.ride-card h2 { font-size: 26px; }
+.ride-card .label { color: var(--match); font-weight: 600; }
+.ride-card .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.next-ride { font: inherit; color: var(--fg); text-align: left; display: flex; flex-direction: column; gap: 3px; border: 0; cursor: pointer; background: var(--surface);
+  border-radius: var(--radius); padding: 14px 18px; box-shadow: var(--shadow); border-left: 5px solid var(--match-fill); }
+.next-ride .label { color: var(--match); }
+.next-steps { margin: 0; padding: 16px 16px 16px 36px; display: flex; flex-direction: column; gap: 10px; background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); font-size: 15px; }
+.demo-skip { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border: 1.5px dashed var(--line); border-radius: 18px; }
+.demo-skip .row { flex-wrap: wrap; }
 .nav-meet.together .label { color: var(--match); }
 .nav-thread { display: grid; gap: 4px; background: var(--fill); border-radius: 16px; padding: 10px 14px; font-size: 14px; }
 .nav-thread p.me { color: var(--muted); }
@@ -531,7 +542,7 @@ a.back.link.center { display: block; text-align: center; font-size: 15px; }
 <script>
 // Which version of the prototype this page shows. new-user.html is the same file with this set to "new".
 const START_AS = "new";
-const BUILD = "26 Nov, 16:53";                 // when this version was made; build.py fills it in
+const BUILD = "26 Nov, 17:03";                 // when this version was made; build.py fills it in
 
 // Address of your live-data server (see server/README.md), e.g. "https://carriage-live.yourname.workers.dev".
 // Empty, or unreachable, means the Ride day screen shows clearly labelled sample times instead.
@@ -732,9 +743,10 @@ const EXTRA = {
 const extra = p => EXTRA[p.n] || { spot:"I'll wave when I see you", handle:"@" + p.n.toLowerCase().replace(/\s+/g, ""), qa:[["What are you into right now?", p.i.join(", ")]] };
 
 const SCHOOL = "L:1.29812,103.88241|Dunman High School|Tanjong Rhu Rd";
+const HOME = "L:1.30395,103.91380|Home|Blk 55 Marine Terrace";   // the demo user's home, a few minutes' walk from Marine Terrace MRT
 const state = {
   isNew: START_AS === "new",
-  step: 0, from: "Marine Terrace", to: SCHOOL, time: "07:45",
+  step: 0, from: HOME, to: SCHOOL, time: "07:40",
   interests: new Set(["Investing","Cars"]), age: 17, mode: "friends", minAge: 15, maxAge: 17,
   window: 10, waves: { "Wei Ling": "sent", "Bryan": "sent" }, planFor: null, car: 3, day: "Tomorrow", plan: null,
   spot: "Black backpack, standing by the door",
@@ -756,10 +768,11 @@ const state = {
     ],
   },
   unread: { "Zhi Hao": 1 },
-  commute: { from: "Marine Terrace", to: SCHOOL, time: "07:45", via: "any" },
-  nav: { from: "Marine Terrace", to: SCHOOL, time: "07:45", via: "any" },
-  via: "any", pick: null, seat: "Upper deck, front",
+  commute: { from: HOME, to: SCHOOL, time: "07:40", via: "mrt" },   // MRT only for now: no buses
+  nav: { from: HOME, to: SCHOOL, time: "07:40", via: "mrt" },
+  via: "mrt", pick: null, seat: "Upper deck, front",
   incoming: { "Hui Min": "this morning", "Nur Aisyah": "yesterday", "Mei Xuan": "2 days ago" },
+  booked: null,   // { n, day, stage: "booked" | "eve" | "today" }
   declined: {}, sentWhen: { "Wei Ling": "yesterday", "Bryan": "3 days ago" }
 };
 
@@ -1528,6 +1541,12 @@ function notify(title, body) {
 }
 
 let navStarting = false;
+// The shared part is done: close navigation and go to the private rating
+function rideOver(nv) {
+  const stops = nv.o ? nv.o.stops : 0;
+  Object.assign(state, { planFor: nv.withName, fromMet: false, rideOver: { stops }, fb: { rate: null, again: null, share: null, ctype: "Telegram", handle: "" } });
+  stopNav(); go(6);
+}
 function startNav(trip, withName) {
   const r = myRoute(trip);
   if (!r) { toast("Pick a start and a destination first."); return; }
@@ -1602,6 +1621,7 @@ function navTick(nv) {
       nv.phase = "parted";
       navLater(nv, 1200, () => theySay(nv, "That was fun, see you around!"));
       notify("How was your ride?", `Your ride with ${nv.p.n} is over. Tap to tell us how it went.`);
+      navLater(nv, 2600, () => rideOver(nv));
     }
   }
   if (nv.prog >= nv.total - (nv.sim ? 1 : NAV_NEAR_M) && (nv.sim ? nv.simStep >= nv.steps.length : true) && nv.phase !== "arrived" && !waiting) {
@@ -1656,9 +1676,8 @@ function navPanel(nv) {
   let meet = "";
   if (n) {
     const p = nv.p;
-    if (nv.phase === "go") meet = `<div class="nav-meet"><span class="label">Meeting ${esc(p.n)}</span>
-      <p>${esc(nv.o.start)} around <b>${fmt(nv.o.at)}</b>, ${esc(meetWhere(nv))}. They'll look for: ${esc(state.spot)}</p>${thread}
-      ${chips(["I'm on my way", "Running late, 5 min", "Can't make it today"])}</div>`;
+    if (nv.phase === "go") meet = `<div class="nav-meet compact"><p><b>Meeting ${esc(p.n)}</b> · ${fmt(nv.o.at)} · ${esc(nv.o.start)} · ${esc(meetWhere(nv))}</p>${thread}
+      ${chips(["I'm on my way", "Running late, 5 min"])}</div>`;
     else if (nv.phase === "meeting") meet = `<div class="nav-meet"><span class="label">Look for ${esc(p.n)}</span>
       <p><b>How to spot them:</b> ${esc(extra(p).spot)}</p>${thread}
       ${chips(["I'm here", "Which carriage are you in?", "I see you!"])}
@@ -1696,11 +1715,10 @@ function updateNavUI() {
   set("nav-rem", rem); set("nav-arr", fmt((toMin(sgNow()) + rem) % 1440)); set("nav-left", distText(Math.max(0, nv.total - nv.prog)));
   const ll = toLL(nv.pos), h = nv.heading;
   if (navMap && navMe) {
-    navMe.setLatLng(ll); setMeHeading(navMe, h);
-    if (nv.follow) {
-      const st = nv.steps[stepAt(nv)], z = st && st.kind === "ride" ? 15 : 17.5;
-      if (Math.abs(navMap.getZoom() - z) > 0.4) navMap.setView(ll, z); else navMap.panTo(ll, { animate: false });
-    }
+    setMeHeading(navMe, h);
+    const st = nv.steps[stepAt(nv)], z = st && st.kind === "ride" ? 15 : 17.5;
+    if (nv.follow && Math.abs(navMap.getZoom() - z) > 0.4) { navMap.setView(ll, z); navMe.setLatLng(ll); }
+    else glideTo(ll, nv.sim ? 230 : 950);
   } else {
     // The drawn map (previews): a dot on it
     const svg = document.querySelector(".navmap svg");
@@ -1711,6 +1729,21 @@ function updateNavUI() {
       dot.setAttribute("cx", nv.pos[0]); dot.setAttribute("cy", nv.pos[1]); dot.setAttribute("r", 6 * u); dot.setAttribute("stroke-width", 3 * u);
     }
   }
+}
+// Glide the "you" dot (and the map, while following) to a new position over a short time, every frame
+let glide = null;
+function glideTo(ll, ms) {
+  const cur = navMe.getLatLng();
+  glide = { from: [cur.lat, cur.lng], to: ll, t0: performance.now(), ms };
+  if (!glideTo.on) { glideTo.on = true; requestAnimationFrame(glideStep); }
+}
+function glideStep(now) {
+  if (!glide || !navMap || !navMe) { glideTo.on = false; return; }
+  const k = Math.min(1, (now - glide.t0) / glide.ms), e = 1 - (1 - k) * (1 - k);
+  const ll = [glide.from[0] + (glide.to[0] - glide.from[0]) * e, glide.from[1] + (glide.to[1] - glide.from[1]) * e];
+  navMe.setLatLng(ll);
+  if (state.navi && state.navi.follow) navMap.panTo(ll, { animate: false });
+  if (k < 1) requestAnimationFrame(glideStep); else glideTo.on = false;
 }
 function mountNav() {
   const nv = state.navi;
@@ -1748,7 +1781,38 @@ function noRouteReason(trip) {
   if (trip.from === trip.to) return "Pick two different places.";
   const m = metres(placeXY(trip.from), placeXY(trip.to));
   if (m < 1200) return `It's only about ${Math.max(1, Math.round(walkMin(m)))} min on foot. No train or bus needed.`;
-  return (trip.via || "any") === "any" ? "No route found for that." : "No route found for that. Try Fastest.";
+  return "No MRT route found for that.";
+}
+// When the booked ride is: "Tomorrow", "Today" or "Next Monday"
+const rideDay = () => !state.booked ? "" : state.booked.stage === "today" ? "Today" : state.booked.stage === "eve" ? "Tomorrow" : state.booked.day;
+// The booked ride, on top of home: the night before (a reminder) and on the morning (start walking)
+function rideCard() {
+  const b = state.booked, m = findPerson(b.n);
+  if (!m) return "";
+  const { p, o } = m, trip = tripOf(b.n) || state.commute, car = Math.min(state.car, lineInfo(o.line).cars);
+  const status = state.lineStatus ? (state.lineStatus.ok ? `<span class="pill-status good">${esc(lineInfo(o.line).short)} running normally</span>` : `<span class="pill-status warn">Delays on the ${esc(lineInfo(o.line).short)}</span>`)
+    + `<span class="small muted">${state.lineStatus.live ? "Live from LTA" : "Sample status"}</span>` : "";
+  if (b.stage === "eve") return `<section class="ride-card">
+      <span class="label">Tomorrow · ${fmt(o.at)}</span>
+      <h2>Ride with ${esc(p.n)}</h2>
+      <p>${esc(o.start)} · carriage ${car} · leave home by ${trip.time}</p>
+      <p class="small muted">We'll remind you again in the morning. ${esc(p.n)} will look for: ${esc(state.spot)}.</p>
+      <button class="btn ghost" data-ticket>Ride details</button>
+    </section>`;
+  return `<section class="ride-card today">
+      <span class="label">Today</span>
+      <h2>Meet ${esc(p.n)} at ${fmt(o.at)}</h2>
+      <p>${esc(o.start)} · carriage ${car} · leave home by ${trip.time}</p>
+      <div class="actions">${status}</div>
+      <button class="btn" data-startride>Start walking to ${esc(o.start)}</button>
+      <button class="back link center" data-ticket>Ride details · how to spot ${esc(p.n)}</button>
+    </section>`;
+}
+// Live train status for the ride card (sample if live data can't be reached)
+async function loadLineStatus(line) {
+  try { const t = await getLive("/train-alerts"); state.lineStatus = { live: true, ok: t.normal && !(t.affected || []).some(a => a.line === lineInfo(line).short) }; }
+  catch (e) { state.lineStatus = { live: false, ok: true }; }
+  if (state.step === 0) render();
 }
 function viaChips(target, via) {
   return `<div class="seg three">${[["any", "Fastest"], ["mrt", "MRT only"], ["bus", "Bus only"]].map(([v, l]) =>
@@ -1881,7 +1945,7 @@ const screens = {
     return `
     <main class="fade">
       <div class="brand"><span class="logo">C</span><b>Carriage</b></div>
-      <h1 class="hello">${hello}<span>Where are you heading?</span></h1>
+      ${state.booked && state.booked.stage !== "booked" ? rideCard() : `<h1 class="hello">${hello}<span>Where are you heading?</span></h1>`}
       ${installTip()}
       <div class="search">
         <div class="search-fields">
@@ -1898,7 +1962,6 @@ const screens = {
         <div class="field"><label class="label" for="navTime">Leaving at</label>
           <div class="time-row"><input type="time" id="navTime" value="${state.nav.time}"><button class="btn ghost small-btn" data-now>Now</button></div></div>
       </div>
-      ${viaChips("nav", state.nav.via)}
       ${!r ? `<p class="error">${noRouteReason(state.nav)}</p>` : `
       <div class="map-card">
         ${routeMap(r, state.nav)}
@@ -1927,7 +1990,6 @@ const screens = {
       ${placeButton("from", "You start at", state.commute.from)}
       ${placeButton("to", "You get off at", state.commute.to)}
       <div class="field"><label class="label" for="time">You usually set off at</label><input type="time" id="time" value="${state.commute.time}"></div>
-      <div class="field"><span class="label">How you travel</span>${viaChips("commute", state.commute.via)}</div>
       ${err}
       ${r ? `<div class="field"><span class="label">Your ride · ${r.stops} stops · ${changes ? changes + " change" + (changes > 1 ? "s" : "") : "no changes"} · about ${r.minutes} min</span>${routeDiagram(r)}
         <span class="small muted">We picked the fastest route. You'll be matched on every train and bus you ride, including after you change.</span></div>` : ""}
@@ -2010,7 +2072,7 @@ const screens = {
     const onCommute = sameTrip(state, state.commute);
     // People who waved at you first stay here after you wave back, until the ride is planned
     const incoming = onCommute ? out.filter(m => state.incoming[m.p.n] && !state.declined[m.p.n] && !state.friends[m.p.n]
-      && (!state.waves[m.p.n] || state.waves[m.p.n] === "mutual") && !(state.plan && state.planFor === m.p.n)) : [];
+      && (!state.waves[m.p.n] || state.waves[m.p.n] === "mutual") && !(state.booked && state.booked.n === m.p.n)) : [];
     const incomingNames = new Set(incoming.map(m => m.p.n));
     const rest = out.filter(m => !incomingNames.has(m.p.n));
     const shown = state.showAll ? rest : rest.slice(0, 8);
@@ -2031,8 +2093,11 @@ const screens = {
         ${open ? `<div class="fold-body list"><p class="small muted">${hint}</p>${people.length ? body : `<p class="note">${empty}</p>`}</div>` : ""}
       </section>`;
     };
+    const next = state.booked && findPerson(state.booked.n);
     return `${header(null)}
     <main class="fade">
+      ${next ? `<button class="next-ride" data-ticket><span class="label">Your next ride · ${rideDay()}</span>
+        <b>${esc(next.p.n)} · ${fmt(next.o.at)} at ${esc(next.o.start)}</b><span class="small muted">Carriage ${Math.min(state.car, lineInfo(next.o.line).cars)} · tap for details</span></button>` : ""}
       ${pending.map(m => `<div class="note nudge"><span>You rode with <b>${esc(m.n)}</b> this morning. How did it go?</span>
         <button class="btn small-btn" data-feedback="${esc(m.n)}">Rate it</button></div>`).join("")}
       <div>
@@ -2087,9 +2152,17 @@ const screens = {
           <button class="back" data-chat="${esc(p.n)}" style="color:var(--accent);font-weight:600;text-align:left">See your messages with ${esc(p.n)} ›</button>
           <span class="small muted">No chat before you meet. Save the talking for the ride.</span>
         </div>
-        <button class="btn" data-startride>Start the ride: navigate and meet ${esc(p.n)}</button>
-        <button class="btn ghost" data-rideday>Ride day: check live ${isBus(o.line) ? "bus times" : "train status"}</button>
-        <button class="btn ghost" data-go="6">Ride's over? Tell us how it went</button>
+        <div class="field"><span class="label">What happens next</span>
+          <ol class="next-steps">
+            <li><b>The night before</b>, we remind you: time, station and carriage.</li>
+            <li><b>That morning</b>, open Carriage. Home shows your ride and walks you to ${esc(o.start)}.</li>
+            <li><b>On the platform</b>, find ${esc(p.n.replace(/\.$/, ""))}. You both tap "We've met".</li>
+            <li><b>When you get off</b>, the ride ends by itself and you rate it (privately).</li>
+          </ol>
+        </div>
+        <div class="demo-skip"><span class="label">Prototype: skip ahead</span>
+          <div class="row"><button class="btn ghost small-btn" data-stage="eve">To the night before</button><button class="btn ghost small-btn" data-stage="today">To ride morning</button></div>
+        </div>
         <div class="row">
           <button class="btn ghost" data-toast="Plan cancelled. ${esc(p.n)} has been told.">Cancel plan</button>
           <button class="btn ghost" data-toast="Report sent. ${esc(p.n)} can no longer see you.">Block or report</button>
@@ -2130,10 +2203,10 @@ const screens = {
     const f = state.fb;
     const opt = (key, val, label) => `<button data-fb="${key}" data-val="${val}" aria-pressed="${f[key] === val}">${label}</button>`;
     const showed = f.rate && f.rate !== "noshow";
-    return `${header(state.fromMet ? 8 : 5)}
+    return `${header(state.rideOver ? null : state.fromMet ? 8 : 5)}
     <main class="fade">
       <div>
-        <p class="label">After your ride with ${esc(p.n)}</p>
+        <p class="label">${state.rideOver ? `Ride over · ${state.rideOver.stops} stop${state.rideOver.stops === 1 ? "" : "s"} with ${esc(p.n)}` : `After your ride with ${esc(p.n)}`}</p>
         <h2>How did it go?</h2>
       </div>
       <div class="rating">
@@ -2421,11 +2494,10 @@ Object.assign(screens, {
     return `${obTop(23, 4)}
     <main class="fade">
       <h2>Your daily commute</h2>
-      <p class="muted">The trip you take most days, by train, bus or both. You can add other trips later from the Map.</p>
+      <p class="muted">The MRT ride you take most days. You can look at other trips later from the Map.</p>
       ${placeButton("from", "You start at", state.commute.from)}
       ${placeButton("to", "You get off at", state.commute.to)}
       <div class="field"><label class="label" for="time">You usually set off at</label><input type="time" id="time" value="${state.commute.time}"></div>
-      <div class="field"><span class="label">How you travel</span>${viaChips("commute", state.commute.via)}</div>
       <div class="field"><span class="label">Days you ride</span>
         <div class="chips">${["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d => `<button class="chip" data-weekday="${d}" aria-pressed="${state.days.has(d)}">${d}</button>`).join("")}</div>
       </div>
@@ -2649,9 +2721,9 @@ const canChat = n => { const m = metPerson(n); return !!m && (m.status === "frie
 function chatGroups() {
   const met = metList().map(metStatus).filter(m => m.status === "friends" || m.status === "again");
   const soon = met.filter(m => m.next).map(m => ({ n: m.n, a: m.a, line: `Next ride: ${m.next}` }));
-  if (state.plan && state.planFor && !soon.some(x => x.n === state.planFor)) {
-    const x = findPerson(state.planFor);
-    if (x) soon.unshift({ n: x.p.n, a: x.p.a, line: `${state.day} · ${fmt(x.o.at)} at ${x.o.start}` });
+  if (state.booked && !soon.some(x => x.n === state.booked.n)) {
+    const x = findPerson(state.booked.n);
+    if (x) soon.unshift({ n: x.p.n, a: x.p.a, line: `${rideDay()} · ${fmt(x.o.at)} at ${x.o.start}` });
   }
   const notYet = findMatches(state.commute).out.filter(m => state.waves[m.p.n] === "mutual" && !soon.some(x => x.n === m.p.n) && !canChat(m.p.n))
     .map(m => ({ n: m.p.n, a: m.p.a, line: `${m.o.stops} stop${m.o.stops > 1 ? "s" : ""} together from ${m.o.start}` }));
@@ -2799,7 +2871,16 @@ app.addEventListener("click", e => {
   const d = b.dataset;
   if (d.go !== undefined) { if (Number(d.go) === 4) state.plan = null; go(Number(d.go)); }
   else if (d.startnav !== undefined) startNav({ ...state.nav });
-  else if (d.startride !== undefined) startNav({ ...(tripOf(state.planFor) || state) }, state.planFor);
+  else if (d.startride !== undefined) startNav({ ...(tripOf(state.booked.n) || state.commute) }, state.booked.n);
+  else if (d.ticket !== undefined) { state.planFor = state.booked.n; state.plan = true; state.fromMet = false; go(5); }
+  else if (d.stage) {
+    // Prototype: jump to the night before or the morning of the ride
+    const m = findPerson(state.booked.n), car = Math.min(state.car, lineInfo(m.o.line).cars);
+    state.booked.stage = d.stage; state.lineStatus = null; state.plan = null;
+    go(0);
+    if (d.stage === "eve") notify(`Tomorrow: ride with ${state.booked.n}`, `${fmt(m.o.at)} at ${m.o.start}, carriage ${car}. Leave home by ${(tripOf(state.booked.n) || state.commute).time}.`);
+    else { notify(`Ride with ${state.booked.n} today`, `Meet at ${fmt(m.o.at)}, ${m.o.start}, carriage ${car}. Tap to start walking.`); loadLineStatus(m.o.line); }
+  }
   else if (d.navend !== undefined || d.navdone !== undefined) { const n = state.navi && state.navi.withName; stopNav(); go(n ? 5 : 0); }
   else if (d.navcenter !== undefined) { state.navi.follow = true; updateNavUI(); }
   else if (d.navmsg) {
@@ -2813,7 +2894,7 @@ app.addEventListener("click", e => {
     nv.phase = "confirming"; updateNavUI();
     navLater(nv, 1800, () => { nv.phase = "together"; updateNavUI(); toast(`You both confirmed. Enjoy the ride with ${nv.p.n}!`); });
   }
-  else if (d.navsplit !== undefined) { const nv = state.navi; nv.phase = "parted"; nv.partD = nv.prog; updateNavUI(); notify("How was your ride?", `Your ride with ${nv.p.n} is over. Tap to tell us how it went.`); }
+  else if (d.navsplit !== undefined) { const nv = state.navi; nv.phase = "parted"; notify("How was your ride?", `Your ride with ${nv.p.n} is over. Tap to tell us how it went.`); rideOver(nv); }
   else if (d.navrate !== undefined) {
     state.planFor = state.navi.withName; state.fromMet = false;
     state.fb = { rate: null, again: null, share: null, ctype: "Telegram", handle: "" };
@@ -2887,6 +2968,7 @@ app.addEventListener("click", e => {
   else if (d.fb) { state.fb[d.fb] = d.val; render(); }
   else if (d.submit !== undefined) {
     state.theySayNo = false;
+    if (state.rideOver) { state.booked = null; state.rideOver = null; }
     if (state.fb.rate !== "noshow" && state.fb.share === "yes") state.friends[state.planFor] = true;
     go(7);
   }
@@ -2901,7 +2983,7 @@ app.addEventListener("click", e => {
   else if (d.meet !== undefined) { Object.assign(state, { from: state.nav.from, to: state.nav.to, time: state.nav.time, via: state.nav.via, showAll: false }); go(4); }
   else if (d.commute !== undefined) { Object.assign(state, state.commute); render(); }
   else if (d.swap !== undefined) { [state.nav.from, state.nav.to] = [state.nav.to, state.nav.from]; render(); }
-  else if (d.trip) { [state.nav.from, state.nav.to] = d.trip.split("|"); state.nav.via = "any"; render(); }
+  else if (d.trip) { [state.nav.from, state.nav.to] = d.trip.split("|"); state.nav.via = "mrt"; render(); }
   else if (d.try !== undefined) { state.commute.from = "Marine Terrace"; state.commute.to = "Raffles Place"; Object.assign(state, state.commute); render(); }
   else if (d.widen !== undefined) { state.window = 15; render(); }
   else if (d.day) { state.day = d.day; render(); }
@@ -2909,7 +2991,8 @@ app.addEventListener("click", e => {
   else if (d.confirm !== undefined) {
     if (!state.spot.trim()) { toast("Add how " + state.planFor + " can spot you."); document.getElementById("spot").focus(); return; }
     state.plan = true; state.fromMet = false; state.fb = { rate: null, again: null, share: null, ctype: "Telegram", handle: "" };
-    render(); window.scrollTo(0, 0); toast("Plan sent to " + state.planFor);
+    state.booked = { n: state.planFor, day: state.day, stage: "booked" };
+    render(); window.scrollTo(0, 0); toast("Ride booked with " + state.planFor);
   }
   else if (d.late !== undefined) { toast(state.planFor + " knows you're running late. They'll save you a spot."); }
   else if (d.shareapp !== undefined) {

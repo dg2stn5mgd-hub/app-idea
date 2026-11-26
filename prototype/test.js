@@ -21,16 +21,24 @@ const assert = require('assert');
   await p.click('.set-row[data-go="2"]'); assert.match(await txt('main'), /What do you like talking about/);
   // Tab bubble sits in the current tab
   await p.click('[data-tab="0"]'); assert.ok(await p.$('.tab[aria-current="page"] .tab-bubble'));
-  // Plan a ride and run the whole meet-up in navigation
+  // Book a ride, then live through it: the night before, the morning, walking, meeting, riding, ride over
   const name = await p.evaluate(() => { const m = findMatches(state.commute).out[0]; state.waves[m.p.n] = 'mutual'; state.planFor = m.p.n; state.plan = null; go(5); return m.p.n; });
+  const first = new RegExp(name.split(' ')[0]);
   await p.fill('#spot', 'Blue cap'); await p.click('[data-confirm]');
-  assert.match(await txt('.ticket'), new RegExp(name.split(' ')[0]));
+  assert.match(await txt('.ticket'), first);
+  assert.ok(!(await p.$('[data-startride]')), 'no start button on the ticket');
+  await p.click('[data-tab="4"]'); assert.match(await txt('.next-ride'), first);
+  await p.click('.next-ride'); await p.click('[data-stage="eve"]');
+  assert.match(await txt('.ride-card'), /Tomorrow/);
+  await p.click('[data-ticket]'); await p.click('[data-stage="today"]');
+  assert.match(await txt('.ride-card'), /Today/);
   await p.click('[data-startride]');
   for (let k = 0; k < 40 && !(await p.$('[data-navmet]')); k++) await p.waitForTimeout(300);
   await p.click('[data-navmet]'); await p.waitForTimeout(2200);
-  for (let k = 0; k < 60 && !(await p.$('[data-navrate]')); k++) await p.waitForTimeout(300);
-  await p.click('[data-navrate]'); assert.match(await txt('main h2'), /How did it go/);
+  for (let k = 0; k < 80 && (await p.evaluate(() => state.step)) !== 6; k++) await p.waitForTimeout(300);
+  assert.match(await txt('main'), /Ride over/);
   await p.click('[data-fb="rate"][data-val="great"]'); await p.click('[data-submit]');
+  assert.equal(await p.evaluate(() => state.booked), null, 'the ride is done');
   // New user: sign-up ends in a full demo
   await p.goto('' + require('url').pathToFileURL(__dirname).href + '/new-user.html');
   await p.click('text=Create my account');

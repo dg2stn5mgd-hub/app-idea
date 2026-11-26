@@ -31,11 +31,16 @@ Rides and Waves use your saved **daily commute**, so you never have to search a 
 
 **Getting in and out of stations:** navigation walks you to the **station exit** closest to where you are ("Walk to Tanjong Rhu, Exit 2"), then says "Enter at Exit 2: go down to the TEL platform for trains towards Woodlands North". At a change it says "Change to the NSL at Dhoby Ghaut: follow the signs to the North-South Line platform". After the ride it picks the exit closest to where you're going ("Leave by Exit 2, the closest exit to Dunman High School"). Exits show as yellow badges on the map. For buses, it gives the stop's name, number and road ("Stop 92239 · Marine Cres"), reminds you to wave the bus down, and says "Press the bell now" one stop before yours. On a planned ride, it also says where to stand on the platform: "Meet Yu Ting in carriage 3: carriage 1 is at the front, the end the train is heading to".
 
-**Starting a planned ride** ("Start the ride" on the ride ticket) adds the meet-up on top:
-1. **On the way**: where and when you're meeting, and quick messages ("I'm on my way", "Running late, 5 min", "Can't make it today"). Still no free chat before you meet.
-2. **At the meeting stop**: a notification, "Meet Yu Ting here, carriage 3", how to spot them, and quick messages like "I'm here", "Which carriage are you in?" and "I see you!".
-3. **"We've met"**: you both tap it when you find each other, which starts the ride together. Then it counts down the stops you have together and suggests a conversation starter.
-4. **After the ride**: when one of you gets off, the app ends the ride by itself and sends a notification asking how it went, which opens the private feedback. (In the real app, it would also notice when your two phones are apart for a minute. In the prototype, it's when you reach the stop where your shared part ends, or you tap "We've gone separate ways".)
+**A booked ride happens in stages, each on its own screen:**
+1. **Booked:** the ride ticket is just the plan (who, when, where, how to spot them, warm-up answers) and "what happens next". Your next ride also sits at the top of Rides.
+2. **The night before:** a reminder notification ("Tomorrow: ride with Yu Ting · 07:45 at Marine Terrace, carriage 3"), and home shows a "Tomorrow" card.
+3. **That morning:** home opens with a "Today" card: meet time, station and carriage, when to leave, live train status, and one button, **Start walking to Marine Terrace**.
+4. **Walking:** full-screen navigation that follows your live location (the dot glides smoothly between GPS readings), walking you to the right station exit.
+5. **On the platform:** the panel switches to meeting them: how to spot them, quick messages ("I'm here", "Which carriage are you in?", "I see you!") and **We've met**, which you both tap.
+6. **Riding together:** stops left together and a conversation starter.
+7. **Ride over:** when your location reaches the stop where your shared part ends, navigation closes by itself and the private rating opens.
+
+In the prototype, "skip ahead" buttons on the ticket jump to the night before or the ride morning. Real reminders at a set time need the live-data server to send push notifications (Web Push), which is the next server job.
 
 Notifications work when the app is on the home screen and allowed to send them; otherwise the message shows inside the app.
 
@@ -43,7 +48,7 @@ You can't add features inside Google Maps itself (Google doesn't allow it), so C
 
 Your profile (set up once, editable on the Me tab) covers:
 
-1. **Set your commute**: where you start and where you get off (any MRT station, bus stop, or real place like a school, building, address or postal code, found through OneMap), the time you set off, and how you travel: **Fastest** (any mix of bus, MRT and walking), **MRT only** or **Bus only**. The app works out the fastest route across every MRT line and bus service, including changes and short walks between a bus stop and a station.
+1. **Set your commute**: where you start and where you get off (any MRT station, bus stop, or real place like a school, building, address or postal code, found through OneMap), the time you set off, and how you travel: **MRT only** for now (bus routing is built but switched off). The app works out the fastest route across every MRT line and bus service, including changes and short walks between a bus stop and a station.
 2. **Pick your interests**, for example investing or cars.
 3. **Choose who to meet**: friends mode now, dating mode (18+) later, plus an age range and how flexible your timing is.
 4. **See matches**: people who share at least one stop with you, going the same way, within your time window. Every train and bus of your trip counts, so someone can join you before or after a change, or change with you.
