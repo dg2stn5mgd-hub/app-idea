@@ -511,6 +511,139 @@ a.back.link.center { display: block; text-align: center; font-size: 15px; }
 .hero-line .dot.them { border-color: var(--accent-2); background: var(--accent-2); }
 
 /* Motion: screens slide in, sheets rise, folds open, messages pop. Nothing moves for people who turn motion off. */
+/* Sign-up story */
+.story-hero { padding-top: 6px; }
+.story-hero h1 { font-size: 44px; line-height: 1.02; letter-spacing: -0.035em; }
+.hero-anim { position: relative; height: 130px; margin: 10px 4px 0; }
+.hero-anim.small { height: 80px; width: 100%; }
+.ha-line { position: absolute; left: 4%; right: 4%; top: 50%; height: 6px; margin-top: -3px; border-radius: 3px; background: linear-gradient(90deg, var(--accent-light, #4f9a73), var(--accent)); }
+.ha-stop { position: absolute; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--bg); border: 3px solid var(--accent); }
+.ha-dot { position: absolute; top: 50%; width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%; border: 4px solid #fff; box-shadow: var(--shadow-float); }
+.ha-dot.you { background: var(--accent); left: 8%; }
+.ha-dot.them { background: var(--accent-2); left: 92%; }
+.ha-wave { position: absolute; top: 4px; left: 50%; font-size: 30px; transform: translateX(-50%) scale(0); }
+.story-top { display: flex; align-items: center; gap: 14px; padding: 14px 18px 0; }
+.round-back { flex: none; width: 36px; height: 36px; border-radius: 50%; border: 0; background: var(--fill); color: var(--fg); display: grid; place-items: center; cursor: pointer; }
+.round-back .chev-back { width: 9px; height: 15px; }
+.story-bar { flex: 1; height: 4px; border-radius: 2px; background: var(--fill); overflow: hidden; }
+.story-bar span { display: block; height: 100%; border-radius: 2px; background: var(--fg); transition: width .6s var(--ease); }
+main.story { padding: 26px 22px 22px; gap: 22px; }
+.s-head { display: flex; flex-direction: column; gap: 8px; text-align: center; }
+.s-head.left { text-align: left; }
+.s-head h2 { font-size: 30px; }
+.s-head h1 { font-size: 38px; }
+.s-options { display: flex; flex-direction: column; gap: 10px; }
+.s-option { font: inherit; color: var(--fg); display: flex; align-items: center; gap: 12px; text-align: left; padding: 16px 18px; border-radius: 18px; border: 1.5px solid transparent; background: var(--surface); box-shadow: var(--shadow); cursor: pointer;
+  transition: transform .3s var(--spring), border-color .2s, background-color .2s; }
+.s-option:active { transform: scale(.97); }
+.s-option[aria-pressed="true"] { border-color: var(--fg); }
+.s-opt-text { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.s-opt-text b { font-weight: 600; font-size: 17px; }
+.s-opt-text span { font-size: 14px; color: var(--muted); }
+.s-radio { flex: none; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--line); position: relative; transition: border-color .2s; }
+[aria-pressed="true"] > .s-radio { border-color: var(--fg); }
+[aria-pressed="true"] > .s-radio::after { content: ""; position: absolute; inset: 4px; border-radius: 50%; background: var(--fg); animation: pop .3s var(--spring); }
+.story-foot { margin-top: auto; padding-top: 10px; }
+.story-foot .btn { background: var(--fg); color: var(--bg); box-shadow: none; }
+.story-foot .btn:disabled { opacity: .25; }
+.s-big { display: flex; flex-direction: column; align-items: center; margin-top: 18px; }
+.s-big b { font-size: 76px; line-height: 1; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; color: var(--fg); }
+.s-big span { color: var(--muted); }
+.s-range { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 3px; background: var(--fill); box-shadow: none; padding: 0; min-height: 0; margin-top: 10px; }
+.s-range::-webkit-slider-thumb { -webkit-appearance: none; width: 30px; height: 30px; border-radius: 50%; background: var(--surface); border: 1.5px solid var(--fg); box-shadow: var(--shadow-float); }
+.s-range::-moz-range-thumb { width: 28px; height: 28px; border-radius: 50%; background: var(--surface); border: 1.5px solid var(--fg); }
+.s-range-ends { display: flex; justify-content: space-between; margin-top: -12px; }
+.ride-grid { display: grid; grid-template-columns: repeat(32, 1fr); gap: 2px; padding: 4px; }
+.ride-grid i { aspect-ratio: 1; border-radius: 2px; background: var(--fill); }
+.s-caption { text-align: center; font-size: 19px; font-weight: 500; color: var(--fg); min-height: 2.6em; }
+.story-full { position: fixed; inset: 0; margin-inline: auto; width: min(420px, 100%); z-index: 650; background: var(--accent); color: #fff; display: flex; flex-direction: column; }
+.story-full .round-back { background: rgba(255,255,255,.15); color: #fff; }
+.story-full .story-bar { background: rgba(255,255,255,.2); }
+.story-full .story-bar span { background: #fff; }
+.story-full main.story { flex: 1; }
+.story-full .story-foot .btn { background: #fff; color: var(--accent); }
+.s-center { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; margin: auto 0; }
+.s-huge { font-size: 92px; line-height: 1; letter-spacing: -0.05em; color: #fff; font-variant-numeric: tabular-nums; }
+.s-huge-sub { font-size: 19px; line-height: 1.35; opacity: .9; }
+.s-card { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; background: var(--surface); border-radius: 28px; padding: 30px 22px; box-shadow: var(--shadow-float); }
+.s-emoji { font-size: 74px; line-height: 1.1; }
+.s-num { font-size: 64px; line-height: 1; letter-spacing: -0.04em; color: var(--fg); font-variant-numeric: tabular-nums; }
+.s-card p { color: var(--muted); font-size: 16px; max-width: 240px; }
+.s-dots { display: flex; justify-content: center; gap: 6px; }
+.s-dots span { width: 6px; height: 6px; border-radius: 3px; background: var(--line); transition: width .4s var(--ease), background-color .3s; }
+.s-dots span.on { width: 20px; background: var(--fg); }
+.s-crowd { width: 100%; }
+.s-person circle, .s-person rect:not(.s-phone) { fill: color-mix(in srgb, var(--fg) 22%, var(--bg)); }
+.s-phone { fill: var(--accent-2); }
+.s-table { background: var(--surface); border-radius: 22px; box-shadow: var(--shadow); overflow: hidden; }
+.s-th, .s-tr { display: grid; grid-template-columns: 1fr 1.25fr; gap: 12px; padding: 12px 16px; font-size: 14.5px; }
+.s-th { font-weight: 600; color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+.s-tr { border-top: 1px solid var(--line); }
+.s-tr s { color: var(--muted); opacity: .7; }
+.s-tr span { color: var(--fg); font-weight: 500; }
+.s-goals { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.s-goal { font: inherit; position: relative; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; gap: 20px; min-height: 150px; padding: 16px; border-radius: 22px; border: 2px solid transparent; color: #fff; cursor: pointer; text-align: left;
+  transition: transform .3s var(--spring), border-color .2s; }
+.s-goal:active { transform: scale(.96); }
+.s-goal[aria-pressed="true"] { border-color: var(--fg); }
+.s-goal b { font-size: 16px; line-height: 1.2; }
+.s-goal-ico { font-size: 34px; }
+.s-goal .s-radio { position: absolute; top: 14px; right: 14px; border-color: rgba(255,255,255,.7); background: rgba(255,255,255,.15); }
+.s-goal[aria-pressed="true"] .s-radio { border-color: #fff; }
+.s-goal[aria-pressed="true"] .s-radio::after { background: #fff; }
+.g-school { background: linear-gradient(160deg, #3f7a5c, #24503a); }
+.g-talk { background: linear-gradient(160deg, #d98b6e, #b5583d); }
+.g-study { background: linear-gradient(160deg, #5a6f9a, #34466b); }
+.g-fun { background: linear-gradient(160deg, #c9a24a, #8f6b1f); }
+.hold-screen { justify-content: space-between; }
+.hold-screen .brand { font-size: 22px; }
+.hold-wrap { position: relative; display: grid; place-items: center; height: 120px; }
+.hold-btn { position: relative; z-index: 2; width: 84px; height: 84px; border-radius: 50%; border: 0; background: var(--fg); font-size: 34px; cursor: pointer; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.hold-fill { position: absolute; z-index: 1; left: 50%; top: 50%; width: 84px; height: 84px; margin: -42px 0 0 -42px; border-radius: 50%; background: var(--fg); transform: scale(1); transition: transform .25s var(--ease); pointer-events: none; }
+.hold-fill.on { transform: scale(22); transition: transform 1.6s cubic-bezier(.5, 0, .7, 1); }
+.s-cheers { justify-content: space-between; }
+.s-hands { font-size: 64px; display: flex; gap: 6px; }
+@media (prefers-reduced-motion: no-preference) {
+  .ha-dot.you { animation: ha-you 4.5s var(--ease) infinite; }
+  .ha-dot.them { animation: ha-them 4.5s var(--ease) infinite; }
+  .ha-wave { animation: ha-wave 4.5s var(--spring) infinite; }
+  @keyframes ha-you { 0%, 10% { left: 8%; } 45%, 85% { left: 45%; } 100% { left: 8%; } }
+  @keyframes ha-them { 0%, 10% { left: 92%; } 45%, 85% { left: 55%; } 100% { left: 92%; } }
+  @keyframes ha-wave { 0%, 44% { transform: translateX(-50%) scale(0) rotate(0); } 52% { transform: translateX(-50%) scale(1.15) rotate(-12deg); } 60% { transform: translateX(-50%) scale(1) rotate(12deg); } 68%, 84% { transform: translateX(-50%) scale(1) rotate(0); } 92%, 100% { transform: translateX(-50%) scale(0); } }
+  /* Each screen: the title arrives first, then the rest, one by one */
+  .screen.enter main.story > * { animation: s-in .55s var(--ease) both; }
+  .screen.enter main.story > :nth-child(2) { animation-delay: .25s; }
+  .screen.enter main.story > :nth-child(3) { animation-delay: .4s; }
+  .screen.enter main.story > :nth-child(n+4) { animation-delay: .5s; }
+  .screen.enter.back-dir main.story > * { animation-name: s-in-back; }
+  .screen.enter .s-option, .screen.enter .s-goal, .screen.enter .s-tr { animation: s-in .5s var(--ease) both; animation-delay: calc(.3s + var(--k) * .08s); }
+  .screen.enter .s-tr s { animation: strike .5s var(--ease) both; animation-delay: calc(.6s + var(--k) * .25s); }
+  .s-reveal { animation: s-blur 1s var(--ease) both; }
+  .s-late { animation: s-in .6s var(--ease) both; animation-delay: .9s; }
+  .ride-grid i { animation: g-in .25s var(--ease) both; animation-delay: calc(var(--i) * .6ms); }
+  .ride-grid i.alone { animation: g-in .25s var(--ease) both, g-alone .3s var(--ease) forwards; animation-delay: calc(var(--i) * .6ms), calc(.6s + var(--i) * 1.2ms); }
+  .ride-grid i.friend { animation: g-in .25s var(--ease) both, g-friend .3s var(--ease) forwards; animation-delay: calc(var(--i) * .6ms), calc(.6s + var(--i) * 1.2ms); }
+  .s-caption.changed { animation: s-in .5s var(--ease) both; }
+  .s-card { animation: s-card .5s var(--spring) both; }
+  .s-hands span:first-child { animation: hand-l .9s var(--spring) both; }
+  .s-hands span:last-child { animation: hand-r .9s var(--spring) both; transform: scaleX(-1); }
+  .story-full { animation: s-flood .5s var(--ease) both; }
+  @keyframes s-in { from { opacity: 0; transform: translateY(14px); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+  @keyframes s-in-back { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
+  @keyframes s-blur { from { opacity: 0; filter: blur(10px); } to { opacity: 1; filter: none; } }
+  @keyframes strike { from { text-decoration-color: transparent; } to { text-decoration-color: currentColor; } }
+  @keyframes g-in { from { opacity: 0; transform: scale(.3); } to { opacity: 1; transform: none; } }
+  @keyframes g-alone { to { background: color-mix(in srgb, var(--fg) 70%, var(--bg)); } }
+  @keyframes g-friend { to { background: var(--accent); } }
+  @keyframes s-card { from { opacity: 0; transform: translateX(40px) scale(.96); } to { opacity: 1; transform: none; } }
+  @keyframes hand-l { from { transform: translateX(-80px) rotate(-30deg); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes hand-r { from { transform: scaleX(-1) translateX(-80px) rotate(-30deg); opacity: 0; } to { transform: scaleX(-1); opacity: 1; } }
+  @keyframes s-flood { from { clip-path: circle(0% at 50% 100%); } to { clip-path: circle(150% at 50% 100%); } }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ride-grid i.alone { background: color-mix(in srgb, var(--fg) 70%, var(--bg)); }
+  .ride-grid i.friend { background: var(--accent); }
+}
 @media (prefers-reduced-motion: no-preference) {
   .screen.enter > * { animation: enter .42s var(--ease) both; }
   .screen.enter > main > * { animation: enter .5s var(--ease) both; }
@@ -542,7 +675,7 @@ a.back.link.center { display: block; text-align: center; font-size: 15px; }
 <script>
 // Which version of the prototype this page shows. new-user.html is the same file with this set to "new".
 const START_AS = "existing";
-const BUILD = "26 Nov, 17:03";                 // when this version was made; build.py fills it in
+const BUILD = "26 Nov, 18:18";                 // when this version was made; build.py fills it in
 
 // Address of your live-data server (see server/README.md), e.g. "https://carriage-live.yourname.workers.dev".
 // Empty, or unreachable, means the Ride day screen shows clearly labelled sample times instead.
@@ -2385,6 +2518,178 @@ const screens = {
 };
 
 // ---------- Sign-up flow for new users (steps 20–28) ----------
+// ---------- Sign-up story: a few taps about you, what your commute adds up to, and the fix (screens 50–63) ----------
+// Every number comes from your own answers: 2 years of JC × 40 school weeks × 5 days × 2 rides a day.
+const story = { stage: null, mins: 40, does: null, friend: null, goals: new Set(), slide: 0 };
+const STORY_STEPS = [50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62];
+const RIDES = 2 * 40 * 5 * 2;
+const rideHours = () => Math.round(RIDES * story.mins / 60);
+let storyTimers = [];
+const storyLater = (ms, f) => storyTimers.push(setTimeout(f, ms));
+
+// A light tap you can feel. Android: vibrate. iPhone (iOS 18+): toggling a hidden switch makes the phone tick.
+function haptic(kind = "light") {
+  try { if (navigator.vibrate) { navigator.vibrate(kind === "success" ? [12, 60, 18] : kind === "heavy" ? 22 : 8); return; } } catch (e) {}
+  try {
+    const tick = () => { const l = document.createElement("label"), i = document.createElement("input");
+      i.type = "checkbox"; i.setAttribute("switch", ""); l.appendChild(i); l.style.display = "none"; l.ariaHidden = "true";
+      document.head.appendChild(l); l.click(); l.remove(); };
+    tick(); if (kind === "success") setTimeout(tick, 90);
+  } catch (e) {}
+}
+function storyTop(back) {
+  const k = STORY_STEPS.indexOf(state.step), pct = Math.max(4, (k + 1) / STORY_STEPS.length * 100);
+  return `<div class="story-top"><button class="round-back" data-sback="${back}" aria-label="Back">${BACK.replace("Back", "")}</button>
+    <div class="story-bar"><span style="width:${pct}%"></span></div></div>`;
+}
+const storyBtn = (label, next, on = true) => `<div class="story-foot"><button class="btn" data-sgo="${next}" ${on ? "" : "disabled"}>${label}</button></div>`;
+function storyChoices(key, list) {
+  return `<div class="s-options">${list.map(([v, title, sub], k) => `<button class="s-option" data-spick="${key}" data-val="${v}" aria-pressed="${story[key] === v}" style="--k:${k}">
+    <span class="s-opt-text"><b>${title}</b>${sub ? `<span>${sub}</span>` : ""}</span><span class="s-radio"></span></button>`).join("")}</div>`;
+}
+const fmtN = n => Math.round(n).toLocaleString("en-SG");
+
+Object.assign(screens, {
+  50() {
+    return `${storyTop(20)}<main class="story">
+      <div class="s-head"><h2>Where are you at?</h2><p class="muted">Choose one to get started</p></div>
+      ${storyChoices("stage", [["jc1", "Starting JC1", "New school, new faces"], ["jc", "Already in JC", "Want to meet more people"], ["other", "Something else", "Poly, ITE or work"]])}
+      ${storyBtn("Continue", 51, !!story.stage)}</main>`;
+  },
+  51() {
+    return `${storyTop(50)}<main class="story">
+      <div class="s-head"><h2>How long is your train ride to school?</h2><p class="muted">One way, door to door</p></div>
+      <div class="s-big"><b id="s-mins">${story.mins}</b><span>minutes</span></div>
+      <input type="range" class="s-range" id="s-range" min="10" max="90" step="1" value="${story.mins}" aria-label="Minutes">
+      <div class="s-range-ends small muted"><span>10 min</span><span>90 min</span></div>
+      ${storyBtn("Continue", 52)}</main>`;
+  },
+  52() {
+    return `${storyTop(51)}<main class="story">
+      <div class="s-head"><h2>On the train, you mostly…</h2></div>
+      ${storyChoices("does", [["scroll", "📱 Scroll my phone"], ["music", "🎧 Music, earphones in"], ["sleep", "😴 Catch some sleep"], ["study", "📚 Last-minute studying"], ["look", "👀 Look around"]])}
+      ${storyBtn("Continue", 53, !!story.does)}</main>`;
+  },
+  53() {
+    return `${storyTop(52)}<main class="story">
+      <div class="s-head"><h2>Ever made a friend on your commute?</h2></div>
+      ${storyChoices("friend", [["never", "Never"], ["once", "Once or twice"], ["some", "A few times"], ["lots", "I talk to everyone"]])}
+      ${storyBtn("Continue", 54, !!story.friend)}</main>`;
+  },
+  54() {
+    return `${storyTop(53)}<main class="story">
+      <div class="s-head left"><h1 class="s-reveal">You're not alone.<br>But here's the thing…</h1>
+      <p class="muted s-late">If nothing changes, this is what your JC commute looks like.</p></div>
+      ${storyBtn("Show me", 55)}</main>`;
+  },
+  55() {
+    const alone = story.friend === "lots" ? 0.8 : story.friend === "some" ? 0.93 : 0.99;
+    const cut = Math.round(RIDES * alone);
+    return `${storyTop(54)}<main class="story">
+      <div class="s-head"><h2>Your two JC years,<br>ride by ride</h2></div>
+      <div class="ride-grid" style="--n:${RIDES}">${Array.from({ length: RIDES }, (_, k) => `<i class="${k < cut ? "alone" : "friend"}" style="--i:${k}"></i>`).join("")}</div>
+      <p class="s-caption" id="s-cap">Every square is one ride.</p>
+      ${storyBtn("Continue", 56)}</main>`;
+  },
+  56() {
+    return `<div class="story-full">${storyTop(55)}<main class="story">
+      <div class="s-center">
+        <b class="s-huge" data-count="${rideHours()}">0</b>
+        <p class="s-huge-sub">hours on the train in JC,<br>next to people your age,<br>without saying a word.</p>
+      </div>
+      ${storyBtn("Continue", 57)}</main></div>`;
+  },
+  57() {
+    const h = rideHours();
+    const cards = [
+      ["📺", Math.floor(h / 16), "whole K-drama seasons, binged start to finish"],
+      ["🎤", Math.floor(h / 3.5), "Eras Tour concerts, front row"],
+      ["🚶", Math.floor(h / 10), "walks from Changi to Tuas"],
+      ["🤝", "1", "friendship that could have started with a hi"],
+    ];
+    const k = Math.min(story.slide, cards.length - 1), [ico, n, what] = cards[k];
+    return `${storyTop(56)}<main class="story">
+      <div class="s-head"><h2>In that time, you could have…</h2></div>
+      <div class="s-card" id="s-card"><span class="s-emoji">${ico}</span><b class="s-num" data-count="${n}">0</b><p>${what}</p></div>
+      <div class="s-dots">${cards.map((_, i) => `<span class="${i === k ? "on" : ""}"></span>`).join("")}</div>
+      ${k < cards.length - 1 ? `<div class="story-foot"><button class="btn" data-snext>Next</button></div>` : storyBtn("I get it", 58)}</main>`;
+  },
+  58() {
+    const person = (x, y, d) => `<g transform="translate(${x} ${y})" style="--d:${d}s" class="s-person"><circle cx="0" cy="0" r="7"/><rect x="-9" y="9" width="18" height="20" rx="8"/><rect class="s-phone" x="-4" y="12" width="8" height="11" rx="2"/></g>`;
+    let crowd = ""; for (let r = 0; r < 4; r++) for (let c = 0; c < 6; c++) crowd += person(30 + c * 42 + (r % 2) * 14, 24 + r * 44, ((r * 6 + c) % 7) * .15);
+    return `${storyTop(57)}<main class="story">
+      <div class="s-head"><h2>It's not your fault</h2></div>
+      <svg class="s-crowd" viewBox="0 0 280 200" aria-hidden="true">${crowd}</svg>
+      <p class="muted s-late center">Everyone wants to talk. Nobody wants to go first. And saying hi to a stranger for no reason feels weird.</p>
+      ${storyBtn("Continue", 59)}</main>`;
+  },
+  59() {
+    return `${storyTop(58)}<main class="story">
+      <div class="s-center">
+        <div class="hero-anim small" aria-hidden="true"><div class="ha-line"></div><span class="ha-dot you"></span><span class="ha-dot them"></span><span class="ha-wave">👋</span></div>
+        <h2>It doesn't have to be this way.</h2>
+        <p class="muted s-late">Carriage gives everyone a reason to say hi. You wave, they wave back, and you meet on the train you already take.</p>
+      </div>
+      ${storyBtn("Let's go", 60)}</main>`;
+  },
+  60() {
+    const rows = [["Swipe on photos", "Matched on the train you already take"], ["Chat with strangers for days", "No chat until you meet"],
+      ["Meet somewhere new", "Meet in your own carriage"], ["Anyone can find you", "Under-18s only meet under-18s"], ["One more thing to schedule", "No extra time: you're riding anyway"]];
+    return `${storyTop(59)}<main class="story">
+      <div class="s-head"><h2>Carriage isn't like other friend apps</h2></div>
+      <div class="s-table"><div class="s-th"><span>Other apps</span><span>Carriage</span></div>
+        ${rows.map(([a, b], k) => `<div class="s-tr" style="--k:${k}"><s>${a}</s><span>✓ ${b}</span></div>`).join("")}</div>
+      ${storyBtn("Continue", 61)}</main>`;
+  },
+  61() {
+    const goals = [["school", "🏫", "A friend in my new school"], ["talk", "💬", "Someone to talk to"], ["study", "📚", "A study buddy"], ["fun", "🎵", "Just less boring rides"]];
+    return `${storyTop(60)}<main class="story">
+      <div class="s-head left"><p class="muted">Carriage turns</p><h1>${fmtN(rideHours())} quiet hours</h1><p class="muted">into a chance to meet someone. What would you like from it?</p></div>
+      <div class="s-goals">${goals.map(([v, ico, t], k) => `<button class="s-goal g-${v}" data-sgoal="${v}" aria-pressed="${story.goals.has(v)}" style="--k:${k}"><span class="s-goal-ico">${ico}</span><b>${t}</b><span class="s-radio"></span></button>`).join("")}</div>
+      ${storyBtn("Continue", 62, story.goals.size > 0)}</main>`;
+  },
+  62() {
+    return `${storyTop(61)}<main class="story hold-screen">
+      <div class="s-center"><span class="brand"><span class="logo">C</span><b>Carriage</b></span><p class="muted small" id="hold-hint">Press and hold</p></div>
+      <div class="s-center"><h2>Make your first wave count</h2><p class="muted">Promise you'll say hi when you meet. Hold to commit.</p></div>
+      <div class="hold-wrap"><span class="hold-fill" id="hold-fill"></span><button class="hold-btn" id="hold-btn" aria-label="Press and hold to commit">👋</button></div>
+    </main>`;
+  },
+  63() {
+    return `<main class="story s-cheers">
+      <div class="s-center"><div class="s-hands" aria-hidden="true"><span>👋</span><span>👋</span></div><h2>See you on the train</h2></div>
+      <div class="story-foot"><button class="btn" data-go="21">Set up my account</button></div></main>`;
+  },
+});
+
+// After a story screen is drawn: count numbers up, start animations, hook up the slider and the hold button
+function mountStory() {
+  document.querySelectorAll("[data-count]").forEach(el => {
+    const to = Number(el.dataset.count) || 0, t0 = performance.now(), ms = to > 50 ? 1400 : 700;
+    const step = now => { const k = Math.min(1, (now - t0) / ms), e = 1 - Math.pow(1 - k, 3); el.textContent = fmtN(to * e); if (k < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  });
+  const range = document.getElementById("s-range");
+  if (range) range.oninput = () => { if (Number(range.value) !== story.mins) haptic(); story.mins = Number(range.value); document.getElementById("s-mins").textContent = story.mins; };
+  if (state.step === 55) {
+    storyLater(1700, () => { const c = document.getElementById("s-cap"); if (c) { c.classList.add("changed"); c.innerHTML = "<b>Almost all of them, alone</b> on your phone."; haptic("heavy"); } });
+  }
+  if (state.step === 63) { haptic("success"); }
+  const btn = document.getElementById("hold-btn");
+  if (btn) {
+    let timer = null, ticks = null;
+    const fill = document.getElementById("hold-fill"), hint = document.getElementById("hold-hint");
+    const stop = () => { clearTimeout(timer); clearInterval(ticks); fill.classList.remove("on"); hint.textContent = "Press and hold"; };
+    btn.onpointerdown = e => {
+      e.preventDefault(); haptic(); fill.classList.add("on"); hint.textContent = "Keep holding";
+      ticks = setInterval(() => haptic(), 180);
+      timer = setTimeout(() => { clearInterval(ticks); haptic("success"); state.dir = "fwd"; go(63); }, 1600);
+    };
+    btn.onpointerup = btn.onpointerleave = btn.onpointercancel = stop;
+    btn.oncontextmenu = e => e.preventDefault();
+  }
+}
+
 const OB_STEPS = 7;
 const avatarOf = (pf, size = "") => pf.photo
   ? `<img class="avatar ${size}" src="${pf.photo}" alt="">`
@@ -2420,26 +2725,22 @@ function obCheck(step) {
 Object.assign(screens, {
   20() {
     return `<div class="top-gap"></div>
-    <main class="fade">
+    <main class="story-hero">
       <div class="brand"><span class="logo">C</span><b>Carriage</b></div>
-      <h1>Meet someone on your way to school or work.</h1>
-      <p class="muted">Tell us your daily train ride and what you're into. Carriage finds people who ride the same train, so you can talk on the way instead of scrolling.</p>
-      <div class="note">
-        <div class="hero-line"><span class="dot you"></span><span class="seg-line"></span><span class="dot them"></span><span class="seg-line"></span><span class="dot"></span></div>
-        <div class="ends small" style="margin-top:6px"><span>You board</span><span>They join</span><span>You get off</span></div>
+      <div class="hero-anim" aria-hidden="true">
+        <div class="ha-line"></div>
+        <span class="ha-stop" style="left:8%"></span><span class="ha-stop" style="left:36%"></span><span class="ha-stop" style="left:64%"></span><span class="ha-stop" style="left:92%"></span>
+        <span class="ha-dot you"></span><span class="ha-dot them"></span><span class="ha-wave">👋</span>
       </div>
-      <ul class="perks small">
-        <li>Matched on every MRT line, including where you change</li>
-        <li>No chatting with strangers: you wave, and meet only if you both wave</li>
-        <li>Under 18? You're only ever matched with other under-18s</li>
-      </ul>
+      <h1>Same train.<br>New friends.</h1>
+      <p class="muted">Meet people from your school who ride your MRT line, on the ride you already take.</p>
       <div class="spacer"></div>
-      <button class="btn" data-go="21">Create my account</button>
-      <button class="btn ghost" data-existing>I already have an account</button>
+      <button class="btn" data-sgo="50">Get started</button>
+      <button class="back link center" data-existing>Already have an account? <b>Sign in</b></button>
     </main>`;
   },
   21() {
-    return `${obTop(20, 1)}
+    return `${obTop(63, 1)}
     <main class="fade">
       <h2>What's your mobile number?</h2>
       <div class="field"><label class="label" for="ob-phone">Mobile number</label>
@@ -2844,7 +3145,8 @@ function render() {
   const entering = state.step !== shownStep, oldBubble = document.querySelector(".tab-bubble");
   const from = oldBubble && oldBubble.getBoundingClientRect();
   shownStep = state.step;
-  app.innerHTML = `<div class="screen${entering ? " enter" : ""}">${screens[state.step]()}</div>${state.step >= 20 ? "" : tabBar()}${state.pick ? pickerOverlay() : ""}`;
+  storyTimers.forEach(clearTimeout); storyTimers = [];
+  app.innerHTML = `<div class="screen${entering ? " enter" : ""}${state.dir === "back" ? " back-dir" : ""}">${screens[state.step]()}</div>${state.step >= 20 ? "" : tabBar()}${state.pick ? pickerOverlay() : ""}`;
   state.justOpened = null;
   const bubble = document.querySelector(".tab-bubble");
   if (from && bubble && bubble.animate && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -2858,6 +3160,8 @@ function render() {
   if (!leafMap && locWatch !== null) { navigator.geolocation.clearWatch(locWatch); locWatch = null; }
   if (state.step === 30) mountNav(); else if (state.navi) stopNav();
   if (state.pick) document.getElementById("pickq").focus();
+  if (state.step >= 50 && state.step <= 63) mountStory();
+  state.dir = null;
 }
 
 function toast(msg) {
@@ -2918,6 +3222,11 @@ app.addEventListener("click", e => {
   }
   else if (d.weekday) { state.days.has(d.weekday) ? state.days.delete(d.weekday) : state.days.add(d.weekday); render(); }
   else if (d.finish !== undefined) { Object.assign(state, state.commute, { nav: { ...state.commute } }); seedDemoHistory(); go(4); toast("Welcome to Carriage!"); }
+  else if (d.sgo) { haptic(); state.dir = "fwd"; story.slide = 0; go(Number(d.sgo)); }
+  else if (d.sback !== undefined) { haptic(); state.dir = "back"; go(Number(d.sback)); }
+  else if (d.spick) { story[d.spick] = d.val; haptic(); render(); }
+  else if (d.sgoal) { story.goals.has(d.sgoal) ? story.goals.delete(d.sgoal) : story.goals.add(d.sgoal); haptic(); render(); }
+  else if (d.snext !== undefined) { story.slide++; haptic(); render(); }
   else if (d.existing !== undefined) { toast("Demo: open the current-user link to see an existing account."); }
   else if (d.pick) { state.pick = { target: d.pick, q: "" }; render(); }
   else if (d.pickclose !== undefined) { state.pick = null; render(); }

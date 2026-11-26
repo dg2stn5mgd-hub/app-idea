@@ -96,6 +96,18 @@ You're already on your way to school or work. If the other person runs late, get
 - **Bus stops and services** (in the prototype now): all 5,208 bus stops and 602 services with their stops in order, from [sgbusdata](https://github.com/cheeaun/sgbusdata) by Lim Chee Aun, built from LTA data.
 - **LTA DataMall** (free, from Singapore's Land Transport Authority; the same data MyTransport.SG uses): live bus arrivals and train service alerts, through the small server in [`server/`](server/README.md), which keeps the LTA key secret. Setup guide: [server/README.md](server/README.md).
 
+## Sign-up: a story first
+
+Inspired by SocialLite's onboarding, sign-up starts with a short story before the account details:
+1. **Welcome:** "Same train. New friends.", with two dots meeting on an MRT line and a wave.
+2. **Quick tap questions** (big option cards, one per screen): where you're at (starting JC1, already in JC, something else), how long your train ride is (a slider), what you do on the train, and whether you've ever made a friend on your commute.
+3. **The problem, from your own answers:** "You're not alone. But here's the thing…", then your two JC years as 800 squares, one per ride (2 years × 40 school weeks × 5 days × 2 rides), filling in as "alone on your phone". A full-green screen counts up the hours: "600 hours on the train in JC, next to people your age, without saying a word."
+4. **"In that time, you could have…"**: cards with numbers worked out from your hours (K-drama seasons, Eras Tour concerts, walks from Changi to Tuas), ending on "1 friendship that could have started with a hi".
+5. **"It's not your fault"** (a carriage of people all on their phones), **"It doesn't have to be this way"**, and **Carriage vs other friend apps** (strike-throughs on the left, ticks on the right).
+6. **What you want from it** (picture cards), then **hold to commit**: press and hold, a circle floods the screen, and "See you on the train" leads into the account setup.
+
+Every number comes from the person's own answers, not made-up statistics. Each screen's title arrives first and the options follow one by one; going back slides the other way. Taps give a light **haptic tick**: vibration on Android, and on iPhone (iOS 18 and newer) a trick with a hidden switch control. The hold button ticks while you hold and gives a double tap when done.
+
 ## Look and feel
 
 **"Forest & cream":** warm and organic. A warm cream background (#FAF6EE) with white cards, deep forest green (#2F6B4F) for the main buttons, active routes and your chat bubbles, a touch of soft terracotta (#E07A5F) for destinations, and warm brown-black text. A soft warm light sits at the top of each screen, and the only other colours are the MRT line and bus colours. The Map tab greets you ("Good morning") and shows roughly how much CO₂ each trip saves compared with driving.

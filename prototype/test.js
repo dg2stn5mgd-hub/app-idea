@@ -41,7 +41,19 @@ const assert = require('assert');
   assert.equal(await p.evaluate(() => state.booked), null, 'the ride is done');
   // New user: sign-up ends in a full demo
   await p.goto('' + require('url').pathToFileURL(__dirname).href + '/new-user.html');
-  await p.click('text=Create my account');
+  // The story: tap answers, see what the commute adds up to, hold to commit
+  await p.click('[data-sgo="50"]'); await p.click('[data-spick="stage"][data-val="jc1"]'); await p.click('[data-sgo="51"]');
+  await p.click('[data-sgo="52"]'); await p.click('[data-val="scroll"]'); await p.click('[data-sgo="53"]');
+  await p.click('[data-val="never"]'); await p.click('[data-sgo="54"]');
+  for (const n of [55, 56, 57]) await p.click(`[data-sgo="${n}"]`);
+  assert.match(await txt('main'), /K-drama/);
+  for (let k = 0; k < 3; k++) await p.click('[data-snext]');
+  for (const n of [58, 59, 60, 61]) await p.click(`[data-sgo="${n}"]`);
+  await p.click('[data-sgoal="talk"]'); await p.click('[data-sgo="62"]');
+  const hb = await (await p.$('#hold-btn')).boundingBox();
+  await p.mouse.move(hb.x + 40, hb.y + 40); await p.mouse.down(); await p.waitForTimeout(1900); await p.mouse.up();
+  assert.match(await txt('main'), /See you on the train/);
+  await p.click('[data-go="21"]');
   await p.fill('#ob-phone', '91234567'); await p.click('[data-obnext="21"]');
   await p.fill('#ob-otp', '123456'); await p.click('[data-obnext="22"]');
   await p.fill('#ob-name', 'Issac'); await p.fill('#ob-birthday', '1993-03-14'); await p.dispatchEvent('#ob-birthday', 'change');
