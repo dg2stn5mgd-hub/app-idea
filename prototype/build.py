@@ -67,7 +67,7 @@ def swapped(page, swaps):
 # The claude.ai previews can't load pictures from the website, so Otto goes inside them
 import base64
 def inlined(page):
-    for path in ("/mascot/otto.png", "/icons/icon-192.png"):
+    for path in ("/mascot/otto-ink.png", "/icons/icon-192.png"):
         data = base64.b64encode((here / path.lstrip("/")).read_bytes()).decode()
         page = page.replace(f'"{path}"', f'"data:image/png;base64,{data}"', 1)
     return page

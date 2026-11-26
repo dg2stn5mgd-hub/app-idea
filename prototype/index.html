@@ -26,7 +26,7 @@ img { max-width: 100%; }
 
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Poppins:wght@400;500;600;700&family=Anton&family=Caveat:wght@600&family=Fredoka:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Poppins:wght@400;500;600;700&family=Anton&family=Caveat:wght@600&family=Fredoka:wght@500;600;700&family=Nanum+Pen+Script&display=swap">
 <style>
 /* Design: "Forest & cream". Warm and organic: a cream background, white cards, deep forest green for the main
    buttons and active routes, a touch of soft terracotta, and warm brown-black text. Rounded cards, frosted
@@ -97,6 +97,63 @@ img { max-width: 100%; }
 :root.poster h3 { font-family: var(--font-body); }
 :root.poster .avatar, :root.poster .face { font-family: var(--font-body); }
 :root.poster .hello span { text-transform: none; letter-spacing: 0; font: 600 23px "Caveat", cursive; color: var(--accent-ink); }   /* a handwritten line, like a café menu */
+/* "Ink": the HEYTEA-like style. Black pen on paper, lots of space, no shadows or colour. Every box and button
+   gets its outline from a pseudo-element run through the #pen filter, so the lines wobble like they were drawn. */
+:root.ink { --halo: transparent; --shadow: none; --shadow-float: none; --glow: none; --avatar: transparent; --pen: 1.6px solid var(--fg); }
+:root.ink :is(.card, .fold, .search, .map-card, .me-row, .group, .stats, .chat-list, .thread, .ticket, .qa, .note.nudge, .rules, .perks, .hero-line,
+  .place-btn, .stops, .bus-row, .rating button, .car, .chip, .btn, .swap, .send-btn, div.avatar, .face, .tag, .eco, .map-toggle, .look-tile, .phone-row .cc, .set-ico, .seg button[aria-pressed="true"]) {
+  position: relative; isolation: isolate; background: transparent; box-shadow: none; border: 0; }
+:root.ink :is(.card, .fold, .search, .map-card, .me-row, .group, .stats, .chat-list, .thread, .ticket, .qa, .note.nudge, .rules, .perks, .hero-line,
+  .place-btn, .stops, .bus-row, .rating button, .car, .chip, .btn, .swap, .send-btn, div.avatar, .face, .tag, .eco, .map-toggle, .look-tile, .phone-row .cc, .set-ico, .seg button[aria-pressed="true"])::after {
+  content: ""; position: absolute; inset: 1.5px; z-index: -1; border: var(--pen); border-radius: inherit; filter: url(#pen); pointer-events: none; }   /* inset so the wobble isn't clipped */
+/* Filled shapes: the main button, chosen options and shared interests are a solid ink blob with paper-coloured text */
+:root.ink :is(.btn:not(.ghost), .chip[aria-pressed="true"], .rating button[aria-pressed="true"], .car[aria-pressed="true"], .tag.shared, .send-btn, .unread-badge)::after { background: var(--fg); }
+:root.ink :is(.btn:not(.ghost), .chip[aria-pressed="true"], .rating button[aria-pressed="true"], .car[aria-pressed="true"], .tag.shared, .send-btn) { color: var(--bg); }
+:root.ink .btn.ghost::after { border-style: dashed; }
+:root.ink .map-card, :root.ink .fold, :root.ink .group, :root.ink .search { overflow: visible; }
+:root.ink .seg { background: transparent; }
+:root.ink .map-card .map-wrap { border-radius: var(--radius) var(--radius) 0 0; overflow: hidden; margin: 3px 3px 0; }
+:root.ink .fold-body .card { background: transparent; }
+:root.ink .fold-body .card::after { border-style: dashed; border-width: 1.2px; }
+/* Inputs are lines to write on, like a form */
+:root.ink :is(input[type="time"], input[type="text"], input[type="tel"], input[type="date"], input[type="search"], select) {
+  background: transparent; box-shadow: none; border-radius: 0; border-bottom: 1.6px solid var(--fg); padding-inline: 2px; }
+:root.ink input:focus, :root.ink select:focus { box-shadow: none; border-bottom-width: 2.4px; }
+/* Handwriting: crooked headings in pen, notes and labels in plain small type */
+:root.ink :is(h1, h2) { font-weight: 400; letter-spacing: 0; line-height: 1; transform: rotate(-1.2deg); transform-origin: left center; }
+:root.ink h1 { font-size: 46px; }
+:root.ink h2 { font-size: 38px; }
+:root.ink .hello { font-size: 50px; }
+:root.ink .hello span { font-family: var(--font-display); font-size: 25px; color: var(--muted); transform: rotate(.6deg); }
+:root.ink :is(.big-time, .stats b, .nav-eta b, .ticket .big, .brand b, .fold-title b, .tpl-name) { font-family: var(--font-display); font-weight: 400 !important; letter-spacing: 0; }
+:root.ink .big-time { font-size: 40px; }
+:root.ink .brand b { font-size: 30px; }
+:root.ink .fold-title { font-size: 24px; }
+:root.ink .stats b { font-size: 34px; }
+:root.ink .label { letter-spacing: .08em; font-size: 11.5px; }
+:root.ink .avatar, :root.ink .face { color: var(--fg); font-family: var(--font-display); font-size: 24px; font-weight: 400; }
+:root.ink .face, :root.ink .fold .face { font-size: 16px; color: var(--fg); background: transparent; }
+:root.ink h3 { font-size: 26px; font-weight: 400; letter-spacing: 0; line-height: 1.05; }
+:root.ink .avatar.huge { background: transparent; box-shadow: none; font-size: 40px; }
+:root.ink .bar span { background: transparent; border-bottom: 1.4px dashed var(--line); height: 5px; border-radius: 0; }
+:root.ink .bar span.on { background: transparent; border-bottom: 2.4px solid var(--fg); }
+:root.ink .set-ico svg { stroke: var(--fg); }
+:root.ink .note:not(.nudge) { font-size: 13.5px; }
+:root.ink .eco { color: var(--fg); }
+/* Tab bar: a plain paper strip with a pen line on top; the current tab is circled in pen */
+:root.ink .tabbar { background: var(--bg); border: 0; border-radius: 0; box-shadow: none; bottom: 0; width: min(420px, 100%); padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px)); }
+:root.ink .tabbar::before { content: ""; position: absolute; left: 10px; right: 10px; top: 0; border-top: var(--pen); filter: url(#pen); }
+:root.ink #app:has(.tabbar) { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+:root.ink .tab, :root.ink .tab[aria-current="page"] { color: var(--fg); }
+:root.ink .tab-bubble { background: transparent; border: var(--pen); border-radius: 50%; filter: url(#pen); inset: 1px 8px; }
+:root.ink .tab-badge { background: var(--fg); color: var(--bg); }
+/* Chats: ink bubbles */
+:root.ink .bubble.me { background: var(--fg); color: var(--bg); }
+:root.ink .bubble.them { background: transparent; box-shadow: inset 0 0 0 1.4px var(--fg); }
+:root.ink .chat-row .avatar, :root.ink .chat-head .avatar { font-size: 22px; }
+/* Home: Otto is bigger, there's room for him */
+:root.ink .otto.peek { width: 116px; margin: -14px -8px -14px 0; }
+:root.ink .logo { box-shadow: none; }
 /* Glass turned off on the Appearance screen: solid panels instead */
 :root.no-glass { --glass: var(--surface); --glass-strong: var(--surface); }
 :root.no-glass * { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
@@ -219,6 +276,10 @@ button:focus-visible, select:focus-visible, input:focus-visible, .chip:focus-vis
 .otto.hero { width: 190px; align-self: center; margin: 4px 0 -6px; }
 .otto.peek { width: 76px; flex: none; margin: -6px -4px -10px 0; }
 .otto.small { width: 110px; margin: 4px auto 0; }
+.when { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.when-time { display: flex; align-items: center; gap: 8px; }
+.when-time input { width: auto; min-height: 0; padding: 8px 10px; }
+:root[data-mode="dark"] .otto { filter: invert(1); }
 .hello-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; }
 img.logo { object-fit: cover; padding: 0; }
 @media (prefers-reduced-motion: no-preference) {
@@ -587,13 +648,16 @@ a.back.link.center { display: block; text-align: center; font-size: 15px; }
   <div id="app"></div>
 </div>
 <div id="toast" class="toast" hidden></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="pen" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="2.6"/></filter>
+</svg>
 
 <script>
 // Which version of the prototype this page shows. new-user.html is the same file with this set to "new".
 const START_AS = "existing";
-const MASCOT = "/mascot/otto.png", MASCOT_FACE = "/icons/icon-192.png";   // Otto the otter (build.py inlines them for the claude.ai previews)
+const MASCOT = "/mascot/otto-ink.png", MASCOT_FACE = "/icons/icon-192.png";   // Otto the otter (build.py inlines them for the claude.ai previews)
 const otto = (cls = "", alt = "Otto the otter waving") => `<img class="otto ${cls}" src="${MASCOT}" alt="${alt}">`;
-const BUILD = "26 Nov, 16:45";                 // when this version was made; build.py fills it in
+const BUILD = "26 Nov, 16:51";                 // when this version was made; build.py fills it in
 
 // Address of your live-data server (see server/README.md), e.g. "https://carriage-live.yourname.workers.dev".
 // Empty, or unreachable, means the Ride day screen shows clearly labelled sample times instead.
@@ -1953,12 +2017,10 @@ const screens = {
         </div>
         <button class="swap" data-swap aria-label="Swap start and destination">⇅</button>
       </div>
-      <div class="chips">
+      <div class="when">
         <button class="chip" data-home aria-pressed="${trip(state.commute.from, state.commute.to)}">Home → ${destWord()}</button>
-      </div>
-      <div class="row">
-        <div class="field"><label class="label" for="navTime">Leaving at</label>
-          <div class="time-row"><input type="time" id="navTime" value="${state.nav.time}"><button class="btn ghost small-btn" data-now>Now</button></div></div>
+        <label class="when-time"><span class="label">leaving</span><input type="time" id="navTime" value="${state.nav.time}"></label>
+        <button class="back link" data-now>now</button>
       </div>
       ${viaChips("nav", state.nav.via)}
       ${!r ? `<p class="error">${noRouteReason(state.nav)}</p>` : `
@@ -1971,10 +2033,9 @@ const screens = {
         </div>
       </div>
       <div class="choice">
-        <button class="btn" data-meet>Meet someone on this ride</button>
+        <button class="btn" data-meet>Find people on this ride →</button>
         <p class="small muted center">${riders ? `${riders} ${riders === 1 ? "person" : "people"} on this ride ${riders === 1 ? "is" : "are"} on Carriage right now.` : "Nobody on this ride yet. Try another time."}</p>
-        <button class="btn ghost" data-startnav>Just navigate</button>
-        <a class="back link center" href="${gmaps(placeQuery(state.nav.from), placeQuery(state.nav.to))}" target="_blank" rel="noopener">Open in Google Maps instead</a>
+        <a class="back link center" href="${gmaps(placeQuery(state.nav.from), placeQuery(state.nav.to))}" target="_blank" rel="noopener">or ride solo · open in Google Maps ↗</a>
       </div>
       <details class="stops"><summary>See every stop</summary>${routeDiagram(r)}</details>`}
     </main>`;
@@ -2813,6 +2874,7 @@ Object.assign(screens, {
 const BACK = `<svg class="chev-back" viewBox="0 0 12 20" aria-hidden="true"><path d="M10 2 2 10l8 8"/></svg>Back`;
 // ---------- Appearance: try looks live. Kept on this phone only. ----------
 const LOOKS = [
+  { id: "ink", name: "Ink & paper", bg: "#fbfaf7", surface: "#fbfaf7", fg: "#181614", accent: "#181614", accent2: "#181614" },
   { id: "cobalt", name: "Cobalt & paper", bg: "#f2ede3", surface: "#f8f4eb", fg: "#1f3fae", accent: "#1f3fae", accent2: "#7d9bf0", style: "outlined", font: "poster" },
   { id: "ploof", name: "Olive & lime", bg: "#f2eee5", surface: "#fbf9f3", fg: "#1d1f16", accent: "#c9e866", accent2: "#5f6b2c" },
   { id: "lavender", name: "Lavender & lime", bg: "#f4f0e8", surface: "#fffdf8", fg: "#2a2433", accent: "#8f7fe0", accent2: "#cfe86b" },
@@ -2834,9 +2896,11 @@ const FONTS = {
   editorial: { name: "Editorial", display: '"Fraunces", ui-serif, Georgia, serif' },
   geometric: { name: "Geometric", display: '"Poppins", system-ui, sans-serif', body: '"Poppins", system-ui, sans-serif' },
   poster: { name: "Poster", display: '"Anton", Impact, "Arial Narrow", sans-serif' },
+  pen: { name: "Pen", display: '"Nanum Pen Script", "Gaegu", cursive' },
   chunky: { name: "Chunky", display: '"Fredoka", "Nunito", ui-rounded, system-ui, sans-serif' },
 };
 const TEMPLATES = [
+  { id: "ink", name: "Ink", note: "pen doodles on paper, like HEYTEA", palette: "ink", font: "pen", radius: 18, buttons: "pill", style: "ink", glass: false },
   { id: "ploof", name: "Ploof", note: "olive, lime, chunky round font", palette: "ploof", font: "chunky", radius: 30, buttons: "pill", style: "outlined", glass: true },
   { id: "lavender", name: "Lavender club", note: "soft purple, lime pops", palette: "lavender", font: "chunky", radius: 30, buttons: "pill", style: "soft", glass: true },
   { id: "coolcat", name: "Cool Cat's", note: "cobalt on paper, poster font", palette: "cobalt", font: "poster", radius: 22, buttons: "pill", style: "outlined", glass: false },
@@ -2844,10 +2908,10 @@ const TEMPLATES = [
   { id: "kopi", name: "Kopitiam", note: "kopi browns, editorial serif", palette: "kopi", font: "editorial", radius: 14, buttons: "rounded", style: "outlined", glass: false },
   { id: "nightbus", name: "Night bus", note: "dark, pink and blue neon", palette: "nightbus", font: "geometric", radius: 24, buttons: "pill", style: "soft", glass: true },
 ];
-const LOOK_START = { palette: "forest", custom: null, font: "system", radius: 22, buttons: "pill", glass: true, style: "soft" };
+const LOOK_START = { palette: "ink", custom: null, font: "pen", radius: 18, buttons: "pill", glass: false, style: "ink", template: "ink" };
 let look = { ...LOOK_START };
-try { Object.assign(look, JSON.parse(localStorage.getItem("carriage-look") || "{}")); } catch (e) {}
-const saveLook = () => { try { localStorage.setItem("carriage-look", JSON.stringify(look)); } catch (e) {} };
+try { Object.assign(look, JSON.parse(localStorage.getItem("carriage-look-2") || "{}")); } catch (e) {}
+const saveLook = () => { try { localStorage.setItem("carriage-look-2", JSON.stringify(look)); } catch (e) {} };
 const lookColors = () => look.custom || LOOKS.find(l => l.id === look.palette) || LOOKS[0];
 // How bright a colour is (0 = black, 1 = white), to pick readable text and light or dark glass
 function brightness(hex) {
@@ -2866,6 +2930,7 @@ function applyLook() {
   root.dataset.mode = dark ? "dark" : "light";
   root.classList.toggle("no-glass", !look.glass);
   root.classList.toggle("outlined", look.style === "outlined");
+  root.classList.toggle("ink", look.style === "ink");
   root.classList.toggle("poster", look.font === "poster");
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.content = c.bg;
@@ -3053,7 +3118,7 @@ app.addEventListener("click", e => {
   else if (d.lookfont) { look.font = d.lookfont; saveLook(); applyLook(); render(); }
   else if (d.lookbtn) { look.buttons = d.lookbtn; saveLook(); applyLook(); render(); }
   else if (d.lookglass) { look.glass = d.lookglass === "on"; saveLook(); applyLook(); render(); }
-  else if (d.lookreset !== undefined) { look = { ...LOOK_START }; saveLook(); applyLook(); render(); toast("Back to Forest & cream"); }
+  else if (d.lookreset !== undefined) { look = { ...LOOK_START }; saveLook(); applyLook(); render(); toast("Back to Ink"); }
   else if (d.lookcopy !== undefined) {
     const text = lookText();
     try { navigator.clipboard.writeText(text).then(() => toast("Copied. Paste it in your message to Claude."), () => toast(text)); } catch (e) { toast(text); }
@@ -3152,13 +3217,13 @@ screens[40] = function () {
     </div>
     <div class="field"><span class="label">Font</span><div class="seg four">${Object.entries(FONTS).map(([k, f]) => seg("lookfont", k, `<span style="font-family:${f.display || "inherit"}">${f.name}</span>`, look.font)).join("")}</div></div>
     <div class="field"><label class="label" for="look-radius">Corners · ${look.radius}px</label><input type="range" id="look-radius" data-keep="look" min="4" max="32" step="2" value="${look.radius}"></div>
-    <div class="field"><span class="label">Cards</span><div class="seg">${seg("lookstyle", "soft", "Soft shadows", look.style)}${seg("lookstyle", "outlined", "Outlined, like print", look.style)}</div></div>
+    <div class="field"><span class="label">Cards</span><div class="seg three">${seg("lookstyle", "ink", "Hand-drawn", look.style)}${seg("lookstyle", "outlined", "Outlined", look.style)}${seg("lookstyle", "soft", "Soft shadows", look.style)}</div></div>
     <div class="row">
       <div class="field"><span class="label">Buttons</span><div class="seg">${seg("lookbtn", "pill", "Pill", look.buttons)}${seg("lookbtn", "rounded", "Rounded", look.buttons)}</div></div>
       <div class="field"><span class="label">Glass</span><div class="seg">${seg("lookglass", "on", "On", look.glass ? "on" : "off")}${seg("lookglass", "off", "Off", look.glass ? "on" : "off")}</div></div>
     </div>
     <button class="btn" data-lookcopy>Copy my look</button>
-    <button class="btn ghost" data-lookreset>Back to Forest & cream</button>
+    <button class="btn ghost" data-lookreset>Back to Ink</button>
   </main>`;
 };
 screens[30] = function () {
