@@ -676,7 +676,7 @@ main.story { padding: 26px 22px 22px; gap: 22px; }
 <script>
 // Which version of the prototype this page shows. new-user.html is the same file with this set to "new".
 const START_AS = "new";
-const BUILD = "26 Nov, 18:38";                 // when this version was made; build.py fills it in
+const BUILD = "26 Nov, 18:40";                 // when this version was made; build.py fills it in
 
 // Address of your live-data server (see server/README.md), e.g. "https://carriage-live.yourname.workers.dev".
 // Empty, or unreachable, means the Ride day screen shows clearly labelled sample times instead.
@@ -2609,7 +2609,7 @@ Object.assign(screens, {
       ["📝", Math.floor(h / 30), "whole PW projects finished", "30 hours of work each, no last-minute panic"],
       ["🧋", Math.floor(h * 60 / 20), "bubble tea runs after school", "20 min each, queue included"],
       ["🎤", Math.floor(h / 2), "KTV sessions with your CCA", "2 hours each, no one skips the chorus"],
-      ["🤝", "1", "friendship that could have started with a hi", ""],
+      ["🚇", "1", "friendship that could have started on the train", "same carriage, same time, every morning"],
     ];
     const k = Math.min(story.slide, cards.length - 1), [ico, n, what, how] = cards[k];
     return `${storyTop(56)}<main class="story">

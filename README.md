@@ -102,7 +102,7 @@ Inspired by SocialLite's onboarding, sign-up starts with a short story before th
 1. **Welcome:** "Same train. New friends.", with two dots meeting on an MRT line and a wave.
 2. **Quick tap questions** (big option cards, one per screen): where you're at (starting JC1, already in JC, something else), how long your train ride is (a slider), what you do on the train, and whether you've ever made a friend on your commute.
 3. **The problem, from your own answers:** "You're not alone. But here's the thing…", then your two JC years as 800 squares, one per ride (2 years × 40 school weeks × 5 days × 2 rides), filling in as "alone on your phone". A full-green screen counts up the hours: "600 hours on the train in JC, next to people your age, without saying a word."
-4. **"In that time, you could have…"**: cards with numbers worked out from your hours, each showing its assumption (Yo-Chi queues at 1 hour each, photo booth sessions with your OG, PW projects at 30 hours, bubble tea runs, KTV with your CCA), ending on "1 friendship that could have started with a hi".
+4. **"In that time, you could have…"**: cards with numbers worked out from your hours, each showing its assumption (Yo-Chi queues at 1 hour each, photo booth sessions with your OG, PW projects at 30 hours, bubble tea runs, KTV with your CCA), ending on "1 friendship that could have started on the train".
 5. **"It's not your fault"** (a carriage of people all on their phones), **"It doesn't have to be this way"**, and **Carriage vs other friend apps** (strike-throughs on the left, ticks on the right).
 6. **What you want from it** (picture cards), then **hold to commit**: press and hold, a circle floods the screen, and "See you on the train" leads into the account setup.
 
