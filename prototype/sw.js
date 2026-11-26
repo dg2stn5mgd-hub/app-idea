@@ -1,8 +1,8 @@
 // Keeps a copy of Carriage on the phone so it opens fast, even with weak signal on the MRT.
 // Pages: try the network for 3 seconds, then fall back to the saved copy.
 // Live bus times (another website) are never saved: they always come fresh.
-const CACHE = "carriage-v13";
-const SHELL = ["/", "/new-user", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/apple-touch-icon.png", "/mascot/otto-ink.png",
+const CACHE = "carriage-v14";
+const SHELL = ["/", "/new-user", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/apple-touch-icon.png",
   "/vendor/leaflet/leaflet.js", "/vendor/leaflet/leaflet.css"];
 
 self.addEventListener("install", e => {

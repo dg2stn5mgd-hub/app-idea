@@ -64,17 +64,9 @@ def swapped(page, swaps):
         page = page.replace(old, new)
     return page
 
-# The claude.ai previews can't load pictures from the website, so Otto goes inside them
-import base64
-def inlined(page):
-    for path in ("/mascot/otto-ink.png", "/icons/icon-192.png"):
-        data = base64.b64encode((here / path.lstrip("/")).read_bytes()).decode()
-        page = page.replace(f'"{path}"', f'"data:image/png;base64,{data}"', 1)
-    return page
-
 versions = {"current-user": src, "new-user": swapped(src, NEW_USER)}
 for name, page in versions.items():
-    (here / "artifact" / f"{name}.html").write_text(inlined(page))
+    (here / "artifact" / f"{name}.html").write_text(page)
 (here / "index.html").write_text(website(versions["current-user"]))
 (here / "new-user.html").write_text(website(versions["new-user"]))
 print("built index.html, new-user.html and artifact/")
