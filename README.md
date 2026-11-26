@@ -93,6 +93,9 @@ You're already on your way to school or work. If the other person runs late, get
 
 ## Look and feel
 
+**Mascot: Otto the otter.** Singapore's otters always travel together, which is the whole idea of Carriage: don't ride alone. Otto waves on the welcome screen, greets you on the Map tab, welcomes you when sign-up is done, keeps you company when nobody's on your ride yet, and is the app icon. (The picture is in `prototype/mascot/otto.png`.)
+
+
 **"Forest & cream":** warm and organic. A warm cream background (#FAF6EE) with white cards, deep forest green (#2F6B4F) for the main buttons, active routes and your chat bubbles, a touch of soft terracotta (#E07A5F) for destinations, and warm brown-black text. A soft warm light sits at the top of each screen, and the only other colours are the MRT line and bus colours. The Map tab greets you ("Good morning") and shows roughly how much CO₂ each trip saves compared with driving.
 
 **Try other looks:** Me → Appearance starts with six one-tap templates (Ploof, Lavender club, Cool Cat's, Forest café, Kopitiam, Night bus) that set colours, font, corners, buttons and card style together. It also has 11 palettes (light ones like Forest & cream, Matcha latte, Kopi-O, Sunset coral, Lilac and Morning sky, and dark ones like Sage & navy, Deep green & gold, Teal & peach, Night bus and Navy & mint), your own five colours (background, cards, text, main and second colour; everything else is mixed from them), four fonts (System, Rounded, Editorial, Geometric), corner roundness, pill or rounded buttons, and glass on or off. It changes live, stays on that phone, and "Copy my look" copies a description to send to whoever is building the app.

@@ -215,6 +215,16 @@ button:focus-visible, select:focus-visible, input:focus-visible, .chip:focus-vis
 .card.faded { opacity: 0.7; }
 .actions { flex-wrap: wrap; }
 .brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 20px; letter-spacing: -0.02em; }
+.otto { display: block; height: auto; pointer-events: none; user-select: none; -webkit-user-drag: none; }
+.otto.hero { width: 190px; align-self: center; margin: 4px 0 -6px; }
+.otto.peek { width: 76px; flex: none; margin: -6px -4px -10px 0; }
+.otto.small { width: 110px; margin: 4px auto 0; }
+.hello-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; }
+img.logo { object-fit: cover; padding: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .otto.hero, .otto.peek { animation: bob 3.6s ease-in-out infinite; transform-origin: 50% 100%; }
+  @keyframes bob { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-5px) rotate(-1.5deg); } }
+}
 .logo { width: 32px; height: 32px; border-radius: 9px; background: linear-gradient(150deg, var(--accent-light), var(--accent)); color: var(--on-accent); display: grid; place-items: center; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,.18); }
 .search { display: flex; align-items: center; gap: 10px; background: var(--surface); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow); }
 .search .place-btn { box-shadow: none; background: var(--fill); }
@@ -581,7 +591,9 @@ a.back.link.center { display: block; text-align: center; font-size: 15px; }
 <script>
 // Which version of the prototype this page shows. new-user.html is the same file with this set to "new".
 const START_AS = "existing";
-const BUILD = "26 Nov, 16:36";                 // when this version was made; build.py fills it in
+const MASCOT = "/mascot/otto.png", MASCOT_FACE = "/icons/icon-192.png";   // Otto the otter (build.py inlines them for the claude.ai previews)
+const otto = (cls = "", alt = "Otto the otter waving") => `<img class="otto ${cls}" src="${MASCOT}" alt="${alt}">`;
+const BUILD = "26 Nov, 16:45";                 // when this version was made; build.py fills it in
 
 // Address of your live-data server (see server/README.md), e.g. "https://carriage-live.yourname.workers.dev".
 // Empty, or unreachable, means the Ride day screen shows clearly labelled sample times instead.
@@ -1930,8 +1942,8 @@ const screens = {
     const eco = r ? co2Saved(r) : 0;
     return `
     <main class="fade">
-      <div class="brand"><span class="logo">C</span><b>Carriage</b></div>
-      <h1 class="hello">${hello}<span>Where are you heading?</span></h1>
+      <div class="brand"><img class="logo" src="${MASCOT_FACE}" alt=""><b>Carriage</b></div>
+      <div class="hello-row"><h1 class="hello">${hello}<span>Where are you heading?</span></h1>${otto("peek", "")}</div>
       ${installTip()}
       <div class="search">
         <div class="search-fields">
@@ -2067,7 +2079,7 @@ const screens = {
     const cards = shown.map(m => card(m)).join("")
       + (rest.length > shown.length ? `<button class="btn ghost" data-showall>Show all ${rest.length} people on your ride</button>` : "");
     const others = outsideWindow.slice(0, 5);
-    const empty = `<div class="note">Nobody rides with you within ${state.window} minutes yet. ${state.window < 15 ? `<button class="btn ghost small-btn" data-widen>Try 15 minutes</button>` : "Invite a friend who takes your train."}</div>`;
+    const empty = `${otto("small", "")}<div class="note">Nobody rides with you within ${state.window} minutes yet. ${state.window < 15 ? `<button class="btn ghost small-btn" data-widen>Try 15 minutes</button>` : "Invite a friend who takes your train."}</div>`;
     const pending = metList().filter(m => metStatus(m).status === "feedback");
     // A heading you tap to open or close: title, how many, and their initials at a glance
     const fold = (key, title, hint, people, body, empty) => {
@@ -2399,7 +2411,8 @@ Object.assign(screens, {
   20() {
     return `<div class="top-gap"></div>
     <main class="fade">
-      <div class="brand"><span class="logo">C</span><b>Carriage</b></div>
+      <div class="brand"><img class="logo" src="${MASCOT_FACE}" alt=""><b>Carriage</b></div>
+      ${otto("hero")}
       <h1>Meet someone on your way to school or work.</h1>
       <p class="muted">Tell us your daily train ride and what you're into. Carriage finds people who ride the same train, so you can talk on the way instead of scrolling.</p>
       <div class="note">
@@ -2544,7 +2557,7 @@ Object.assign(screens, {
     const pf = state.profile, n = findMatches(state.commute).out.length;
     return `<div class="top-gap"></div>
     <main class="fade">
-      <div class="done-hero">${avatarOf(pf, "big")}<h1>Welcome, ${esc(pf.name)}!</h1>
+      <div class="done-hero">${otto("hero")}<h1>Welcome, ${esc(pf.name)}!</h1>
         <p class="muted">Your account is ready.</p></div>
       <div class="card">
         <span class="label">Your daily commute</span>
