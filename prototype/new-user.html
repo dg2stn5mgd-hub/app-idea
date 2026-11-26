@@ -26,7 +26,7 @@ img { max-width: 100%; }
 
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Poppins:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Poppins:wght@400;500;600;700&family=Anton&family=Caveat:wght@600&display=swap">
 <style>
 /* Design: "Forest & cream". Warm and organic: a cream background, white cards, deep forest green for the main
    buttons and active routes, a touch of soft terracotta, and warm brown-black text. Rounded cards, frosted
@@ -89,6 +89,13 @@ img { max-width: 100%; }
   --warn-fg: #ffc94d;
   color-scheme: dark;
 }
+/* "Outlined, like print": thin lines in the main colour instead of shadows */
+:root.outlined { --shadow: 0 0 0 1.5px color-mix(in srgb, var(--accent) 55%, transparent); --shadow-float: 0 0 0 1.5px color-mix(in srgb, var(--accent) 55%, transparent), 0 8px 20px color-mix(in srgb, var(--shadow-c) 10%, transparent); --glow: none; }
+/* "Poster" font: tall condensed capitals for headings */
+:root.poster h1, :root.poster h2, :root.poster .brand b, :root.poster .big-time, :root.poster .stats b { text-transform: uppercase; letter-spacing: .01em; font-weight: 400; }
+:root.poster h3 { font-family: var(--font-body); }
+:root.poster .avatar, :root.poster .face { font-family: var(--font-body); }
+:root.poster .hello span { text-transform: none; letter-spacing: 0; font: 600 23px "Caveat", cursive; color: var(--accent); }   /* a handwritten line, like a café menu */
 /* Glass turned off on the Appearance screen: solid panels instead */
 :root.no-glass { --glass: var(--surface); --glass-strong: var(--surface); }
 :root.no-glass * { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
@@ -569,7 +576,7 @@ a.back.link.center { display: block; text-align: center; font-size: 15px; }
 <script>
 // Which version of the prototype this page shows. new-user.html is the same file with this set to "new".
 const START_AS = "new";
-const BUILD = "26 Nov, 16:31";                 // when this version was made; build.py fills it in
+const BUILD = "26 Nov, 16:34";                 // when this version was made; build.py fills it in
 
 // Address of your live-data server (see server/README.md), e.g. "https://carriage-live.yourname.workers.dev".
 // Empty, or unreachable, means the Ride day screen shows clearly labelled sample times instead.
@@ -2788,6 +2795,7 @@ Object.assign(screens, {
 const BACK = `<svg class="chev-back" viewBox="0 0 12 20" aria-hidden="true"><path d="M10 2 2 10l8 8"/></svg>Back`;
 // ---------- Appearance: try looks live. Kept on this phone only. ----------
 const LOOKS = [
+  { id: "cobalt", name: "Cobalt & paper", bg: "#f2ede3", surface: "#f8f4eb", fg: "#1f3fae", accent: "#1f3fae", accent2: "#7d9bf0", style: "outlined", font: "poster" },
   { id: "forest", name: "Forest & cream", bg: "#faf6ee", surface: "#ffffff", fg: "#2b2a26", accent: "#2f6b4f", accent2: "#e07a5f" },
   { id: "matcha", name: "Matcha latte", bg: "#f3f1e7", surface: "#fffdf6", fg: "#2e3a2f", accent: "#6f8f4e", accent2: "#c9a37a" },
   { id: "kopi", name: "Kopi-O", bg: "#f5ede3", surface: "#fffaf3", fg: "#3b2a20", accent: "#8a5a3b", accent2: "#d9a441" },
@@ -2805,8 +2813,9 @@ const FONTS = {
   rounded: { name: "Rounded", display: '"Nunito", ui-rounded, system-ui, sans-serif', body: '"Nunito", ui-rounded, system-ui, sans-serif' },
   editorial: { name: "Editorial", display: '"Fraunces", ui-serif, Georgia, serif' },
   geometric: { name: "Geometric", display: '"Poppins", system-ui, sans-serif', body: '"Poppins", system-ui, sans-serif' },
+  poster: { name: "Poster", display: '"Anton", Impact, "Arial Narrow", sans-serif' },
 };
-const LOOK_START = { palette: "forest", custom: null, font: "system", radius: 22, buttons: "pill", glass: true };
+const LOOK_START = { palette: "forest", custom: null, font: "system", radius: 22, buttons: "pill", glass: true, style: "soft" };
 let look = { ...LOOK_START };
 try { Object.assign(look, JSON.parse(localStorage.getItem("carriage-look") || "{}")); } catch (e) {}
 const saveLook = () => { try { localStorage.setItem("carriage-look", JSON.stringify(look)); } catch (e) {} };
@@ -2826,11 +2835,13 @@ function applyLook() {
   set("--radius", look.radius + "px"); set("--btn-radius", look.buttons === "pill" ? "999px" : Math.round(look.radius * .6) + "px");
   root.dataset.mode = dark ? "dark" : "light";
   root.classList.toggle("no-glass", !look.glass);
+  root.classList.toggle("outlined", look.style === "outlined");
+  root.classList.toggle("poster", look.font === "poster");
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.content = c.bg;
 }
 const lookText = () => { const c = lookColors(), f = FONTS[look.font] || FONTS.system;
-  return `Carriage look: ${look.custom ? "my own colours" : lookColors().name}. Background ${c.bg}, cards ${c.surface}, text ${c.fg}, main colour ${c.accent}, second colour ${c.accent2}. Font: ${f.name}. Corners: ${look.radius}px. Buttons: ${look.buttons}. Glass: ${look.glass ? "on" : "off"}.`; };
+  return `Carriage look: ${look.custom ? "my own colours" : lookColors().name}. Background ${c.bg}, cards ${c.surface}, text ${c.fg}, main colour ${c.accent}, second colour ${c.accent2}. Font: ${f.name}. Cards: ${look.style}. Corners: ${look.radius}px. Buttons: ${look.buttons}. Glass: ${look.glass ? "on" : "off"}.`; };
 
 const ICONS = {
   map: '<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Zm0 0v14m6-12v14"/>',
@@ -2998,7 +3009,12 @@ app.addEventListener("click", e => {
     render(); window.scrollTo(0, 0); toast("Plan sent to " + state.planFor);
   }
   else if (d.late !== undefined) { toast(state.planFor + " knows you're running late. They'll save you a spot."); }
-  else if (d.look) { look.palette = d.look; look.custom = null; saveLook(); applyLook(); render(); }
+  else if (d.look) {
+    const l = LOOKS.find(x => x.id === d.look);
+    Object.assign(look, { palette: d.look, custom: null }, l.style ? { style: l.style } : {}, l.font ? { font: l.font } : {});
+    saveLook(); applyLook(); render();
+  }
+  else if (d.lookstyle) { look.style = d.lookstyle; saveLook(); applyLook(); render(); }
   else if (d.lookfont) { look.font = d.lookfont; saveLook(); applyLook(); render(); }
   else if (d.lookbtn) { look.buttons = d.lookbtn; saveLook(); applyLook(); render(); }
   else if (d.lookglass) { look.glass = d.lookglass === "on"; saveLook(); applyLook(); render(); }
@@ -3094,6 +3110,7 @@ screens[40] = function () {
     </div>
     <div class="field"><span class="label">Font</span><div class="seg four">${Object.entries(FONTS).map(([k, f]) => seg("lookfont", k, `<span style="font-family:${f.display || "inherit"}">${f.name}</span>`, look.font)).join("")}</div></div>
     <div class="field"><label class="label" for="look-radius">Corners · ${look.radius}px</label><input type="range" id="look-radius" data-keep="look" min="4" max="32" step="2" value="${look.radius}"></div>
+    <div class="field"><span class="label">Cards</span><div class="seg">${seg("lookstyle", "soft", "Soft shadows", look.style)}${seg("lookstyle", "outlined", "Outlined, like print", look.style)}</div></div>
     <div class="row">
       <div class="field"><span class="label">Buttons</span><div class="seg">${seg("lookbtn", "pill", "Pill", look.buttons)}${seg("lookbtn", "rounded", "Rounded", look.buttons)}</div></div>
       <div class="field"><span class="label">Glass</span><div class="seg">${seg("lookglass", "on", "On", look.glass ? "on" : "off")}${seg("lookglass", "off", "Off", look.glass ? "on" : "off")}</div></div>
