@@ -568,7 +568,8 @@ main.story { padding: 26px 22px 22px; gap: 22px; }
 .s-card { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; background: var(--surface); border-radius: 28px; padding: 30px 22px; box-shadow: var(--shadow-float); }
 .s-emoji { font-size: 74px; line-height: 1.1; }
 .s-num { font-size: 64px; line-height: 1; letter-spacing: -0.04em; color: var(--fg); font-variant-numeric: tabular-nums; }
-.s-card p { color: var(--muted); font-size: 16px; max-width: 240px; }
+.s-card p { color: var(--fg); font-size: 17px; font-weight: 500; max-width: 260px; }
+.s-how { font-size: 13px; color: var(--muted); }
 .s-dots { display: flex; justify-content: center; gap: 6px; }
 .s-dots span { width: 6px; height: 6px; border-radius: 3px; background: var(--line); transition: width .4s var(--ease), background-color .3s; }
 .s-dots span.on { width: 20px; background: var(--fg); }
@@ -675,7 +676,7 @@ main.story { padding: 26px 22px 22px; gap: 22px; }
 <script>
 // Which version of the prototype this page shows. new-user.html is the same file with this set to "new".
 const START_AS = "new";
-const BUILD = "26 Nov, 18:18";                 // when this version was made; build.py fills it in
+const BUILD = "26 Nov, 18:38";                 // when this version was made; build.py fills it in
 
 // Address of your live-data server (see server/README.md), e.g. "https://carriage-live.yourname.workers.dev".
 // Empty, or unreachable, means the Ride day screen shows clearly labelled sample times instead.
@@ -2601,16 +2602,19 @@ Object.assign(screens, {
   },
   57() {
     const h = rideHours();
+    // Things JC1s actually do, with the time each one takes (shown small, so the maths is honest)
     const cards = [
-      ["📺", Math.floor(h / 16), "whole K-drama seasons, binged start to finish"],
-      ["🎤", Math.floor(h / 3.5), "Eras Tour concerts, front row"],
-      ["🚶", Math.floor(h / 10), "walks from Changi to Tuas"],
-      ["🤝", "1", "friendship that could have started with a hi"],
+      ["🍦", Math.floor(h / 1), "Yo-Chi queues survived", "if each queue takes 1 hour"],
+      ["📸", Math.floor(h * 60 / 15), "photo booth sessions with your OG", "15 min each, props included"],
+      ["📝", Math.floor(h / 30), "whole PW projects finished", "30 hours of work each, no last-minute panic"],
+      ["🧋", Math.floor(h * 60 / 20), "bubble tea runs after school", "20 min each, queue included"],
+      ["🎤", Math.floor(h / 2), "KTV sessions with your CCA", "2 hours each, no one skips the chorus"],
+      ["🤝", "1", "friendship that could have started with a hi", ""],
     ];
-    const k = Math.min(story.slide, cards.length - 1), [ico, n, what] = cards[k];
+    const k = Math.min(story.slide, cards.length - 1), [ico, n, what, how] = cards[k];
     return `${storyTop(56)}<main class="story">
       <div class="s-head"><h2>In that time, you could have…</h2></div>
-      <div class="s-card" id="s-card"><span class="s-emoji">${ico}</span><b class="s-num" data-count="${n}">0</b><p>${what}</p></div>
+      <div class="s-card" id="s-card"><span class="s-emoji">${ico}</span><b class="s-num" data-count="${n}">0</b><p>${what}</p>${how ? `<span class="s-how">${how}</span>` : ""}</div>
       <div class="s-dots">${cards.map((_, i) => `<span class="${i === k ? "on" : ""}"></span>`).join("")}</div>
       ${k < cards.length - 1 ? `<div class="story-foot"><button class="btn" data-snext>Next</button></div>` : storyBtn("I get it", 58)}</main>`;
   },
